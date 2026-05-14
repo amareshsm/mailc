@@ -1,0 +1,94 @@
+---
+title: Target clients
+description: Choose which email clients to optimise the output for.
+---
+
+`targetClients` is a list of caniemail glob patterns. The compiler uses this list to:
+
+- Decide which CSS properties are SAFE / ENHANCE / STRIP (see [Compatibility mode](/docs/configuration/compatibility-mode))
+- Validate against the Gmail clip budget (102 KB)
+- Choose which Outlook VML fallbacks to emit
+
+## Default
+
+```ts
+const DEFAULT_CLIENTS = [
+  'gmail.*',
+  'apple-mail.*',
+  'outlook.*',
+  'yahoo.*',
+  'samsung-email.android',
+]
+```
+
+Covers ~95% of global email opens (Litmus 2023).
+
+## Globs
+
+Patterns follow caniemail's hierarchy:
+
+```
+'gmail.*'                   // every Gmail surface — web, iOS, Android
+'gmail.web'                 // Gmail web only
+'outlook.*'                 // every Outlook
+'outlook.windows.*'         // Outlook desktop (2016/2019/365)
+'outlook.macos'             // Outlook for Mac
+'apple-mail.ios'            // iOS Mail
+'samsung-email.android'     // Samsung Mail (Android only — no iOS build)
+```
+
+For the full client tree, see the [caniemail database](https://www.caniemail.com).
+
+## Examples
+
+### Default (consumer email)
+
+```ts
+// no config needed — DEFAULT_CLIENTS is used
+compile(source)
+```
+
+### B2B with heavy Outlook desktop usage
+
+```ts
+compile(source, {
+  targetClients: ['outlook.windows.*', 'outlook.macos', 'gmail.*', 'apple-mail.*'],
+  compatibilityMode: 'strict',
+})
+```
+
+Strict mode + Outlook desktop in the targets means properties like `box-shadow` get stripped — Outlook 2019 doesn't render them.
+
+### Mobile-only
+
+```ts
+compile(source, {
+  targetClients: ['gmail.android', 'gmail.ios', 'apple-mail.ios', 'samsung-email.android'],
+})
+```
+
+ENHANCE properties broaden because mobile clients have better CSS support.
+
+### Extending the defaults
+
+```ts
+import { DEFAULT_CLIENTS } from 'mailc'
+
+compile(source, {
+  targetClients: [...DEFAULT_CLIENTS, 'fastmail.*', 'protonmail.*'],
+})
+```
+
+## CLI
+
+```bash
+mailc build src/ --target 'gmail.*,outlook.windows.*'
+```
+
+Comma-separated list of globs.
+
+## How target clients shape the output
+
+The compiler classifies every CSS property against the union of all matched clients. A property is **SAFE** only if every target supports it; otherwise it's **ENHANCE** (with at least one target supporting it) or **STRIP** (broken in any target).
+
+So narrowing `targetClients` makes more properties SAFE; broadening it makes more ENHANCE. Pair with `compatibilityMode: 'strict'` if you want a guaranteed pixel-identical output across the chosen targets.

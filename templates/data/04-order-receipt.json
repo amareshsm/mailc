@@ -1,0 +1,18 @@
+{
+  "customer": {
+    "email": "amaresh@example.com"
+  },
+  "order": {
+    "number": "ORD-20260417-8842",
+    "date": "17 April 2026",
+    "subtotal": "$130.00",
+    "shipping": "$8.00",
+    "tax": "$10.00",
+    "total": "$148.00",
+    "items": [
+      { "name": "mailc Pro Licence", "sku": "MC-PRO-1Y", "qty": "1", "total": "$99.00" },
+      { "name": "TypeScript Handbook (PDF)", "sku": "BOOK-TS-4", "qty": "1", "total": "$19.00" },
+      { "name": "Dev Sticker Pack", "sku": null, "qty": "3", "total": "$12.00" }
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+---
+title: mailc contract
+description: Extract a data contract from a template — what variables and shapes options.data must provide.
+---
+
+```bash
+mailc contract <input> [options]
+```
+
+Reads a template, finds every `{{var}}`, `<mc-if>`, and `<mc-each>`, and produces a contract describing what `options.data` needs to look like at compile time.
+
+## Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `<input>` | yes | Path to a `.mc` or `.json` template |
+
+## Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `-f, --format <format>` | `'markdown' \| 'json'` | `'markdown'` | Output format |
+| `-o, --output <path>` | string | stdout | Write to file instead of stdout |
+| `-c, --config <path>` | string | auto-discovered | Path to a config file |
+
+## Examples
+
+### Markdown report
+
+```bash
+mailc contract welcome.mc
+```
+
+Produces a human-readable list of required and optional fields, with the loop iterators called out:
+
+```markdown
+# Data contract for welcome.mc
+
+## Required
+- `user.firstName` (string)
+- `cart.items` (array)
+
+## Optional
+- `user.isPremium` (boolean) — used in mc-if at line 12
+
+## Loops
+- `cart.items` → as `item` (line 18)
+```
+
+### JSON for tooling
+
+```bash
+mailc contract welcome.mc --format json -o contract.json
+```
+
+JSON shape mirrors `introspect.dataContract()`:
+
+```json
+{
+  "required": [
+    { "path": "user.firstName", "type": "string", "loc": { "line": 5, "col": 12 } }
+  ],
+  "optional": [
+    { "path": "user.isPremium", "type": "boolean", "loc": { "line": 12, "col": 18 } }
+  ],
+  "loops": [
+    { "collection": "cart.items", "as": "item", "loc": { "line": 18, "col": 1 } }
+  ]
+}
+```
+
+## Use cases
+
+- **Code generation** — generate TypeScript types for `options.data` from the contract
+- **Runtime validation** — pipe the JSON through Zod or similar before calling `compile()`
+- **Documentation** — keep marketing/CRM teams in sync with what fields each template needs

@@ -1,0 +1,176 @@
+---
+title: Dark mode
+description: How mailc generates dark-mode CSS, what each strategy emits, and how colorMapping is applied.
+---
+
+mailc can generate dark-mode CSS that lets recipients see your email in a colour palette tuned for dark backgrounds. It's **opt-in** — `darkMode.enabled` is `false` by default.
+
+## Configuration
+
+```ts
+// mailc.config.ts
+export default defineConfig({
+  darkMode: {
+    enabled: true,
+    strategy: 'media-query',     // or 'class' (limited support — see below)
+    colorMapping: {
+      '#ffffff': '#1a1a1a',      // light background → dark background
+      '#0a0a0f': '#f5f5f8',      // light text → dark text
+      '#4f46e5': '#a78bfa',      // brand colour shifts lighter for dark
+    },
+  },
+})
+```
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `enabled` | `boolean` | `false` | Master switch |
+| `strategy` | `'media-query' \| 'class'` | `'media-query'` | How dark styles are scoped (see below) |
+| `colorMapping` | `Record<string, string>` | `{}` | Light → dark hex pairs the post-processor swaps |
+
+## Strategy: media-query (recommended)
+
+Generates `@media (prefers-color-scheme: dark)` rules. Clients that respect the user's OS-level dark-mode preference (Apple Mail, iOS Mail, Outlook.com) flip automatically. Other clients ignore the rules and stay in light mode.
+
+### What gets injected
+
+mailc adds three things to the compiled HTML:
+
+1. **Two meta tags in `<head>`**:
+
+   ```html
+   <meta name="color-scheme" content="light dark">
+   <meta name="supported-color-schemes" content="light dark">
+   ```
+
+   These prevent Apple Mail / iOS from forcing a colour-inversion algorithm on top of your styles (without these, your dark-mode rules can fight Apple's auto-darkening).
+
+2. **A scoped `<style>` block** with one rule per mapped colour:
+
+   ```html
+   <style>
+     @media (prefers-color-scheme: dark) {
+       .dm-bg-0 { background-color: #1a1a1a !important; }
+       .dm-c-0 { color: #f5f5f8 !important; }
+     }
+   </style>
+   ```
+
+3. **Class attributes injected on matching elements** — only on elements whose inline `background-color` or `color` matches a key in `colorMapping`.
+
+### Class naming
+
+Generated class names follow a deterministic pattern:
+
+| Property | Class prefix |
+|---|---|
+| `background-color` | `dm-bg-N` |
+| `color` | `dm-c-N` |
+
+`N` is the index in `colorMapping` (0-based). If you have 3 entries in `colorMapping`, you'll see classes `dm-bg-0` through `dm-bg-2` and `dm-c-0` through `dm-c-2`.
+
+These classes are added **only when** the element actually uses the corresponding light colour. Empty rules aren't emitted.
+
+### Before / after
+
+Input:
+
+```ts
+darkMode: {
+  enabled: true,
+  strategy: 'media-query',
+  colorMapping: {
+    '#ffffff': '#111111',
+    '#333333': '#ffffff',
+  },
+}
+```
+
+```html
+<mc-text color="#333333" background-color="#ffffff">Hello</mc-text>
+```
+
+Compiled output (relevant excerpts):
+
+```html
+<head>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .dm-bg-0 { background-color: #111111 !important; }
+      .dm-c-0 { color: #ffffff !important; }
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <tr>
+      <td style="background-color:#ffffff;color:#333333;" class="dm-bg-0 dm-c-0">
+        Hello
+      </td>
+    </tr>
+  </table>
+</body>
+```
+
+In a client with dark-mode preference active:
+- `background-color` flips to `#111111`
+- `color` flips to `#ffffff`
+
+In a client without dark-mode support: the `@media` block is ignored, the inline styles stay in effect, the email looks identical to before.
+
+### Color matching is case-insensitive
+
+Keys in `colorMapping` are normalised to lowercase. `'#FFFFFF'` and `'#ffffff'` are the same key. Inline styles in your output (which mailc generates) are lowercase by default, so this rarely matters in practice — but worth knowing if you handcraft any styles.
+
+## Strategy: class (not implemented yet)
+
+The `'class'` strategy is in the API but **not yet implemented in the compiler**. Setting `strategy: 'class'` today falls back to no dark-mode emission. Use `'media-query'` for now.
+
+When implemented, it would scope dark rules under a `.dark-mode` class selector instead of `@media`, requiring the recipient's client (or your sending pipeline) to add the class at render time. This is useful for clients that don't support `prefers-color-scheme`.
+
+## What about Tailwind's `dark:` utility?
+
+If you're using class-mode styling with Tailwind utilities, the `dark:` prefix (e.g. `dark:bg-zinc-900`) is **not processed by mailc**. Tailwind itself generates `@media (prefers-color-scheme: dark)` blocks at its own build step, and mailc sees the result.
+
+Practically:
+
+- If you're using mailc's `darkMode.colorMapping` → emit `@media` rules from the post-processor
+- If you're using Tailwind classes with `dark:` variants → Tailwind emits the `@media` rules, mailc inlines them
+
+Both end up with the same kind of `@media` block in the compiled CSS. They just come from different stages.
+
+## Limitations
+
+- **Only `color` and `background-color` are mapped.** Other properties (border colours, shadow colours, etc.) aren't currently in the mapping. Use a `<mc-style>` block for those if needed.
+- **`!important` is added** on every dark-mode declaration. Email clients aggressively rewrite styles, and `!important` is the only reliable way to make `@media` rules win against client-injected overrides.
+- **Outlook desktop ignores `@media` queries entirely.** Dark-mode rules don't apply there. Outlook's separate dark-mode treatment is client-controlled and largely unaffected by the email's CSS.
+- **Apple Mail's auto-inversion** can still kick in for colours not in your mapping. Build a colourMapping that covers every brand colour and every neutral you use to fully control the dark-mode appearance.
+
+## Recommended config
+
+For most templates:
+
+```ts
+darkMode: {
+  enabled: true,
+  strategy: 'media-query',
+  colorMapping: {
+    // Backgrounds
+    '#ffffff': '#0a0a0a',
+    '#f5f5f5': '#1a1a1a',
+    // Text
+    '#0a0a0f': '#f5f5f8',
+    '#666666': '#aaaaaa',
+    // Brand
+    '#4f46e5': '#a78bfa',
+  },
+}
+```
+
+Lock light → dark pairs once, reuse across every template. Re-do per brand redesign, not per template.
+
+## Testing dark mode
+
+Litmus and Email-on-Acid both have dark-mode preview lanes. Real-device testing in Apple Mail (macOS, iOS) catches issues the previews miss. There's no good way to test dark mode in Outlook Desktop because Outlook ignores the `@media` block entirely — you have to design the light-mode rendering to be acceptable in Outlook's auto-inverted dark mode.

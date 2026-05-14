@@ -1,0 +1,194 @@
+---
+title: Source maps
+description: Structure of result.sourceMap — every output element traced back to the source component, attribute, and template expression that produced it.
+---
+
+When you call `compile(source, { sourceMap: true })`, the result includes a structured map of every component in the source and where it ended up in the compiled HTML. The same map is also available via `result.sourceMapJSON` as a pre-serialised string.
+
+## When the source map is built
+
+| Option | What you get |
+|---|---|
+| `sourceMap: true` | `data-mc-id="entry-N"` attributes injected on output elements; `result.sourceMap` populated; HTML stays clean otherwise |
+| `debug: true` | `<!-- mc:source --><!-- /mc:source -->` comments wrapping output ranges; useful for "view source" debugging |
+| Both | Both injection forms; same `result.sourceMap` |
+| Neither (default) | `result.sourceMap` is `undefined` |
+
+## Top-level shape
+
+```ts
+interface EmailSourceMap {
+  version: 1
+  sourceFile: string         // input file path (or '' if compiled from a string)
+  outputFile: string         // output file path (or '')
+  templateData: unknown      // the `data` object that was passed in
+  mailcVersion: string       // e.g. '0.1.0'
+  entries: SourceMapEntry[]  // every tracked component + sub-element
+  stats: {
+    sourceComponents: number   // count of <mc-*> tags in source
+    outputElements: number     // count of HTML elements tracked
+    expansionRatio: number     // outputSize / inputSize (always > 1 for email)
+  }
+}
+```
+
+## Entry shape
+
+Each entry in `entries[]` describes one piece of the output:
+
+```ts
+interface SourceMapEntry {
+  id: string                 // 'entry-1', 'entry-2', …
+  parentId: string | null    // parent entry's id, or null for root
+
+  sourceComponent: string    // 'mc-section', 'mc-button', …
+  sourceLoc: {               // location in your .mc source
+    startLine: number
+    startCol: number
+    endLine: number
+    endCol: number
+  }
+
+  role: 'content' | 'container-table' | 'container-row'
+      | 'container-cell' | 'loop-iteration' | 'conditional-branch'
+      | 'mso-fallback' | …
+  outputTag: string          // 'table', 'tr', 'td', 'a', …
+  outputRange: { start: number; end: number } | null
+  outputLoc: {
+    startLine: number; startCol: number
+    endLine: number;   endCol: number
+  } | null
+
+  styles: StyleOrigin[]
+  expressions: ExpressionResolution[]
+  conditional: ConditionalInfo | null
+  loop: LoopInfo | null
+
+  sourceAttributes: Record<string, string>
+  children: string[]         // ids of direct child entries
+}
+```
+
+### outputRange and outputLoc
+
+These are **byte offsets** and **line/column positions** into `result.html`. They're `null` until offset calculation runs (which happens automatically when `sourceMap: true` is set).
+
+Slice the HTML with `outputRange` to get exactly what a component emitted, including any wrappers it added:
+
+```ts
+const html = result.html!
+for (const entry of result.sourceMap!.entries) {
+  if (entry.sourceComponent === 'mc-button' && entry.outputRange) {
+    const { start, end } = entry.outputRange
+    console.log(html.slice(start, end))
+    // → '<table border="0" cellpadding="0">...<a href="...">Click</a>...</table>'
+  }
+}
+```
+
+## StyleOrigin — where every style came from
+
+Every style on the output element is recorded with its provenance:
+
+```ts
+interface StyleOrigin {
+  property: string             // 'padding-top', 'color', …
+  value: string                // resolved value, e.g. '16px'
+  origin:
+    | 'attribute'              // came from <mc-text color="...">
+    | 'tailwind-class'         // came from class="text-zinc-900"
+    | 'mc-attributes'          // came from <mc-attributes><mc-text color="..."/></mc-attributes>
+    | 'mc-class'               // came from <mc-class name="cta">
+    | 'component-default'      // built-in default for this component
+    | 'post-processor'         // injected by an output stage (e.g. inliner)
+  originalValue?: string       // class name or attr value before resolution
+  support?: PropertySupport    // caniemail data
+}
+
+interface PropertySupport {
+  supported: string[]          // client globs with full support
+  partial: string[]            // partial support
+  unsupported: string[]        // no support (would be stripped)
+}
+```
+
+This is what powers questions like "why is this padding 24px?" — answer: it was set by `<mc-attributes><mc-text padding="24px">`.
+
+## ExpressionResolution — every `{{var}}` that fired
+
+```ts
+interface ExpressionResolution {
+  expression: string           // 'user.name'
+  resolvedValue: unknown       // 'Alex'
+  dataPath: string[]           // ['user', 'name']
+  usedFallback: boolean        // true if `{{x || "fallback"}}` triggered
+}
+```
+
+Useful for tracing why a particular value rendered the way it did.
+
+## ConditionalInfo and LoopInfo
+
+Set when the entry came from a templating directive:
+
+```ts
+interface ConditionalInfo {
+  type: 'mc-if' | 'mc-else-if' | 'mc-else'
+  condition: string            // raw condition string from `condition=`
+  evaluatedTo: boolean         // outcome
+}
+
+interface LoopInfo {
+  collection: string           // collection path, e.g. 'cart.items'
+  iterationIndex: number       // 0-based
+  totalIterations: number
+  asName: string               // e.g. 'item'
+  itemValue: unknown           // the item being rendered in this iteration
+}
+```
+
+So a loop that produced 3 children gives 3 entries with `loop.iterationIndex` 0, 1, 2 and the same `loop.collection`.
+
+## Practical use cases
+
+### Debug a rendering bug in one client
+
+```ts
+const result = compile(source, { sourceMap: true })
+
+// Find every mc-button entry
+const buttons = result.sourceMap!.entries.filter(
+  (e) => e.sourceComponent === 'mc-button',
+)
+
+// Inspect each one's output
+for (const b of buttons) {
+  console.log(`${b.sourceComponent} at ${b.sourceLoc.startLine}:${b.sourceLoc.startCol}`)
+  console.log('  Output:', result.html!.slice(b.outputRange!.start, b.outputRange!.end))
+  console.log('  Styles:', b.styles.map((s) => `${s.property}=${s.value} (${s.origin})`))
+}
+```
+
+### Build a source-jump editor
+
+Use `outputLoc` and `sourceLoc` as the bidirectional bridge — click a line in the rendered HTML, look up the entry whose `outputLoc` covers that line, jump to its `sourceLoc` in the editor.
+
+### Style attribution UI
+
+Group `entry.styles` by `origin` to show "13 styles from attributes, 4 from `mc-attributes`, 8 from defaults." That's the data the playground's Output Explorer renders.
+
+## Performance
+
+Source maps add 5–15% to compile time. Disable in production hot paths; enable in dev / for tooling.
+
+## Serialised JSON
+
+`result.sourceMapJSON` is `JSON.stringify(result.sourceMap, null, 2)` — already serialised so you can write it next to the HTML output without re-stringifying.
+
+The CLI does this automatically with `--source-map`:
+
+```
+mailc build email.mc -o email.html --source-map
+# → email.html
+# → email.html.map.json
+```

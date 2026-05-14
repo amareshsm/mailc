@@ -1,0 +1,135 @@
+---
+title: Compatibility mode
+description: liberal vs strict — controls how the compiler handles partially-supported CSS.
+---
+
+mailc has two compatibility modes for handling CSS properties that don't render uniformly across email clients.
+
+## liberal (default)
+
+Inlines every CSS property that has **any** support in the target clients. Clients that don't support a property silently ignore it.
+
+- **Output**: Larger CSS surface, richer rendering in modern clients
+- **Warnings**: None for partial support — graceful degradation is intentional
+- **Use when**: Sending to consumer email (Gmail, Apple Mail, etc.) where progressive enhancement is acceptable
+
+```ts
+compile(source, { compatibilityMode: 'liberal' })
+// or
+compile(source) // liberal is the default
+```
+
+## strict
+
+Strips ENHANCE properties (those that work in modern clients but break in some older ones) and emits an `ENHANCE_PROPERTY_STRIPPED` warning per occurrence.
+
+- **Output**: Smaller CSS surface, identical rendering everywhere
+- **Warnings**: One warning per stripped property
+- **Use when**: B2B audiences with significant Outlook desktop usage; legal/compliance contexts where the email must look identical for everyone
+
+```ts
+compile(source, { compatibilityMode: 'strict' })
+```
+
+Both styling paths are subject to the same classifier — strict mode strips ENHANCE properties whether they came from a Tailwind class or a direct CSS-property attribute:
+
+```html
+<!-- Both stripped identically in strict mode -->
+<mc-column class="rounded-lg" />
+<mc-column border-radius="8px" />
+```
+
+## What strict mode does NOT cover
+
+Strict mode gates **CSS-property attributes** and **Tailwind classes**. It does **not** look inside `<mc-style>` blocks or `<mc-raw>` content. Both are deliberate escape hatches — by design, they pass through without classification.
+
+```html
+<!-- Strict mode WILL strip this and warn -->
+<mc-button box-shadow="0 4px 8px red">Click</mc-button>
+
+<!-- Strict mode does NOT strip this (passes through verbatim) -->
+<mc-style>.btn { box-shadow: 0 4px 8px red; }</mc-style>
+<mc-button class="btn">Click</mc-button>
+
+<!-- Same — mc-raw is also a passthrough -->
+<mc-raw><style>.btn { box-shadow: 0 4px 8px red; }</style></mc-raw>
+```
+
+This is the right design — `<mc-style>` exists so you can write CSS that mailc's structured API doesn't cover (media queries, pseudo-classes, custom selectors, dark-mode rules, etc.). Gating it would defeat the purpose.
+
+**What this means in practice:**
+
+- If you're using strict mode for **graceful-degradation discipline** (most users), the escape hatch is fine. You explicitly chose to write raw CSS, so you've already accepted responsibility for compatibility.
+- If you're using strict mode as a **strict CI gate** to catch any ENHANCE property anywhere, the gate has a hole. A teammate could put `box-shadow` inside `<mc-style>` and CI wouldn't flag it. You'd need a separate lint step on `<mc-style>` content for full coverage.
+
+## Honest limitations
+
+- The output-byte difference between liberal and strict is typically small (3–250 bytes per template in our benchmarks). Strict's value is the **`ENHANCE_PROPERTY_STRIPPED` warnings** it emits — those tell you *where* compatibility risks live in your template, not how many bytes you saved.
+- For most consumer email, liberal is the right default. Strict is for B2B/regulated audiences or QA workflows that need every compatibility risk surfaced as a warning.
+
+## Property classification
+
+Every CSS property gets one of four classifications based on the configured `targetClients`:
+
+| Classification | Behaviour |
+|---|---|
+| **SAFE** | Supported by every target client. Always inlined |
+| **ENHANCE** | Partial support (e.g. `border-radius`, `box-shadow`, `opacity`). Inlined in `liberal`, stripped in `strict` (with `ENHANCE_PROPERTY_STRIPPED` warning) |
+| **BREAKING** | Causes layout bugs (e.g. `display: flex`, `position: absolute`). Stripped in **both** modes with `BREAKING_CSS` warning |
+| **NO_EFFECT** | Has no effect in email clients (e.g. `transition`, `animation`). Stripped in **both** modes with `NO_EFFECT_CSS` warning |
+
+Classification is **dynamic** — it's computed from caniemail data against your `targetClients`. Adding or removing a client can shift a property between SAFE and ENHANCE.
+
+### How the classification is computed
+
+For each compile, mailc:
+
+1. Probes a known set of CSS properties against the caniemail database, restricted to the configured `targetClients`.
+2. Properties that caniemail returns **errors** for in the configured set → flagged for downgrade.
+3. Properties that caniemail returns **warnings** for → also flagged for downgrade.
+4. The downgrade is applied only to properties in mailc's `ENHANCE_PROPERTIES` set (e.g. `border-radius`, `box-shadow`, `opacity`). Layout-critical properties stay in their hardcoded buckets regardless.
+5. Hardcoded overrides apply last:
+   - **`ALWAYS_BREAKING`** — `flex`, `grid-*`, `align-items`, `justify-content`, `position`, `top/right/bottom/left`, `float`, `clear`, `z-index`, `overflow`. These are STRIP no matter what.
+   - **`ALWAYS_NO_EFFECT`** — `transition`, `animation`, `transform`, `cursor`, `outline`, `pointer-events`, `user-select`. Removed quietly (no warning) — they don't break, they just don't do anything in email.
+   - **`margin-top` / `margin-bottom`** — always SAFE, even if caniemail flags edge cases.
+
+### How target clients shift classification
+
+A representative example: how three properties classify across three different target sets.
+
+| Property | DEFAULT_CLIENTS | + `outlook.windows.*` | Mobile-only (`gmail.android`, `apple-mail.ios`) |
+|---|---|---|---|
+| `padding` | SAFE | SAFE | SAFE |
+| `border-radius` | ENHANCE | ENHANCE | **SAFE** |
+| `box-shadow` | ENHANCE | ENHANCE | **SAFE** |
+| `display: flex` | BREAKING | BREAKING | BREAKING |
+| `transform` | NO_EFFECT | NO_EFFECT | NO_EFFECT |
+
+- **Adding Outlook desktop** narrows the SAFE set — properties Outlook 2016/2019 doesn't render get downgraded to ENHANCE (or stay there).
+- **Mobile-only targets** widen SAFE — modern mobile clients support `border-radius`, `box-shadow`, `opacity`, etc. natively, so they upgrade from ENHANCE to SAFE.
+- **BREAKING and NO_EFFECT properties stay stripped** regardless of the target set — they're in `ALWAYS_BREAKING` / `ALWAYS_NO_EFFECT` for structural reasons that no client choice changes.
+
+This isn't a static lookup table — it's recomputed per compile based on the resolved `targetClients`. If your audience analytics show 0% Outlook desktop traffic, dropping `outlook.windows.*` from `targetClients` actually changes which properties survive a `strict` build.
+
+## Examples of ENHANCE properties
+
+These work in Gmail, Apple Mail, modern Outlook web — but break in Outlook 2016/2019 desktop:
+
+- `box-shadow`
+- `border-radius`
+- `opacity`
+- `background-image`
+
+In `liberal` mode they're inlined. In `strict` mode they're stripped, with warnings like:
+
+```
+[warning] ENHANCE_PROPERTY_STRIPPED: "border-radius" is not supported by all target clients and has been stripped (compatibilityMode: 'strict'). Switch to compatibilityMode: 'liberal' to allow graceful degradation instead.
+```
+
+## CLI
+
+```bash
+mailc build src/ --compatibility-mode strict
+```
+
+Per-call mode wins over the config file's `compatibilityMode`.

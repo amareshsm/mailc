@@ -1,0 +1,56 @@
+---
+title: mc-group
+description: "Wraps mc-column children to keep them side-by-side on mobile (no auto-stacking)."
+---
+
+Wraps mc-column children to keep them side-by-side on mobile (no auto-stacking).
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `container` |
+| Allowed parents | `mc-section` |
+| Allowed children | `mc-column` |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<div>`, `<table>`, `<tr>`, `<td>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `bg-white` | Utility classes. |
+| `id` | `string` | — | `social-row` | Unique identifier. |
+| `width` | `css-value` | — | `100%` | Group width inside the section. Defaults to (100 / sibling count) %. |
+| `background-color` | `color` | — | `#ffffff` | Group background color. |
+| `direction` | `ltr` \| `rtl` | `ltr` | `ltr` | Child render order. |
+| `vertical-align` | `top` \| `middle` \| `bottom` | `top` | `top` | Vertical alignment of grouped columns. |
+
+
+## Compiles to
+
+Output elements: `<div>`, `<table>`, `<tr>`, `<td>`.
+
+Outer inline-block div forces children to stay horizontal on mobile; Outlook conditional table reproduces the row layout for MSO clients.
+
+## Example markup
+
+```html
+<mc-group></mc-group>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-group')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

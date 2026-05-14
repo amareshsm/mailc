@@ -1,0 +1,54 @@
+---
+title: mc-else-if
+description: "Else-if branch for an mc-if chain."
+---
+
+Else-if branch for an mc-if chain.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `logic` |
+| Allowed parents | _(none)_ |
+| Allowed children | _(none)_ |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to |  |
+
+## Required attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `condition` | `string` | — | `user.plan === "free"` | Template expression. |
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | — | Utility classes. |
+| `id` | `string` | — | — | Unique identifier. |
+
+
+## Compiles to
+
+Output elements: .
+
+Compile-time conditional — no HTML wrapper emitted.
+
+## Example markup
+
+```html
+<mc-else-if condition="user.plan === "free""></mc-else-if>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-else-if')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

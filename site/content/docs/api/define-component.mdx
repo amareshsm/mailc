@@ -1,0 +1,235 @@
+---
+title: defineComponent()
+description: Register a custom component (plugin) with the mailc compiler.
+---
+
+```ts
+function defineComponent(spec: DefineComponentSpec): void
+```
+
+Registers a custom `<my-component>` into the same registry as built-in `<mc-*>` components. After registration, the component appears in `introspect.all()`, the visual builder, and any tooling that queries the registry.
+
+## Signature
+
+```ts
+import { defineComponent } from 'mailc'
+
+defineComponent({
+  type: 'acme-card',
+  metadata: { /* full schema */ },
+  compile: (node, ctx) => '<table>...</table>',
+})
+```
+
+## DefineComponentSpec
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | `string` | Component tag name. Must contain a hyphen (HTML custom-element rule), must NOT start with `mc-` (reserved), must not collide with an already-registered type |
+| `metadata` | `ComponentMetadata` | Full structural metadata — same shape as built-in components |
+| `compile` | `(node: ASTNode, ctx: CompileContext) => string` | Compile function that emits HTML |
+
+## metadata shape
+
+| Field | Type | Description |
+|---|---|---|
+| `description` | `string` | One-line description shown in the schema and in tooling |
+| `category` | `'container' \| 'content' \| 'head' \| 'logic'` | Determines where it fits structurally |
+| `parent` | `string \| null` | Required parent type, or `null` if root |
+| `alternateParents` | `string[]` | Other types that may parent this component |
+| `allowedChildren` | `string[]` \| `'*'` | Whitelist of child types, or `'*'` for any |
+| `allowsTextContent` | `boolean` | Whether raw text is allowed as a child |
+| `acceptsClassAttribute` | `boolean` | Whether `class="..."` is supported |
+| `validClassCategories` | `CSSCategory[]` | Which Tailwind utility families are allowed |
+| `requiredAttributes` | `AttributeSpec[]` | Attrs that must be present |
+| `optionalAttributes` | `AttributeSpec[]` | Attrs that may be present |
+| `cssPropertyAttributes` | `AttributeSpec[]` | Subset of optional attrs that map to CSS properties |
+| `compilesTo` | `CompilesToSpec` | HTML elements this component produces and why |
+| `example` | `{ markup: string }` | Minimal valid example |
+| `commonMistakes` | `string[]` | Known pitfalls — surfaced in error messages |
+
+## AttributeSpec
+
+```ts
+interface AttributeSpec {
+  name: string
+  type: 'string' | 'number' | 'enum' | 'boolean' | 'color' | 'url' | 'css-value' | 'tailwind-classes'
+  required: boolean
+  description: string
+  example: string
+  default?: string
+  values?: string[]                  // for type: 'enum'
+  hasEmailCompatibilityNotes: boolean
+  isCssPropAttr?: boolean
+  classHint?: string                 // suggested Tailwind class equivalent
+}
+```
+
+## Example
+
+```ts
+import { defineComponent } from 'mailc'
+
+defineComponent({
+  type: 'acme-rating',
+  metadata: {
+    description: 'Star rating display, 1–5 stars.',
+    category: 'content',
+    parent: 'mc-column',
+    alternateParents: [],
+    allowedChildren: [],
+    allowsTextContent: false,
+    acceptsClassAttribute: true,
+    validClassCategories: ['typography', 'spacing'],
+    requiredAttributes: [
+      {
+        name: 'value',
+        type: 'number',
+        required: true,
+        description: 'Number of filled stars (1–5).',
+        example: '4',
+        hasEmailCompatibilityNotes: false,
+      },
+    ],
+    optionalAttributes: [],
+    cssPropertyAttributes: [],
+    compilesTo: {
+      outputElements: ['table', 'tr', 'td', 'span'],
+      reason: 'Inline-styled table for cross-client spacing.',
+      annotatedExample: { input: '<acme-rating value="4" />', output: '...' },
+    },
+    example: { markup: '<acme-rating value="4" />' },
+    commonMistakes: ['Passing value > 5 — clamped to 5 silently.'],
+  },
+  compile: (node) => {
+    const value = Math.min(5, Number(node.attributes.value ?? 0))
+    const filled = '★'.repeat(value)
+    const empty = '☆'.repeat(5 - value)
+    return `<span style="color:#fbbf24;font-size:18px">${filled}</span><span style="color:#d1d5db;font-size:18px">${empty}</span>`
+  },
+})
+```
+
+Now usable in templates:
+
+```html
+<mc-column>
+  <acme-rating value="4" />
+</mc-column>
+```
+
+## CompileContext
+
+The second argument to your `compile` function. It carries the resolved configuration, theme tokens, accumulated warnings, and the source-map collector. Read what you need; mutate `warnings` to surface issues to the caller.
+
+```ts
+interface CompileContext {
+  // ── Resolved config + theme ─────────────────────────────────────────
+  config: MailcConfig          // full resolved config (output, css, dark mode, ...)
+  theme: ResolvedTheme          // resolved theme tokens (colors, spacing, fontSize, ...)
+
+  // ── Active modes ────────────────────────────────────────────────────
+  templateStyle: 'attribute' | 'class'
+  compatibilityMode: 'liberal' | 'strict'
+  debug: boolean                // CompileOptions.debug
+  cleanSourceMap: boolean       // CompileOptions.sourceMap
+
+  // ── Layout context (set by the parent compiler) ─────────────────────
+  parentWidth: number           // px width of the parent element
+  columnCount: number           // siblings in the current section (for column auto-divide)
+
+  // ── Diagnostic accumulator ──────────────────────────────────────────
+  warnings: MCIssue[]           // push your own MCIssue here to surface to the caller
+
+  // ── mc-head defaults / class bundles ────────────────────────────────
+  attributeDefaults: Map<string, Record<string, string>>
+  // key: component type ('mc-all', 'mc-text', 'acme-rating', ...)
+  // value: attr → value map. Merged below explicit attrs and class-derived styles.
+
+  namedClasses: Map<string, Record<string, string>>
+  // key: name from <mc-class name="X">
+  // value: resolved attribute bundle (with `extends` chains merged)
+
+  // ── Pre-built CSS classification (when targetClients-aware) ─────────
+  classificationMap?: ClassificationMap
+
+  // ── Per-document state ──────────────────────────────────────────────
+  responsiveClasses: string[]   // accumulated `sm:*` classes for media query gen
+  inlineStyleRules: { selector: string; declarations: Record<string, string> }[]
+  title: string                 // pulled from <mc-title>
+  counters: CompileCounters     // shared mutable counters
+
+  // ── Source map collector ────────────────────────────────────────────
+  sourceMap: ISourceMapCollector
+}
+```
+
+### Things you'll typically read
+
+- `ctx.theme` — for resolving theme tokens like `theme.colors.brand`
+- `ctx.config.targetClients` — to make caniemail-aware decisions
+- `ctx.compatibilityMode` — to decide whether to emit ENHANCE properties
+- `ctx.parentWidth` and `ctx.columnCount` — for layout math (column-width auto-divide, hero VML dimensions)
+
+### Things you might write to
+
+- `ctx.warnings` — push `MCIssue` objects here to surface issues. They flow into `result.warnings`.
+- `ctx.sourceMap` — call `ctx.sourceMap.addStyle(id, …)` etc. only if you're tracking provenance for visual builders. Most plugins don't need this.
+
+### Things to leave alone
+
+- `ctx.counters`, `ctx.attributeDefaults`, `ctx.namedClasses`, `ctx.classificationMap` — these are managed by the compiler. Reading is fine; mutating breaks invariants in unpredictable ways.
+
+### Minimal plugin example using context
+
+```ts
+defineComponent({
+  type: 'acme-callout',
+  metadata: { /* … */ },
+  compile: (node, ctx) => {
+    // Read theme color
+    const accent = ctx.theme.colors?.accent ?? '#4f46e5'
+
+    // Surface a warning to the caller
+    if (ctx.compatibilityMode === 'strict' && node.attributes['shadow']) {
+      ctx.warnings.push({
+        code: 'PLUGIN_CSS_COMPATIBILITY',
+        severity: 'warning',
+        message: '<acme-callout shadow=""> is stripped in strict mode',
+      })
+    }
+
+    return `<table style="background:${accent};color:#fff;padding:16px">
+      <tr><td>${getTextContent(node)}</td></tr>
+    </table>`
+  },
+})
+```
+
+## Registration timing
+
+`defineComponent()` must be called **before** any `compile()` call.
+
+After the first `compile()` runs, the registry locks. Calling `defineComponent()` afterwards throws:
+
+```
+Error: Cannot register 'acme-card' — registry was locked after first compile().
+       Register all plugins at startup.
+```
+
+This prevents subtle bugs where a template renders successfully in one request but fails in the next because a plugin was loaded mid-flight.
+
+## Helper functions
+
+```ts
+import { getRegisteredComponents, isComponentRegistered } from 'mailc'
+
+getRegisteredComponents()           // ['mc', 'mc-body', ..., 'acme-rating']
+isComponentRegistered('mc-button')  // true
+```
+
+Both exclude synthetic compiler-only types (those prefixed with `_`).
+
+## Trust model
+
+mailc trusts plugin output — the string returned by your `compile` function is spliced into the final HTML as-is. mailc does **not** re-validate plugin CSS against caniemail. Plugin authors are responsible for keeping their output email-safe.

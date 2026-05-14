@@ -1,0 +1,117 @@
+{
+  "brand": {
+    "name": "mailc",
+    "tagline": "Your design tokens. Your email. Zero config.",
+    "previewText": "See how mailc's theme config system turns your brand colors into pixel-perfect emails — automatically.",
+    "logoAlt": "mailc logo",
+    "logoUrl": "https://placehold.co/120x36/6d28d9/ffffff?text=mailc&font=raleway",
+    "siteUrl": "https://mailcraft.dev",
+    "company": "Mailcraft Labs",
+    "address": "Building the future of email, one compile at a time.",
+    "unsubscribeUrl": "https://mailcraft.dev/unsubscribe",
+    "privacyUrl": "https://mailcraft.dev/privacy"
+  },
+  "hero": {
+    "eyebrow": "✦ THEME CONFIG",
+    "headline": "Your brand tokens, compiled into every email.",
+    "subline": "Define your colors, typography, and spacing once in mailc.config.js — then use them as Tailwind classes across every template.",
+    "ctaLabel": "Read the theme docs →",
+    "ctaUrl": "https://mailcraft.dev/docs/theme",
+    "ctaSecondaryLabel": "View on GitHub",
+    "ctaSecondaryUrl": "https://github.com/mailcraft/mailc"
+  },
+  "configSnippet": {
+    "title": "One config. Every template.",
+    "description": "Add a <code>theme.extend</code> block to your <code>mailc.config.js</code>. Every key you define becomes a Tailwind-style class you can use directly in your markup.",
+    "code": "// mailc.config.js\nexport default {\n  theme: {\n    extend: {\n      colors: {\n        brand: {\n          DEFAULT: '#6d28d9',\n          light:   '#a78bfa',\n          dark:    '#4c1d95',\n        },\n        surface: '#18181b',\n        muted:   '#71717a',\n      },\n      fontFamily: {\n        display: \"'Helvetica Neue', Helvetica, Arial, sans-serif\",\n      },\n      borderRadius: {\n        card: '12px',\n      },\n    },\n  },\n};"
+  },
+  "tokens": [
+    {
+      "category": "Color",
+      "class": "bg-brand",
+      "value": "#6d28d9",
+      "swatch": "#6d28d9",
+      "usage": "Primary brand background"
+    },
+    {
+      "category": "Color",
+      "class": "text-brand-light",
+      "value": "#a78bfa",
+      "swatch": "#a78bfa",
+      "usage": "Accent text on dark surfaces"
+    },
+    {
+      "category": "Color",
+      "class": "bg-surface",
+      "value": "#18181b",
+      "swatch": "#18181b",
+      "usage": "Card and panel background"
+    },
+    {
+      "category": "Color",
+      "class": "text-muted",
+      "value": "#71717a",
+      "swatch": "#71717a",
+      "usage": "Secondary / supporting text"
+    }
+  ],
+  "features": [
+    {
+      "icon": "🎨",
+      "title": "Colors",
+      "description": "Flat keys, nested palettes, or both. <code>bg-brand</code>, <code>bg-brand-light</code>, <code>text-surface</code> — all resolved automatically."
+    },
+    {
+      "icon": "🔤",
+      "title": "Typography",
+      "description": "Custom font stacks via <code>fontFamily</code>. Applied globally with <code>mc-attributes</code> or per-component as a class."
+    },
+    {
+      "icon": "📐",
+      "title": "Spacing & Sizing",
+      "description": "Custom steps in your spacing scale. Use <code>p-card</code>, <code>gap-section</code> — any key you name."
+    },
+    {
+      "icon": "⬡",
+      "title": "Border Radius",
+      "description": "Name your corner sizes. <code>rounded-card</code> becomes <code>border-radius:12px</code> everywhere."
+    },
+    {
+      "icon": "🔒",
+      "title": "rem → px auto-conversion",
+      "description": "Paste Tailwind's default theme as-is. mailc converts every <code>rem</code> value to <code>px</code> at build time — email clients require it."
+    },
+    {
+      "icon": "♿",
+      "title": "Accessibility baked in",
+      "description": "Enable <code>accessibility.enabled</code> to get automatic <code>lang</code> attribute injection, missing-alt warnings, and WCAG contrast checks."
+    }
+  ],
+  "a11yChecks": [
+    {
+      "check": "lang attribute",
+      "status": "pass",
+      "note": "Auto-injected on <html> from accessibility.lang config"
+    },
+    {
+      "check": "Image alt text",
+      "status": "pass",
+      "note": "All images in this template carry descriptive alt attributes"
+    },
+    {
+      "check": "Color contrast",
+      "status": "pass",
+      "note": "Every text/background pair meets WCAG AA (4.5:1 minimum)"
+    },
+    {
+      "check": "Role=presentation on layout tables",
+      "status": "pass",
+      "note": "Compiler auto-adds role and aria-hidden to layout scaffolding"
+    }
+  ],
+  "showA11yBadge": true,
+  "meta": {
+    "year": "2026",
+    "version": "v0.1.0"
+  }
+}

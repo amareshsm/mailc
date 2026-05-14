@@ -1,0 +1,117 @@
+---
+title: Getting started
+description: Install mailc and compile your first email.
+---
+
+## Install
+
+<Tabs items={['npm', 'pnpm', 'yarn', 'bun']}>
+  <Tab value="npm">
+```bash
+npm install mailc
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm add mailc
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn add mailc
+```
+  </Tab>
+  <Tab value="bun">
+```bash
+bun add mailc
+```
+  </Tab>
+</Tabs>
+
+mailc ships ESM, CJS, browser, and CLI builds.
+
+## Scaffold a project
+
+```bash
+npx mailc init my-emails
+```
+
+Then enter the new directory:
+
+```bash
+cd my-emails
+```
+
+Creates a `mailc.config.ts`, an example `welcome.mc`, and a `package.json` with the `mailc` dependency.
+
+## Compile from the CLI
+
+```bash
+mailc build welcome.mc -o welcome.html
+```
+
+Or compile a directory:
+
+```bash
+mailc build src/ -o dist/
+```
+
+See [CLI reference](/docs/cli) for every command and flag.
+
+## Compile from code
+
+```ts
+import { compile } from 'mailc'
+import { readFileSync, writeFileSync } from 'node:fs'
+
+const source = readFileSync('welcome.mc', 'utf8')
+const result = compile(source)
+
+if (result.errors.length > 0) {
+  console.error(result.errors)
+  process.exit(1)
+}
+
+writeFileSync('welcome.html', result.html!)
+```
+
+See [API reference](/docs/api) for `compile()` options and the full result shape.
+
+## Output shape
+
+`compile(source)` returns **pretty-printed multi-line HTML by default** — readable, indented, easy to diff and inspect. Pass `config: { output: { minify: true } }` to get minified single-line HTML instead. Source maps are independent and work on either shape.
+
+```ts
+compile(source)                                               // pretty (default)
+compile(source, { config: { output: { minify: true } } })     // minified
+```
+
+See [OutputConfig](/docs/configuration#outputconfig) for details.
+
+## Hello world
+
+`welcome.mc`:
+
+```html
+<mc>
+  <mc-body>
+    <mc-section padding="48px 24px" align="center">
+      <mc-text size="3xl" weight="bold">Welcome to Acme</mc-text>
+      <mc-text color="muted" class="mt-3">
+        Your account is ready.
+      </mc-text>
+      <mc-button href="https://acme.co/start" class="mt-6">
+        Get started
+      </mc-button>
+    </mc-section>
+  </mc-body>
+</mc>
+```
+
+Run `mailc build welcome.mc -o welcome.html` and open the output in a browser to preview, or paste it into your email-sending pipeline.
+
+## Next steps
+
+- Look up the components used above in the [Components reference](/docs/components)
+- Configure target clients and compatibility mode in [Configuration](/docs/configuration)
+- Add data variables and loops with [templating](/docs/templating)

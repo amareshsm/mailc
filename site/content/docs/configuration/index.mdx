@@ -1,0 +1,103 @@
+---
+title: mailc.config.ts
+description: Project-wide configuration for the mailc compiler.
+---
+
+mailc reads `mailc.config.ts` (or `.js`, `.mjs`) from the project root. Every option is optional — defaults cover the common case.
+
+## Example
+
+```ts
+// mailc.config.ts
+import { defineConfig } from 'mailc'
+
+export default defineConfig({
+  width: 600,
+  targetClients: ['gmail.*', 'apple-mail.*', 'outlook.windows.*'],
+  compatibilityMode: 'liberal',
+  darkMode: { enabled: true, strategy: 'media-query' },
+  output: { minify: true },
+})
+```
+
+## Top-level options
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `width` | `number` | `600` | Email container width in pixels |
+| `targetClients` | `string[] \| 'default' \| undefined` | `undefined` | Which email clients to gate against. `undefined` = no caniemail-driven gating (ALWAYS_BREAKING / ALWAYS_NO_EFFECT rules still apply). `'default'` expands to the curated 5-client preset (Gmail, Apple Mail, Outlook, Yahoo, Samsung Android). Pass a custom `string[]` for fine control. See [Target clients](/docs/configuration/target-clients) |
+| `compatibilityMode` | `'liberal' \| 'strict'` | `'liberal'` | CSS compatibility mode. See [Compatibility mode](/docs/configuration/compatibility-mode) |
+| `css` | `CssConfig` | see below | CSS pipeline settings |
+| `responsive` | `ResponsiveConfig` | see below | Responsive design / media queries |
+| `darkMode` | `DarkModeConfig` | see below | Dark mode generation |
+| `accessibility` | `AccessibilityConfig` | see below | Accessibility checks |
+| `output` | `OutputConfig` | see below | HTML output formatting |
+| `templateEngine` | `TemplateEngineConfig` | see below | Template engine behaviour |
+| `styling` | `StylingConfig` | see below | Styling mode (attribute vs class). See [Modes](/docs/configuration/modes) |
+| `theme` | `UserThemeConfig` | defaults | Theme token overrides. See [Theme](/docs/configuration/theme) |
+
+## ResponsiveConfig
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `breakpoint` | `number` | `480` | Mobile breakpoint in pixels |
+
+## DarkModeConfig
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | `boolean` | `false` | Enable dark mode CSS generation |
+| `strategy` | `'media-query' \| 'class'` | `'media-query'` | How to scope dark styles. `media-query` uses `@media (prefers-color-scheme: dark)`; `class` uses `.dark-mode` |
+| `colorMapping` | `Record<string, string>` | `{}` | Explicit light → dark hex mapping (e.g. `{ "#ffffff": "#1a1a1a" }`) |
+
+## AccessibilityConfig
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | `boolean` | `false` | Inject ARIA landmarks and roles |
+| `warnMissingAlt` | `boolean` | `true` | Warn when an `<mc-image>` is missing `alt` |
+| `enforceAltText` | `boolean` | `false` | Promote missing `alt` from warning to error |
+| `checkContrast` | `boolean` | `true` | Validate WCAG AA 4.5:1 contrast ratio |
+
+## OutputConfig
+
+Controls the shape of the final HTML. One knob, two outcomes.
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `minify` | `boolean` | `false` | `false` (default) → pretty-printed multi-line HTML. `true` → minified single-line HTML |
+| `comments` | `boolean` | `false` | Keep non-Outlook comments. Outlook conditional comments are always preserved regardless |
+
+```ts
+// Default — pretty multi-line output
+compile(source)
+
+// Minified single-line output
+compile(source, { config: { output: { minify: true } } })
+```
+
+Source maps are orthogonal — `sourceMap: true` attaches a source-map structure to whichever shape (pretty or minified) `output.minify` produced. See [`compile()` options](/docs/configuration/compile-options).
+
+## TemplateEngineConfig
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `strictVariables` | `boolean` | `false` | Emit an `UNDEFINED_VARIABLE` error when a `{{var}}` path doesn't resolve and has no fallback. Useful in CI. |
+
+`{{var}}` output is always HTML-escaped. Use `{{{var}}}` for raw, pre-trusted HTML.
+
+## StylingConfig
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `templateStyle` | `'attribute' \| 'class'` | `'attribute'` | See [Modes](/docs/configuration/modes) |
+
+## Precedence
+
+When the same option is specified in multiple places, the highest-priority value wins:
+
+1. **Per-call options** — `compile(source, { compatibilityMode: 'strict' })`
+2. **Config file** — `mailc.config.ts`
+3. **Built-in defaults**
+
+CLI flags (`--compatibility-mode`, `--target`) feed into per-call options.

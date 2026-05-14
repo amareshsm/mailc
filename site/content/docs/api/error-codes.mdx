@@ -1,0 +1,173 @@
+---
+title: Error codes
+description: Every machine-readable code that can appear in result.errors / result.warnings, grouped by pipeline stage.
+---
+
+Every issue mailc reports comes with a stable, machine-readable `code`. You can match on these in CI, lint scripts, or builder tooling — codes never change without a major-version bump.
+
+```ts
+const result = compile(source)
+for (const issue of result.errors) {
+  if (issue.code === 'INVALID_NESTING') {
+    // ...
+  }
+}
+```
+
+Codes are grouped by the compile-pipeline stage that emits them. Same group = same kind of problem.
+
+## Tokenizer
+
+| Code | Severity |
+|---|---|
+| `UNCLOSED_TAG` | error |
+| `UNCLOSED_QUOTE` | error |
+| `UNCLOSED_EXPRESSION` | error |
+| `UNEXPECTED_CHARACTER` | error |
+
+## Parser
+
+| Code | Severity |
+|---|---|
+| `MISMATCHED_TAG` | error |
+| `UNEXPECTED_EOF` | error |
+| `UNEXPECTED_TOKEN` | error |
+| `UNEXPECTED_CLOSE_TAG` | error |
+
+## Validator
+
+| Code | Severity |
+|---|---|
+| `INVALID_NESTING` | error |
+| `MISSING_ATTRIBUTE` | error |
+| `UNKNOWN_COMPONENT` | error |
+| `UNKNOWN_ATTRIBUTE` | error |
+| `INVALID_LOGIC_ORDER` | error |
+| `HEAD_NOT_FIRST_CHILD` | error |
+| `INVALID_ATTRIBUTES_CHILD` | error |
+| `TABLE_INVALID_CHILD` | error |
+| `TABLE_MISSING_HEADERS` | error |
+| `TABLE_MISSING_SCOPE` | error |
+| `TABLE_INCONSISTENT_COLUMNS` | error |
+| `TABLE_COLSPAN_EXCEEDS_COLUMNS` | error |
+
+## Hero
+
+| Code | Severity |
+|---|---|
+| `HERO_INVALID_CHILD` | error |
+| `HERO_UNSAFE_URL` | error |
+| `HERO_INVALID_HEIGHT` | error |
+| `HERO_MISSING_FALLBACK_COLOR` | error |
+
+## Template Engine
+
+| Code | Severity |
+|---|---|
+| `UNDEFINED_VARIABLE` | warning |
+| `INVALID_OPERATOR` | error |
+| `INVALID_EXPRESSION` | error |
+| `LOOP_NOT_ARRAY` | error |
+| `VARIABLE_SHADOWING` | warning |
+
+## CSS Pipeline
+
+| Code | Severity |
+|---|---|
+| `UNKNOWN_CLASS` | warning |
+| `UNSUPPORTED_UTILITY` | warning |
+| `BREAKING_CSS` | error |
+| `NO_EFFECT_CSS` | warning |
+| `NO_DESKTOP_FALLBACK` | warning |
+| `INVALID_CSS_VALUE` | warning |
+| `IMPORTANT_NOT_SUPPORTED` | warning |
+
+## Component Compiler
+
+| Code | Severity |
+|---|---|
+| `EMPTY_DOCUMENT` | error |
+| `UNKNOWN_COMPONENT_TYPE` | error |
+| `INVALID_ATTRIBUTE_VALUE` | error |
+| `UNKNOWN_MC_CLASS` | error |
+| `PLUGIN_COMPILE_ERROR` | error |
+| `PLUGIN_CSS_COMPATIBILITY` | error |
+
+## Config
+
+| Code | Severity |
+|---|---|
+| `CONFIG_NOT_FOUND` | error |
+| `CONFIG_INVALID` | error |
+| `TAILWIND_CONFIG_ERROR` | error |
+
+## Styling Mode
+
+| Code | Severity |
+|---|---|
+| `CSS_ATTR_IN_CLASS_MODE` | error |
+
+## Compile Mode
+
+| Code | Severity |
+|---|---|
+| `ENHANCE_PROPERTY_STRIPPED` | warning |
+| `STRICT_MODE_MCSTYLE_BYPASS` | info |
+
+## Layout
+
+| Code | Severity |
+|---|---|
+| `GROUP_COLUMN_PX_WIDTH` | error |
+
+## Security
+
+| Code | Severity |
+|---|---|
+| `UNSAFE_URL` | error |
+
+## Accessibility
+
+| Code | Severity |
+|---|---|
+| `MISSING_ALT` | warning |
+| `MISSING_TITLE` | warning |
+| `LOW_CONTRAST` | warning |
+| `LINKED_IMAGE_EMPTY_ALT` | warning |
+
+## Email Budget
+
+| Code | Severity |
+|---|---|
+| `EMAIL_SIZE_LIMIT` | warning |
+
+## I/O
+
+| Code | Severity |
+|---|---|
+| `FILE_NOT_FOUND` | error |
+| `FILE_READ_ERROR` | error |
+| `FILE_WRITE_ERROR` | error |
+
+## Compiler safety
+
+| Code | Severity |
+|---|---|
+| `MAX_RECURSION_DEPTH` | error |
+| `JSON_PARSE_ERROR` | error |
+
+## Reading an issue
+
+Every entry in `result.errors` and `result.warnings` follows this shape:
+
+```ts
+interface MCIssue {
+  code: string                   // one of the values above
+  message: string                // human-readable detail
+  severity: 'error' | 'warning' | 'info'
+  loc?: { line: number; col: number; file?: string }
+  fix?: string                   // suggested fix when known
+}
+```
+
+For programmatic handling, switch on `code`. For surfacing to humans, `message` is already formatted.

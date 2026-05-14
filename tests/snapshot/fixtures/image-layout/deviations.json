@@ -1,0 +1,23 @@
+[
+  {
+    "description": "mailc places content directly in column td without per-component tr>td wrappers",
+    "status": "green",
+    "reason": "MJML wraps every component in tr>td with font-size:0px, padding, and word-break. mailc handles word-break at the column td level — less HTML, same rendering.",
+    "mjmlApproach": "<tr><td style='font-size:0px;padding:10px 25px;word-break:break-word'><div>content</div></td></tr>",
+    "mailcApproach": "Content markup directly in column td — no per-component wrapper"
+  },
+  {
+    "description": "mailc uses semantic <p> with margin:0 instead of MJML's <div> wrapper with injected font defaults",
+    "status": "green",
+    "reason": "MJML uses div because its own CSS reset breaks p elements. mailc uses p directly with margin:0 — semantically correct, less HTML.",
+    "mjmlApproach": "<div style='font-family:Ubuntu,...;font-size:13px'>text</div>",
+    "mailcApproach": "<p style='margin:0'>text</p> — semantically correct, no font defaults injected"
+  },
+  {
+    "description": "mailc uses fluid-width images with max-width instead of MJML's fixed-width img attributes",
+    "status": "green",
+    "reason": "MJML sets width/height attributes directly on img. mailc uses max-width:100% with width:100% for fluid images that scale down on mobile — better responsive behavior out of the box.",
+    "mjmlApproach": "<img width='600' height='auto' style='width:600px'> — fixed pixel width",
+    "mailcApproach": "<img style='max-width:100%;width:100%;height:auto'> — fluid, scales with container"
+  }
+]

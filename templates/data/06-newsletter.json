@@ -1,0 +1,77 @@
+{
+  "user": {
+    "firstName": "Amaresh",
+    "email": "amaresh@example.com",
+    "isPro": false
+  },
+  "showUpgradeBar": true,
+  "proArticleCount": "2",
+  "issue": {
+    "number": "42",
+    "date": "17 April 2026",
+    "headline": "The Email Compiler Renaissance",
+    "previewText": "How modern tooling is transforming email development in 2026"
+  },
+  "articles": [
+    {
+      "title": "Why Tailwind in Email is Finally Possible",
+      "summary": "A deep look at how compile-time CSS expansion solves the inlining problem that blocked Tailwind from email for years.",
+      "url": "https://mailcraft.dev/blog/tailwind-in-email",
+      "category": "Deep Dive",
+      "readTime": "6 min read",
+      "isFree": true,
+      "showFull": false,
+      "showTeaser": false
+    },
+    {
+      "title": "How Email Compilers Handle Outlook in 2026",
+      "summary": "A look at how modern email compilers approach Outlook's quirks — VML fallbacks, conditional comments, and the trade-offs each one makes.",
+      "url": "https://mailcraft.dev/blog/compiler-benchmark-2026",
+      "category": "Benchmark",
+      "readTime": "10 min read",
+      "isFree": false,
+      "showFull": false,
+      "showTeaser": true
+    },
+    {
+      "title": "The State of Dark Mode in Email",
+      "summary": "Coverage has crossed 60% in Gmail iOS. Here's what that means for how you should write dark mode CSS in 2026.",
+      "url": "https://mailcraft.dev/blog/dark-mode-2026",
+      "category": "Accessibility",
+      "readTime": "5 min read",
+      "isFree": true,
+      "showFull": false,
+      "showTeaser": false
+    },
+    {
+      "title": "Fluid Hybrid vs Fixed Width: Which Should You Use?",
+      "summary": "The definitive analysis of layout strategies across 18 email clients — with rendering comparisons and Lighthouse scores.",
+      "url": "https://mailcraft.dev/blog/fluid-hybrid-vs-fixed",
+      "category": "Layout",
+      "readTime": "12 min read",
+      "isFree": false,
+      "showFull": false,
+      "showTeaser": true
+    }
+  ],
+  "quickLinks": [
+    {
+      "label": "→ Can I Email adds 47 new CSS properties — caniemail.com",
+      "url": "https://caniemail.com/changelog"
+    },
+    {
+      "label": "→ Gmail now supports CSS Grid (limited) — Google Dev Docs",
+      "url": "https://developers.google.com/gmail/design/email-clients"
+    },
+    {
+      "label": "→ How Stripe's transactional emails are built — Stripe Engineering",
+      "url": "https://stripe.com/blog/email-infrastructure"
+    }
+  ],
+  "sponsor": {
+    "name": "Postmark — Reliable transactional email",
+    "copy": "Postmark delivers transactional emails at blazing speed with a 99.99% uptime SLA. Used by 90,000+ developers. Start free, no credit card needed.",
+    "url": "https://postmarkapp.com/?ref=mailcraft-weekly",
+    "cta": "Try Postmark free →"
+  }
+}

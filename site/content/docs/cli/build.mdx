@@ -1,0 +1,98 @@
+---
+title: mailc build
+description: Compile .mc or .json into email-safe HTML.
+---
+
+```bash
+mailc build <input> [options]
+```
+
+Compiles a single file, a directory, or a glob pattern into HTML.
+
+## Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `<input>` | yes | Path to a `.mc` / `.json` file, a directory, or a glob (e.g. `'src/**/*.mc'`) |
+
+## Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `-o, --output <path>` | string | stdout / mirror tree | Output file when input is a single file; output directory when input is a directory or glob |
+| `-d, --data <path>` | string | — | Path to a JSON file used as `options.data` for templating |
+| `-c, --config <path>` | string | auto-discovered | Path to a `mailc.config.{ts,js,mjs}` file |
+| `-v, --verbose` | bool | false | Print INFO-level messages and per-file compile stats |
+| `--fail-on-warnings` | bool | false | Exit code `1` if any warnings are emitted |
+| `-m, --minify` | bool | false | Minify the HTML output |
+| `-t, --target <clients>` | string | from config | `'default'` for the curated 5-client preset, or a comma-separated glob list (e.g. `'gmail.*,outlook.windows.*'`). Omit for no client-specific gating. |
+| `--compatibility-mode <mode>` | `'liberal' \| 'strict'` | `'liberal'` | Override the project's `compatibilityMode` |
+| `--debug` | bool | false | Inject `<!-- mc:source -->` comments into HTML and emit a `.map.json` next to each output file |
+| `--source-map` | bool | false | Inject `data-mc-id` attributes on component roots and emit a `.map.json` next to each output file |
+
+## Examples
+
+### Single file
+
+```bash
+mailc build welcome.mc -o welcome.html
+```
+
+### Directory
+
+```bash
+mailc build src/emails -o dist/
+```
+
+Mirrors the directory tree — `src/emails/foo/bar.mc` → `dist/foo/bar.html`.
+
+### Glob
+
+```bash
+mailc build 'src/**/*.mc' -o dist/
+```
+
+### With template data
+
+```bash
+mailc build welcome.mc -d data/welcome.json -o welcome.html
+```
+
+`data/welcome.json` becomes `options.data` for variable resolution, conditionals, and loops.
+
+### Strict mode for B2B / Outlook-heavy audiences
+
+```bash
+mailc build welcome.mc \
+  --compatibility-mode strict \
+  --target 'outlook.windows.*,gmail.*' \
+  -o welcome.html
+```
+
+### CI pipeline
+
+```bash
+mailc build 'src/**/*.mc' --fail-on-warnings -o dist/
+```
+
+Exits non-zero on any warning — useful for blocking deploys on regressions.
+
+## Client gating modes
+
+`--target` controls how mailc gates CSS against email-client compatibility:
+
+```bash
+mailc build src/ -o dist/                                # no gating: ENHANCE → SAFE, inlined directly
+mailc build src/ --target default -o dist/               # curated 5-client preset (Gmail, Apple Mail, Outlook, Yahoo, Samsung Android)
+mailc build src/ --target gmail.web,outlook.web -o dist/ # exact custom client list
+```
+
+Hardcoded structural safety always applies — `display:flex`,
+`position:absolute`, `transition`, `transform`, etc. are stripped in every
+mode because they'd corrupt Outlook (or be dead bytes) in every email
+client. `--target` only controls how ENHANCE properties (`box-shadow`,
+`opacity`, `border-radius`, `background-image`) are handled.
+
+## Stdin / stdout
+
+Piping isn't supported. Pass a file path. For programmatic compilation, use the [`compile()` API](/docs/api#compile) instead.

@@ -1,0 +1,50 @@
+---
+title: mailc convert
+description: Convert between .mc and JSON formats.
+---
+
+```bash
+mailc convert <input> --to <format> [options]
+```
+
+Converts an existing template between mailc's two source formats — `.mc` markup and JSON.
+
+## Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `<input>` | yes | Path to the source file |
+
+## Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--to <format>` | `'json' \| 'mc'` | **required** | Target format |
+| `--from <format>` | `'mc' \| 'json'` | auto-detected from extension | Source format |
+| `-o, --output <path>` | string | stdout | Output file path |
+
+## Examples
+
+### Markup → JSON
+
+```bash
+mailc convert welcome.mc --to json -o welcome.json
+```
+
+JSON form is useful for visual builders, programmatic editing, and AST-level tooling.
+
+### JSON → Markup
+
+```bash
+mailc convert welcome.json --to mc -o welcome.mc
+```
+
+### Pipe to stdout
+
+```bash
+mailc convert welcome.mc --to json | jq '.children[0]'
+```
+
+## Notes
+
+- The conversion is lossless between `.mc` and JSON — round-tripping produces equivalent output.

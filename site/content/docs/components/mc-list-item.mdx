@@ -1,0 +1,58 @@
+---
+title: mc-list-item
+description: "Single list item inside mc-list. Accepts inline HTML."
+---
+
+Single list item inside mc-list. Accepts inline HTML.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `content` |
+| Allowed parents | `mc-list` |
+| Allowed children | _(none)_ |
+| Accepts text content | yes |
+| Accepts `class` attribute | yes |
+| Compiles to | `<li>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `text-gray-900` | Utility classes. |
+| `id` | `string` | — | `item-1` | Unique identifier. |
+| `color` | `color` | — | `#333333` | Text color. |
+| `background-color` | `color` | — | `#f5f5f5` | Item background color. |
+| `font-weight` | `normal` \| `bold` | — | `bold` | Font weight. |
+| `font-style` | `normal` \| `italic` | — | `italic` | Font style. |
+| `text-decoration` | `none` \| `underline` \| `line-through` | — | `none` | Text decoration. |
+| `padding` | `css-value` | — | `4px 0` | Padding around the item content. |
+
+
+## Compiles to
+
+Output elements: `<li>`.
+
+Semantic `<li>` tag; inline styles inherit from mc-list when not overridden.
+
+## Example markup
+
+```html
+<mc-list-item>Single list item inside mc-list</mc-list-item>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-list-item')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

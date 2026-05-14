@@ -1,0 +1,27 @@
+<mjml>
+  <mj-head>
+    <mj-preview>Reset your password</mj-preview>
+  </mj-head>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-image src="https://example.com/logo.png" alt="Example Inc" width="150px" />
+        <mj-spacer height="24px" />
+        <mj-text font-size="22px" font-weight="bold" align="center">Password Reset</mj-text>
+        <mj-spacer height="16px" />
+        <mj-text>Hi there,</mj-text>
+        <mj-spacer height="8px" />
+        <mj-text>We received a request to reset your password. Click the button below to choose a new one.</mj-text>
+        <mj-spacer height="24px" />
+        <mj-button href="https://example.com/reset?token=abc123" background-color="#4A90D9" border-radius="4px">Reset Password</mj-button>
+        <mj-spacer height="24px" />
+        <mj-text font-size="13px" color="#666666">If you didn't request this, you can safely ignore this email. Your password won't be changed.</mj-text>
+        <mj-spacer height="16px" />
+        <mj-divider border-color="#dddddd" />
+        <mj-spacer height="16px" />
+        <mj-text font-size="12px" color="#999999" align="center">Example Inc, 123 Main Street, Anytown USA</mj-text>
+        <mj-text font-size="12px" color="#999999" align="center">You received this because you have an account at example.com</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

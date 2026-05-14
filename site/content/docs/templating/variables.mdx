@@ -1,0 +1,108 @@
+---
+title: Variables
+description: "Interpolation with {{var}} — dot paths, fallbacks, raw vs escaped output."
+---
+
+## Basic interpolation
+
+```html
+<mc-text>Hi {{user.firstName}},</mc-text>
+```
+
+```ts
+compile(source, { data: { user: { firstName: 'Alex' } } })
+// → <p>Hi Alex,</p>
+```
+
+Variables work in **text content** and **attribute values**:
+
+```html
+<mc-button href="{{cta.url}}">{{cta.label}}</mc-button>
+```
+
+## Dot paths
+
+Nested fields are accessed with `.`:
+
+```html
+{{order.shipping.address.city}}
+{{user.profile.firstName}}
+```
+
+Array indexing uses `[N]`:
+
+```html
+{{items[0].name}}
+{{order.lineItems[2].sku}}
+```
+
+## Fallbacks
+
+If a path resolves to `undefined` or `null`, you can supply a fallback with `||`:
+
+```html
+{{user.firstName || "there"}}
+{{order.discount.code || "NONE"}}
+{{user.avatar || "https://acme.co/default-avatar.png"}}
+```
+
+The fallback runs only when the resolved value is `undefined` or `null` — empty strings, `0`, and `false` use the actual value.
+
+## Escaped vs raw output
+
+By default, interpolation is **HTML-escaped**:
+
+```html
+<mc-text>{{message}}</mc-text>
+```
+
+```ts
+compile(source, { data: { message: '<script>alert(1)</script>' } })
+// → <p>&lt;script&gt;alert(1)&lt;/script&gt;</p>
+```
+
+For pre-trusted HTML, use the triple-brace form to bypass escaping:
+
+```html
+<mc-text>{{{markdown.renderedHtml}}}</mc-text>
+```
+
+Use `{{{...}}}` only for content you've already sanitised — anything user-supplied should stay in `{{...}}`.
+
+## Strict variables
+
+By default, missing values render as empty strings (or use the fallback):
+
+```html
+{{nonExistent}}
+```
+
+```ts
+compile(source, { data: {} })
+// → (empty string, no error)
+```
+
+Enable `strictVariables` in your config to error instead:
+
+```ts
+// mailc.config.ts
+export default defineConfig({
+  templateEngine: { strictVariables: true },
+})
+```
+
+```
+[error] UNDEFINED_VARIABLE at line 5: 'nonExistent' is not defined in template data
+```
+
+Use this in CI to catch typos and stale variables before they reach production.
+
+## Where variables can appear
+
+| Location | Supported |
+|---|---|
+| Text content | yes — `<mc-text>Hi {{user.firstName}}</mc-text>` |
+| Attribute values | yes — `<mc-button href="{{cta.url}}">` |
+| Class attribute | yes — `class="{{theme === 'dark' ? 'dark-bg' : 'light-bg'}}"` (use [conditionals](/docs/templating/conditionals) for branching) |
+| Tag names | no — `<mc-{{type}}>` is not supported |
+| Inside `<mc-style>` blocks | no — keep dynamic styles out of raw CSS |

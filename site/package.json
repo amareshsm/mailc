@@ -1,0 +1,42 @@
+{
+  "name": "@mailc/site",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --turbo",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "gen:components": "tsx scripts/gen-component-pages.ts",
+    "gen:error-codes": "tsx scripts/gen-error-codes-page.ts",
+    "gen:mcp-tools": "tsx scripts/gen-mcp-tools-page.ts",
+    "gen:all": "pnpm gen:components && pnpm gen:error-codes && pnpm gen:mcp-tools",
+    "postinstall": "fumadocs-mdx"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.10.2",
+    "fumadocs-core": "^15.8.5",
+    "fumadocs-mdx": "^12.0.3",
+    "fumadocs-ui": "^15.8.5",
+    "js-beautify": "^1.15.4",
+    "mailc": "workspace:*",
+    "next": "^15.5.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@tailwindcss/postcss": "^4.2.0",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "globals": "^17.6.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.59.2"
+  }
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "description": "mailc places content directly in column td without per-component tr>td wrappers",
+    "status": "green",
+    "reason": "MJML wraps every component in tr>td with font-size:0px, padding, and word-break. mailc handles word-break at the column td level — less HTML, same rendering.",
+    "mjmlApproach": "<tr><td style='font-size:0px;padding:10px 25px;word-break:break-word'><div>button</div></td></tr>",
+    "mailcApproach": "Button markup directly in column td — no per-component wrapper"
+  },
+  {
+    "description": "mailc uses VML v:roundrect for Outlook buttons instead of MJML's table+bgcolor approach",
+    "status": "green",
+    "reason": "MJML uses a table wrapper with bgcolor for Outlook background and mso-padding-alt. mailc uses VML v:roundrect giving pixel-perfect rounded buttons in Outlook — better rendering, less HTML.",
+    "mjmlApproach": "<table style='border-collapse:separate'><tr><td bgcolor='#414141' style='mso-padding-alt:10px 25px'><a>text</a></td></tr></table>",
+    "mailcApproach": "<!--[if mso]><v:roundrect fillcolor='#000'><center>text</center></v:roundrect><![endif]--><!--[if !mso]><!--><a>text</a><!--<![endif]-->"
+  },
+  {
+    "description": "mailc uses semantic <p> with margin:0 instead of MJML's <div> wrapper with injected font defaults",
+    "status": "green",
+    "reason": "MJML uses div because its own CSS reset breaks p elements. mailc uses p directly with margin:0 — semantically correct, less HTML.",
+    "mjmlApproach": "<div style='font-family:Ubuntu,...;font-size:13px'>text</div>",
+    "mailcApproach": "<p style='margin:0'>text</p> — semantically correct, no font defaults injected"
+  },
+  {
+    "description": "Text content extraction order differs due to title and preview text DOM placement",
+    "status": "neutral",
+    "reason": "Both compilers include the same visible text. Difference is DOM ordering — affects flat extraction only, not rendering.",
+    "mjmlApproach": "<title>text</title> in head, preview text with zero-width padding",
+    "mailcApproach": "<title>text</title> in head, preview text in hidden div — same content, different order"
+  },
+  {
+    "description": "MJML button td uses bgcolor HTML attr; mailc VML v:roundrect handles Outlook colors natively",
+    "status": "green",
+    "reason": "The bgcolor attr is exclusively on button <td> elements. mailc uses VML v:roundrect which provides pixel-perfect rounded corners AND background colors in Outlook — the superior approach.",
+    "mjmlApproach": "<td bgcolor='#414141' style='background:#414141'>button</td>",
+    "mailcApproach": "<!--[if mso]><v:roundrect fillcolor='#414141'><center>text</center></v:roundrect><![endif]--> — VML handles colors"
+  }
+]

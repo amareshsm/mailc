@@ -1,0 +1,126 @@
+{
+  "name": "mailc",
+  "version": "0.1.0",
+  "description": "A modern email markup compiler — attribute or Tailwind styling, email-safe, developer-first.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./introspect": {
+      "import": {
+        "types": "./dist/introspect.d.ts",
+        "default": "./dist/introspect.js"
+      },
+      "require": {
+        "types": "./dist/introspect.d.cts",
+        "default": "./dist/introspect.cjs"
+      }
+    },
+    "./browser": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/browser.js"
+    }
+  },
+  "browser": "./dist/browser.js",
+  "unpkg": "./dist/browser.global.js",
+  "jsdelivr": "./dist/browser.global.js",
+  "bin": {
+    "mailc": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "concurrently --names lib,site,playground --prefix-colors yellow,magenta,cyan \"pnpm dev:lib\" \"pnpm dev:site\" \"pnpm dev:playground\"",
+    "dev:lib": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "bench": "vitest bench",
+    "check:circular": "node scripts/check-circular.mjs",
+    "prepublishOnly": "pnpm build",
+    "templates": "tsx scripts/compile-templates.ts",
+    "templates:watch": "tsx scripts/compile-templates.ts --watch",
+    "dev:site": "cd site && pnpm dev",
+    "dev:playground": "cd playground && pnpm dev",
+    "dev:apps": "concurrently --names site,playground --prefix-colors magenta,cyan \"pnpm dev:site\" \"pnpm dev:playground\"",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mailc",
+    "html-email",
+    "caniemail-safe-email",
+    "email-compiler",
+    "responsive-email"
+  ],
+  "author": "amareshsm <amareshsm13@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amareshsm/mailc.git"
+  },
+  "homepage": "https://github.com/amareshsm/mailc#readme",
+  "bugs": {
+    "url": "https://github.com/amareshsm/mailc/issues"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/js-beautify": "^1.14.0",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "concurrently": "^9.2.1",
+    "domhandler": "^6.0.1",
+    "eslint": "^9.0.0",
+    "globals": "^17.6.0",
+    "htmlparser2": "^12.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "madge": "^8.0.0",
+    "mjml": "^4.18.0",
+    "mjml-browser": "^4.18.0",
+    "prettier": "^3.5.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "@types/picomatch": "^4.0.3",
+    "caniemail-tool": "file:../caniemail-toolkit",
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.0",
+    "picomatch": "^4.0.4"
+  },
+  "optionalDependencies": {
+    "js-beautify": "^1.14.9"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --max-warnings=94",
+      "bash -c 'npx tsc --noEmit'"
+    ],
+    "tests/**/*.ts": [
+      "eslint --max-warnings=94"
+    ]
+  }
+}

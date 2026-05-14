@@ -1,0 +1,93 @@
+---
+title: Templating overview
+description: Variables, conditionals, and loops — resolved at compile time so the output stays plain HTML.
+---
+
+mailc has built-in templating. Three primitives — interpolation, conditionals, loops — all resolve at compile time when you pass `options.data` to [`compile()`](/docs/api/compile).
+
+## When templating runs
+
+Templating runs as **stage 3b** of the compiler — after parsing and structural validation, before CSS classification and HTML generation. The output of stage 3b is a deterministic AST with no `<mc-if>`, `<mc-for-each>`, or `{{...}}` left in it.
+
+If you don't pass `options.data`, stage 3b is skipped entirely. Sources containing template directives in that case will fail with `UNKNOWN_COMPONENT_TYPE` errors.
+
+## Quick example
+
+```html
+<mc>
+  <mc-body>
+    <mc-section>
+      <mc-column>
+        <mc-text>Hi {{user.firstName || "there"}},</mc-text>
+
+        <mc-if condition="cart.itemCount > 0">
+          <mc-text weight="bold">Your cart:</mc-text>
+          <mc-for-each collection="cart.items" as="item">
+            <mc-text>{{item.name}} — {{item.formattedPrice}}</mc-text>
+          </mc-for-each>
+        </mc-if>
+        <mc-else>
+          <mc-text color="muted">Your cart is empty.</mc-text>
+        </mc-else>
+      </mc-column>
+    </mc-section>
+  </mc-body>
+</mc>
+```
+
+```ts
+// Note: prices are formatted in the backend before passing in.
+// mailc deliberately doesn't ship currency / date / number formatters.
+compile(source, {
+  data: {
+    user: { firstName: 'Alex' },
+    cart: {
+      itemCount: 2,
+      items: [
+        { name: 'Studio Lamp', formattedPrice: '$49.00' },
+        { name: 'Walnut Desk', formattedPrice: '$299.00' },
+      ],
+    },
+  },
+})
+```
+
+## Sections
+
+| Page | Content |
+|---|---|
+| [Variables](/docs/templating/variables) | `{{var}}`, dot paths, fallbacks, raw vs escaped output, `strictVariables` |
+| [Conditionals](/docs/templating/conditionals) | `<mc-if>`, `<mc-else-if>`, `<mc-else>`, comparison operators, boolean logic |
+| [Loops](/docs/templating/loops) | `<mc-for-each>`, `<mc-each>`, loop metadata, nested loops, index aliasing |
+| [Formatters](/docs/templating/formatters) | Pipe-syntax escape hatch — used sparingly; default path is pre-formatting in your backend |
+
+## Design philosophy
+
+> **Backend does logic, we do rendering.**
+> Complex business logic belongs in the backend. mailc receives clean data and renders it.
+
+This is why formatters ship empty by default and why the expression language is intentionally minimal. If you find yourself reaching for ternaries, arithmetic, or function calls inside a template, the answer is almost always "compute that value upstream and pass it in as `options.data`."
+
+## What's not supported
+
+These are deliberately out of scope. Each row below has a recommended alternative:
+
+| Not supported | Why | Use instead |
+|---|---|---|
+| Function calls — `{{formatDate(d)}}` | Scope creep. Formatting belongs in the backend | Pre-format: `data: { formattedDate: 'May 6, 2026' }` |
+| Arithmetic — `{{price * qty}}` | Computation belongs in the backend | Pre-compute: `data: { lineTotal: '$29.99' }` |
+| Built-in filters — `{{name \| uppercase}}` | We don't ship formatters by design | Pre-format in backend, or pass a custom formatter via `options.formatters` |
+| String concatenation — `{{first + " " + last}}` | Not a string-manipulation language | Use adjacent expressions: `{{first}} {{last}}` |
+| Ternary operator — `{{a ? b : c}}` | Less readable than explicit branches | Use `<mc-if>` / `<mc-else>` |
+| Assignment — `{{x = 5}}` | Templates are read-only views of data | Compute in backend |
+| Partials / includes | Phase 2 — not needed for v1 | Duplicate, or generate `.mc` from JSON |
+| Async expressions | mailc is a compiler, not a server | Fetch in backend, pass resolved data to `compile()` |
+
+## Tooling around templating
+
+- [`mailc contract`](/docs/cli/contract) — extract a data contract from any template (required/optional fields, loop iterations)
+- [`introspect.dataContract(ast)`](/docs/api/introspect#introspect-datacontract) — same, programmatically — useful for code-gen of TypeScript types or runtime validation schemas
+
+## Using a different templating engine
+
+If you'd rather use Handlebars, Liquid, Nunjucks, or your own engine, render it to `.mc` markup first and pass the result to `compile()`. mailc takes the rendered string from there.

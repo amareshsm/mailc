@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch when a new push arrives.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Type-check — fastest gate, fails early before slower jobs start
+  # ---------------------------------------------------------------------------
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript strict check
+        run: pnpm typecheck
+
+  # ---------------------------------------------------------------------------
+  # 2. Lint — ESLint with zero warnings allowed
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint (zero warnings)
+        run: pnpm lint --max-warnings=0
+
+  # ---------------------------------------------------------------------------
+  # 3. Test matrix — Node 20 (LTS) and Node 22 (Current)
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test / Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+  # ---------------------------------------------------------------------------
+  # 4. Build — all 5 bundle formats must succeed (ESM, CJS, DTS, browser, IIFE)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all bundle formats
+        run: pnpm build
+
+      - name: Verify dist artifacts exist
+        run: |
+          for f in dist/index.js dist/index.cjs dist/index.d.ts \
+                   dist/browser.js dist/browser.global.js \
+                   dist/introspect.js dist/introspect.cjs; do
+            [ -f "$f" ] && echo "✓ $f" || (echo "✗ MISSING: $f" && exit 1)
+          done

@@ -1,0 +1,136 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/preset.css';
+
+@source '../node_modules/fumadocs-ui/dist/**/*.js';
+@source '../components/**/*.{ts,tsx}';
+@source '../app/**/*.{ts,tsx}';
+@source '../content/**/*.{md,mdx}';
+
+/* ── Fumadocs theme tokens — registered with Tailwind so it can build utilities
+   like `bg-fd-primary`, `border-fd-primary/50`, etc. The values here are the
+   *defaults* (light theme); .dark overrides below. ──────────────────────── */
+@theme {
+  /* mailc accent palette */
+  --color-fd-primary: #8b5cf6;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-ring: #8b5cf6;
+
+  /* Light surfaces */
+  --color-fd-background: #f7f7f9;
+  --color-fd-foreground: #0a0a0f;
+  --color-fd-muted: rgba(10, 10, 15, 0.05);
+  --color-fd-muted-foreground: rgba(10, 10, 15, 0.66);
+  --color-fd-popover: #ffffff;
+  --color-fd-popover-foreground: #0a0a0f;
+  --color-fd-card: #ffffff;
+  --color-fd-card-foreground: #0a0a0f;
+  --color-fd-border: rgba(10, 10, 15, 0.08);
+  --color-fd-secondary: rgba(255, 255, 255, 0.80);
+  --color-fd-secondary-foreground: #0a0a0f;
+  --color-fd-accent: rgba(255, 255, 255, 0.80);
+  --color-fd-accent-foreground: #0a0a0f;
+}
+
+/* Dark surfaces (default — playground defaults to dark too) */
+.dark {
+  --color-fd-primary: #a78bfa;
+  --color-fd-primary-foreground: #07070a;
+  --color-fd-ring: #a78bfa;
+
+  --color-fd-background: #07070a;
+  --color-fd-foreground: #f5f5f8;
+  --color-fd-muted: rgba(255, 255, 255, 0.05);
+  --color-fd-muted-foreground: rgba(245, 245, 248, 0.66);
+  --color-fd-popover: #0c0c12;
+  --color-fd-popover-foreground: #f5f5f8;
+  --color-fd-card: #0c0c12;
+  --color-fd-card-foreground: #f5f5f8;
+  --color-fd-border: rgba(255, 255, 255, 0.08);
+  --color-fd-secondary: rgba(255, 255, 255, 0.05);
+  --color-fd-secondary-foreground: #f5f5f8;
+  --color-fd-accent: rgba(255, 255, 255, 0.05);
+  --color-fd-accent-foreground: #f5f5f8;
+}
+
+/* ── mailc design tokens (mirrors playground/src/index.css) ─────────────── */
+:root {
+  --accent: #8b5cf6;
+  --accent-soft: #a78bfa;
+  --accent-glow: 139 92 246;
+  --accent-contrast: #ffffff;
+
+  --hue-violet: #5b21b6;
+  --hue-cyan: #0369a1;
+  --hue-mint: #0d7e6e;
+  --hue-peach: #c2410c;
+  --hue-rose: #be185d;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Light mode surfaces */
+  --bg: #f7f7f9;
+  --bg-raised: #ffffff;
+  --fg: #0a0a0f;
+  --fg-muted: rgba(10, 10, 15, 0.66);
+  --fg-dim: rgba(10, 10, 15, 0.44);
+  --fg-faint: rgba(10, 10, 15, 0.18);
+  --card-bg: #ffffff;
+
+  --surface-1: rgba(255, 255, 255, 0.65);
+  --surface-2: rgba(255, 255, 255, 0.80);
+  --surface-3: rgba(255, 255, 255, 0.92);
+  --border: rgba(10, 10, 15, 0.08);
+  --border-strong: rgba(10, 10, 15, 0.14);
+
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(10, 10, 15, 0.08);
+}
+
+.dark {
+  --hue-violet: #8a7cff;
+  --hue-cyan: #4fd6ff;
+  --hue-mint: #5ce0b3;
+  --hue-peach: #ff9d6e;
+  --hue-rose: #ff6b9d;
+
+  --bg: #07070a;
+  --bg-raised: #0c0c12;
+  --fg: #f5f5f8;
+  --fg-muted: rgba(245, 245, 248, 0.66);
+  --fg-dim: rgba(245, 245, 248, 0.42);
+  --fg-faint: rgba(245, 245, 248, 0.18);
+  --card-bg: #0c0c12;
+
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --glass-bg: rgba(18, 18, 26, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.10);
+}
+
+/* ── Body ──────────────────────────────────────────────────────────────── */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
+}
+
+/* ── Glass utilities (mirrors playground) ─────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+}
+
+/* ── Gradient text ─────────────────────────────────────────────────────── */
+.grad-text {
+  background: linear-gradient(135deg, var(--fg) 0%, var(--accent-soft) 55%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

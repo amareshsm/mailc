@@ -1,0 +1,44 @@
+---
+title: API overview
+description: Programmatic API exported by the mailc package.
+---
+
+```ts
+import { compile, compileFromJSON, introspect, defineComponent } from 'mailc'
+```
+
+| Export | Purpose |
+|---|---|
+| [`compile()`](/docs/api/compile) | Compile a `.mc` source string to email-safe HTML |
+| [`compileFromJSON()`](/docs/api/compile#compilefromjson) | Same, but takes a JSON AST instead of markup |
+| [`jsonToMarkup()` / `markupToJSON()`](/docs/api/json) | Convert between `.mc` markup and the JSON AST |
+| [`validateJSON()` / `validateDocument()` / `normalizeJSON()`](/docs/api/json) | Validate and normalize JSON templates |
+| [`checkCss()`](/docs/api/css-checking) | Check CSS declarations against email-client compatibility |
+| [`lintEmailHtml()`](/docs/api/lint) | Lint compiled email HTML for best practices |
+| [`introspect.*`](/docs/api/introspect) | Static-analysis API — component schemas, validation, data contracts |
+| [`defineComponent()`](/docs/api/define-component) | Register a custom component (plugin) |
+| [Low-level primitives](/docs/api/low-level) | `tokenize`, `parse`, `COMPONENT_COMPILERS`, `resolveTemplate` — escape hatches |
+
+## Reference tables
+
+| Page | What's there |
+|---|---|
+| [Source maps](/docs/api/source-maps) | Structure of `result.sourceMap` — every output element traced back to source |
+| [Error codes](/docs/api/error-codes) | Every machine-readable code that can appear in `result.errors` / `result.warnings` |
+| [MCP server](/docs/api/mcp-server) | Tools the `mailc-mcp` package exposes to AI agents (Claude Desktop, Cursor, …) |
+
+## Browser bundle
+
+```ts
+import { compile } from 'mailc/browser'
+```
+
+Same `compile()` signature, no Node-specific dependencies. Used by the playground to compile in the browser.
+
+## Subpath imports
+
+```ts
+import { introspect } from 'mailc/introspect'
+```
+
+The `mailc/introspect` subpath ships introspect-only — useful when you want the schema API without the compiler payload (e.g. visual builders, AI tooling).

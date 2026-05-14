@@ -1,0 +1,39 @@
+---
+title: CLI overview
+description: All mailc CLI commands at a glance.
+---
+
+The `mailc` binary is installed when you add `mailc` to your project. Run it via `npx mailc` or, after installing globally, just `mailc`.
+
+Show help:
+
+```bash
+mailc --help
+```
+
+Print the installed version:
+
+```bash
+mailc --version
+```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| [`mailc build`](/docs/cli/build) | Compile `.mc` or `.json` to email-safe HTML |
+| [`mailc watch`](/docs/cli/watch) | Watch a `.mc` file and recompile on change, with optional live-reload server |
+| [`mailc validate`](/docs/cli/validate) | Validate `.mc` / `.json` without compiling |
+| [`mailc init`](/docs/cli/init) | Scaffold a new mailc project |
+| [`mailc convert`](/docs/cli/convert) | Convert between `.mc`, JSON |
+| [`mailc contract`](/docs/cli/contract) | Extract a data contract from a template |
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Success |
+| `1` | Compilation/validation errors, or `--fail-on-warnings` triggered |
+| `2` | Configuration error (missing/invalid `mailc.config.*`) |
+
+Use these in shell scripts and CI pipelines to gate deploys.

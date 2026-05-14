@@ -1,0 +1,58 @@
+---
+title: mc-table
+description: "Data table with full Tailwind CSS processing on every cell, row, and section."
+---
+
+Data table with full Tailwind CSS processing on every cell, row, and section.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `content` |
+| Allowed parents | `mc-column` |
+| Allowed children | _(none)_ |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<table>`, `<thead>`, `<tbody>`, `<tfoot>`, `<tr>`, `<td>`, `<th>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `w-full text-sm` | Tailwind utility classes applied to the `<table>` element. |
+| `width` | `css-value` | `100%` | `100%` | Table width. Outputs both width HTML attr and CSS. |
+| `cellpadding` | `number` | `0` | `0` | HTML cellpadding attribute — required for Outlook. |
+| `cellspacing` | `number` | `0` | `0` | HTML cellspacing attribute — required for Outlook. |
+| `border` | `string` | — | `0` | HTML border attribute (e.g. "0"). |
+| `align` | `left` \| `center` \| `right` | — | `left` | Table horizontal alignment (HTML attr fallback). |
+| `role` | `string` | `table` | `table` | ARIA role. Defaults to "table". NEVER set to "presentation" — this is a data table. |
+| `style` | `string` | — | `border-collapse:collapse;` | Raw inline CSS merged with class-derived styles. |
+
+
+## Compiles to
+
+Output elements: `<table>`, `<thead>`, `<tbody>`, `<tfoot>`, `<tr>`, `<td>`, `<th>`.
+
+Semantic HTML table — NOT a layout table. role="table" is auto-injected. Tailwind classes on table/tr/td/th are all resolved to inline styles.
+
+## Example markup
+
+```html
+<mc-table></mc-table>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-table')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

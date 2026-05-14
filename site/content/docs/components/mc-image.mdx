@@ -1,0 +1,71 @@
+---
+title: mc-image
+description: "Email-safe image. Wrapped in a table for Outlook width constraints."
+---
+
+Email-safe image. Wrapped in a table for Outlook width constraints.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `content` |
+| Allowed parents | `mc-column`, `mc-hero` |
+| Allowed children | _(none)_ |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<table>`, `<td>`, `<img>` |
+
+## Required attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `src` | `url` | — | `https://example.com/image.png` | Image source URL. Must be absolute. |
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `rounded` | Utility classes. |
+| `id` | `string` | — | `hero-image` | Unique identifier. |
+| `alt` | `string` | — | `Product screenshot` | Alt text for screen readers and image-off rendering. |
+| `width` | `css-value` | — | `600px` | Image width in px. |
+| `height` | `css-value` | `auto` | `auto` | Image height. |
+| `href` | `url` | — | `https://example.com` | Makes the image a link. |
+| `title` | `string` | — | `Click to visit` | Tooltip title attribute. |
+| `border-radius` | `css-value` | — | `8px` | Rounded corners (ENHANCE). |
+| `box-shadow` | `css-value` | — | `0 4px 8px rgba(0,0,0,0.15)` | Drop shadow on the image (ENHANCE — Outlook ignores). Supports single shadow, multi-comma stacked shadows, rgba(), and inset. |
+| `opacity` | `css-value` | — | `0.85` | Image opacity 0–1 (ENHANCE — Outlook ignores). |
+| `border` | `css-value` | — | `1px solid #e5e7eb` | CSS border shorthand on the image wrapper td. |
+| `padding` | `css-value` | — | `8px` | Padding around the image. |
+| `padding-top` | `css-value` | — | `8px` | Top padding. |
+| `padding-right` | `css-value` | — | `8px` | Right padding. |
+| `padding-bottom` | `css-value` | — | `8px` | Bottom padding. |
+| `padding-left` | `css-value` | — | `8px` | Left padding. |
+| `align` | `left` \| `center` \| `right` | — | `center` | Horizontal alignment. |
+| `target` | `_self` \| `_blank` | — | `_blank` | Link target (when href is set). |
+| `rel` | `string` | — | `noopener noreferrer` | Link rel (when href is set). |
+
+
+## Compiles to
+
+Output elements: `<table>`, `<td>`, `<img>`.
+
+Table wrapper forces Outlook to respect max-width, which it ignores on `<img>` directly.
+
+## Example markup
+
+```html
+<mc-image src="https://example.com/image.png" />
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-image')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

@@ -1,0 +1,62 @@
+---
+title: mc-divider
+description: "Horizontal rule / divider line."
+---
+
+Horizontal rule / divider line.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `content` |
+| Allowed parents | `mc-column`, `mc-hero` |
+| Allowed children | _(none)_ |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<table>`, `<tr>`, `<td>`, `<p>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `border-gray-300` | Utility classes. |
+| `id` | `string` | — | `divider-1` | Unique identifier. |
+| `border-color` | `color` | `#e5e7eb` | `#e5e7eb` | Divider line color. |
+| `border-style` | `solid` \| `dashed` \| `dotted` | `solid` | `solid` | Border style. |
+| `border-width` | `css-value` | `1px` | `1px` | Divider thickness. |
+| `padding` | `css-value` | `16px 0` | `16px 0` | Vertical spacing shorthand around the divider. |
+| `padding-top` | `css-value` | — | `16px` | Top padding. |
+| `padding-right` | `css-value` | — | `0` | Right padding. |
+| `padding-bottom` | `css-value` | — | `16px` | Bottom padding. |
+| `padding-left` | `css-value` | — | `0` | Left padding. |
+| `width` | `css-value` | `100%` | `100%` | Divider width. |
+| `container-background-color` | `color` | — | `#ffffff` | Background of the divider container cell. |
+
+
+## Compiles to
+
+Output elements: `<table>`, `<tr>`, `<td>`, `<p>`.
+
+p with border-top is the most compatible divider pattern across email clients.
+
+## Example markup
+
+```html
+<mc-divider />
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-divider')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

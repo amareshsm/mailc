@@ -1,0 +1,5 @@
+{
+  "title": "Configuration",
+  "defaultOpen": true,
+  "pages": ["index", "compile-options", "compatibility-mode", "target-clients", "theme", "modes", "dark-mode", "accessibility"]
+}

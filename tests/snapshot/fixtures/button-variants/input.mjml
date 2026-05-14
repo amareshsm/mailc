@@ -1,0 +1,15 @@
+<mjml>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="18px" font-weight="bold" align="center">Button Showcase</mj-text>
+        <mj-spacer height="20px" />
+        <mj-button href="https://example.com/primary">Primary Button</mj-button>
+        <mj-spacer height="12px" />
+        <mj-button href="https://example.com/custom" background-color="#e74c3c" color="#ffffff" border-radius="8px" font-size="14px">Red Rounded</mj-button>
+        <mj-spacer height="12px" />
+        <mj-button href="https://example.com/large" background-color="#27ae60" font-size="20px" inner-padding="16px 48px">Large Green</mj-button>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

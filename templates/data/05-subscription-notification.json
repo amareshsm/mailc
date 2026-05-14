@@ -1,0 +1,21 @@
+{
+  "subscription": {
+    "planLabel": "Free",
+    "isPro": false,
+    "showUpgrade": true,
+    "billingCycle": "Monthly",
+    "renewalDate": "17 May 2026",
+    "isTrial": true,
+    "trialDaysLeft": "7",
+    "features": [
+      "Up to 3 email templates",
+      "100 emails/month",
+      "Basic components (text, button, image)",
+      "HTML export"
+    ],
+    "usage": {
+      "emailsSent": "47",
+      "templatesCreated": "3"
+    }
+  }
+}

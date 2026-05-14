@@ -1,0 +1,141 @@
+---
+title: Loops
+description: <mc-for-each>, <mc-each>, loop metadata, nested loops, index aliasing.
+---
+
+## Basic loop
+
+```html
+<mc-for-each collection="cart.items" as="item">
+  <mc-section>
+    <mc-column>
+      <mc-text>{{item.name}} — {{item.formattedPrice}}</mc-text>
+    </mc-column>
+  </mc-section>
+</mc-for-each>
+```
+
+```ts
+// Format upstream — mailc doesn't ship currency/date formatters.
+compile(source, {
+  data: {
+    cart: {
+      items: [
+        { name: 'Studio Lamp', formattedPrice: '$49.00' },
+        { name: 'Walnut Desk', formattedPrice: '$299.00' },
+      ],
+    },
+  },
+})
+```
+
+Resolves `collection` against `options.data`, expects an array, and renders the children once per item with the iteration variable bound under the `as` name.
+
+## Attributes
+
+| Attribute | Required | Description |
+|---|---|---|
+| `collection` | yes | Dot-path to an array in `options.data` |
+| `as` | yes | Name to bind each item under (e.g. `as="item"` → `{{item.name}}`) |
+| `index` | no | Optional alias for the zero-based index — useful inside nested loops |
+
+## mc-each shorthand
+
+`<mc-each>` is a sugar form using `items` instead of `collection`:
+
+```html
+<mc-each items="products" as="product">
+  <mc-text>{{product.name}}</mc-text>
+</mc-each>
+```
+
+Internally it's normalised to `<mc-for-each collection="products" as="product">` — same semantics, same metadata.
+
+## Loop metadata
+
+Every iteration injects four variables into scope:
+
+| Variable | Type | Description |
+|---|---|---|
+| `_index` | number | Zero-based index |
+| `_first` | boolean | `true` for the first item |
+| `_last` | boolean | `true` for the last item |
+| `_total` | number | Total count of items in the collection |
+
+Use them with [conditionals](/docs/templating/conditionals):
+
+```html
+<mc-for-each collection="cart.items" as="item">
+  <mc-section padding="{{_first ? '24px 24px 8px' : '8px 24px'}}">
+    <mc-column>
+      <mc-text>{{_index + 1}}. {{item.name}}</mc-text>
+      <mc-if condition="!_last">
+        <mc-divider class="mt-2" />
+      </mc-if>
+    </mc-column>
+  </mc-section>
+</mc-for-each>
+```
+
+Wait — that ternary inside the attribute won't work; `{{...}}` doesn't support ternaries. Real version:
+
+```html
+<mc-for-each collection="cart.items" as="item">
+  <mc-if condition="_first">
+    <mc-section padding="24px 24px 8px"><mc-column>
+      <mc-text>{{_index}}. {{item.name}}</mc-text>
+    </mc-column></mc-section>
+  </mc-if>
+  <mc-else>
+    <mc-section padding="8px 24px"><mc-column>
+      <mc-text>{{_index}}. {{item.name}}</mc-text>
+      <mc-if condition="!_last"><mc-divider /></mc-if>
+    </mc-column></mc-section>
+  </mc-else>
+</mc-for-each>
+```
+
+## Nested loops
+
+Inner loops shadow the outer loop's metadata. To preserve the outer index, alias it:
+
+```html
+<mc-for-each collection="orders" as="order" index="orderIndex">
+  <mc-section>
+    <mc-column>
+      <mc-text weight="bold">Order #{{orderIndex}}</mc-text>
+
+      <mc-for-each collection="order.items" as="item">
+        <mc-text>{{_index}}. {{item.name}}</mc-text>
+      </mc-for-each>
+    </mc-column>
+  </mc-section>
+</mc-for-each>
+```
+
+Without the `index="orderIndex"` alias, `{{_index}}` inside the inner loop would refer to the inner iteration. With the alias, `{{orderIndex}}` is preserved across the inner scope.
+
+The four built-in metadata variables (`_index`, `_first`, `_last`, `_total`) always refer to the **innermost** loop. Aliasing is the only way to keep the outer values visible inside.
+
+## Empty collections
+
+If `collection` resolves to:
+
+- An empty array → no iterations, no output
+- `undefined` or `null` → no iterations, no output
+- A non-array value → no iterations, no output
+
+There's no error — the loop just produces nothing. Validate the data shape upstream if you need to enforce that the collection exists.
+
+## Reserved names
+
+mailc rejects loop variables named `__proto__`, `constructor`, or `prototype` — these would shadow JavaScript prototype keys. Using one as `as` or `index` causes the loop to silently produce no output.
+
+```html
+<!-- Don't do this -->
+<mc-for-each collection="items" as="__proto__">...</mc-for-each>
+```
+
+## Performance
+
+Loops deep-clone their children once per iteration before resolving variables. Templates with thousands of iterations or deeply-nested loops compile in milliseconds, but very large collections (10k+ items) are better handled by chunking on the producer side and sending multiple emails.

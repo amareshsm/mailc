@@ -1,0 +1,18 @@
+<mjml>
+  <mj-body>
+    <mj-section>
+      <mj-column width="50%">
+        <mj-image src="https://example.com/photo.jpg" alt="Product photo" width="280px" />
+        <mj-spacer height="12px" />
+        <mj-text font-size="14px" align="center">Product showcase</mj-text>
+      </mj-column>
+      <mj-column width="50%">
+        <mj-text font-size="20px" font-weight="bold">Our Latest Product</mj-text>
+        <mj-spacer height="8px" />
+        <mj-text>Discover the features that make this product special. Built with quality and care.</mj-text>
+        <mj-spacer height="16px" />
+        <mj-button href="https://example.com/shop">Shop Now</mj-button>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

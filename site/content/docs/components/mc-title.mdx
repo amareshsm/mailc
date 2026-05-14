@@ -1,0 +1,52 @@
+---
+title: mc-title
+description: "Sets the <title> tag of the generated email HTML."
+---
+
+Sets the `<title>` tag of the generated email HTML.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `head` |
+| Allowed parents | `mc-head` |
+| Allowed children | _(none)_ |
+| Accepts text content | yes |
+| Accepts `class` attribute | yes |
+| Compiles to | `<title>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | — | Utility classes. |
+| `id` | `string` | — | `email-title` | Unique identifier. |
+
+
+## Compiles to
+
+Output elements: `<title>`.
+
+Content placed verbatim in `<title>`.
+
+## Example markup
+
+```html
+<mc-title>Sets the <title> tag of the generated email HTML</mc-title>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-title')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

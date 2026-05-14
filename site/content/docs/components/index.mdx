@@ -1,0 +1,66 @@
+---
+title: Components
+description: All 26 built-in <mc-*> components, grouped by category.
+---
+
+Every mailc template is a tree of `<mc-*>` components. Each one has a fixed schema — required attributes, allowed parents, allowed children, allowed CSS categories — enforced at compile time.
+
+The reference pages below are **auto-generated** from the live registry via [`introspect.all()`](/docs/api/introspect#introspect-all). Each page documents the component's source markup, attributes, and what HTML it compiles to.
+
+## Container
+
+Structural components that hold other components.
+
+| Component | Purpose |
+|---|---|
+| [`<mc>`](/docs/components/mc) | Document root. Every template has exactly one |
+| [`<mc-body>`](/docs/components/mc-body) | Email body. Direct child of `<mc>` |
+| [`<mc-section>`](/docs/components/mc-section) | Full-width horizontal row. Holds 1–4 `<mc-column>` |
+| [`<mc-column>`](/docs/components/mc-column) | Column inside `<mc-section>`. Stacks vertically on mobile |
+| [`<mc-hero>`](/docs/components/mc-hero) | Full-width banner with background-image support. CSS in modern clients, VML in Outlook |
+
+## Content
+
+The leaf elements that produce visible HTML.
+
+| Component | Purpose |
+|---|---|
+| [`<mc-text>`](/docs/components/mc-text) | Rich text block. Accepts inline HTML |
+| [`<mc-image>`](/docs/components/mc-image) | Email-safe image, wrapped in a table for Outlook |
+| [`<mc-button>`](/docs/components/mc-button) | Clickable button with automatic Outlook VML fallback |
+| [`<mc-divider>`](/docs/components/mc-divider) | Horizontal rule |
+| [`<mc-spacer>`](/docs/components/mc-spacer) | Vertical whitespace |
+| [`<mc-table>`](/docs/components/mc-table) | Data table with full Tailwind processing on every cell |
+| [`<mc-list>`](/docs/components/mc-list) | Ordered or unordered list. Holds `<mc-list-item>` |
+| [`<mc-list-item>`](/docs/components/mc-list-item) | Single list item |
+| [`<mc-raw>`](/docs/components/mc-raw) | Passthrough — content emitted as-is, no transformation |
+
+## Head
+
+Document-level metadata. Live inside `<mc-head>`.
+
+| Component | Purpose |
+|---|---|
+| [`<mc-head>`](/docs/components/mc-head) | Container for head metadata. Direct child of `<mc>` |
+| [`<mc-title>`](/docs/components/mc-title) | Sets the `<title>` of the generated HTML |
+| [`<mc-preview>`](/docs/components/mc-preview) | Preheader text shown in inbox preview. Hidden in the rendered email body |
+| [`<mc-style>`](/docs/components/mc-style) | Injects raw CSS into `<head>` |
+| [`<mc-attributes>`](/docs/components/mc-attributes) | Defines default attribute values for component types within scope |
+| [`<mc-all>`](/docs/components/mc-all) | Sets defaults for all components (used inside `<mc-attributes>`) |
+| [`<mc-class>`](/docs/components/mc-class) | Defines a named attribute bundle, applied via `class="name"` |
+
+## Logic
+
+Templating directives. Resolved at compile time when `options.data` is provided. See [Templating](/docs/templating) for the language reference.
+
+| Component | Purpose |
+|---|---|
+| [`<mc-if>`](/docs/components/mc-if) | Conditional block. Children render only when `condition` is truthy |
+| [`<mc-else-if>`](/docs/components/mc-else-if) | Else-if branch in an `<mc-if>` chain |
+| [`<mc-else>`](/docs/components/mc-else) | Else branch |
+| [`<mc-each>`](/docs/components/mc-each) | Loop over an array. Shorthand for `<mc-for-each>`. Uses `items=` and `as=` |
+| [`<mc-for-each>`](/docs/components/mc-for-each) | Loop. Uses `collection=` and `as=` |
+
+## How these pages stay in sync
+
+A small script (`pnpm gen:components`) reads `introspect.all()` and emits one MDX file per component. Re-run it whenever the registry changes — schema drift between code and docs is a single command away from being fixed.

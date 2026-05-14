@@ -1,0 +1,123 @@
+---
+title: Conditionals
+description: <mc-if>, <mc-else-if>, <mc-else> with full comparison and boolean operators.
+---
+
+## Basic if
+
+```html
+<mc-if condition="user.isPremium">
+  <mc-text>Welcome back, premium member.</mc-text>
+</mc-if>
+```
+
+`condition` is evaluated against `options.data`. If truthy, the children render. If falsy, the entire block is removed from the output AST.
+
+## if / else-if / else
+
+```html
+<mc-if condition="user.isPremium">
+  <mc-text>Premium member 🌟</mc-text>
+</mc-if>
+<mc-else-if condition="user.isTrial">
+  <mc-text>{{user.daysLeft}} days left in your trial</mc-text>
+</mc-else-if>
+<mc-else>
+  <mc-text>Thanks for signing up</mc-text>
+</mc-else>
+```
+
+`<mc-else-if>` and `<mc-else>` must be **immediate siblings** of the matching `<mc-if>`. The chain ends as soon as one branch matches.
+
+## Truthiness
+
+Standard JavaScript truthiness:
+
+| Value | Truthy? |
+|---|---|
+| `true` | yes |
+| Non-empty string | yes |
+| Non-zero number | yes |
+| Non-empty array | yes |
+| Non-empty object | yes |
+| `false`, `null`, `undefined`, `0`, `''`, `NaN`, `[]`, `{}` | **no** |
+
+Empty arrays and empty objects are falsy in mailc — useful for `<mc-if condition="cart.items">` style checks.
+
+## Comparison operators
+
+```html
+<mc-if condition="cart.itemCount > 0">...</mc-if>
+<mc-if condition="user.role === 'admin'">...</mc-if>
+<mc-if condition="order.total >= 100">...</mc-if>
+<mc-if condition="user.age < 18">...</mc-if>
+```
+
+Supported operators:
+
+| Operator | Meaning |
+|---|---|
+| `===` | Strict equality |
+| `!==` | Strict inequality |
+| `==` | Loose equality |
+| `!=` | Loose inequality |
+| `>` `>=` `<` `<=` | Numeric comparisons (both sides must be numbers) |
+
+Comparisons against literals — strings (`'admin'`, `"premium"`), numbers (`0`, `100`), and booleans (`true`, `false`) — work as expected.
+
+## Boolean logic
+
+Combine conditions with `&&`, `||`, `!`, and parens:
+
+```html
+<mc-if condition="user.isActive && order.total > 50">
+  <mc-text>You qualify for free shipping</mc-text>
+</mc-if>
+
+<mc-if condition="!user.unsubscribed">
+  <mc-text>You're subscribed to updates</mc-text>
+</mc-if>
+
+<mc-if condition="(user.isPremium || user.isTrial) && cart.items">
+  <mc-text>Your premium cart</mc-text>
+</mc-if>
+```
+
+Operator precedence follows JavaScript: `!` first, then comparison operators, then `&&`, then `||`. Use parens when in doubt.
+
+## Inside loops
+
+Conditionals work inside `<mc-for-each>` — common pattern is highlighting the first or last iteration:
+
+```html
+<mc-for-each collection="cart.items" as="item">
+  <mc-section>
+    <mc-column>
+      <mc-text>{{item.name}}</mc-text>
+      <mc-if condition="!_last">
+        <mc-divider />
+      </mc-if>
+    </mc-column>
+  </mc-section>
+</mc-for-each>
+```
+
+See [Loops](/docs/templating/loops) for the `_last`, `_first`, `_index`, `_total` metadata.
+
+## Errors
+
+Malformed conditions evaluate to `false` rather than throwing — the block is simply removed:
+
+```html
+<mc-if condition="this is not valid syntax">
+  <!-- never renders -->
+</mc-if>
+```
+
+This is intentional: a bad condition shouldn't fail an entire compile. Validate conditions in CI with [`mailc validate`](/docs/cli/validate) instead.
+
+## Limitations
+
+- No ternary inside `{{...}}`. Use `<mc-if>` for branching.
+- No string concatenation in conditions — pre-compute combined values in `options.data`.
+- No `typeof`, `instanceof`, regex, or arbitrary function calls. The condition language is intentionally minimal.

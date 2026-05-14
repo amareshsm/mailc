@@ -1,0 +1,73 @@
+---
+title: mailc validate
+description: Check .mc / .json files for errors without compiling.
+---
+
+```bash
+mailc validate <input> [options]
+```
+
+Runs the parser, validator, and structural checks against `<input>` and reports errors and warnings. Does not produce HTML — useful in CI as a pre-flight before `mailc build`.
+
+## Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `<input>` | yes | Path to a `.mc` / `.json` file or a directory |
+
+## Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `-c, --config <path>` | string | auto-discovered | Path to a config file |
+| `-f, --format <format>` | `'text' \| 'json'` | `'text'` | Output format. `text` for humans, `json` for tooling |
+| `-v, --verbose` | bool | false | Include INFO-level messages |
+
+## Examples
+
+### Single file
+
+```bash
+mailc validate welcome.mc
+```
+
+### Whole tree
+
+```bash
+mailc validate src/emails
+```
+
+### Machine-readable output
+
+```bash
+mailc validate src/emails --format json > report.json
+```
+
+JSON output shape:
+
+```json
+{
+  "files": [
+    {
+      "path": "src/emails/welcome.mc",
+      "errors": [
+        {
+          "code": "MISSING_REQUIRED_ATTRIBUTE",
+          "message": "<mc-button> requires a 'href' attribute",
+          "severity": "error",
+          "loc": { "line": 8, "col": 4 }
+        }
+      ],
+      "warnings": []
+    }
+  ]
+}
+```
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | All files valid |
+| `1` | One or more errors found |
+| `2` | Configuration error |

@@ -1,0 +1,69 @@
+---
+title: mc-column
+description: "A column inside mc-section. Stacks vertically on mobile (or stays side-by-side when wrapped in mc-group)."
+---
+
+A column inside mc-section. Stacks vertically on mobile (or stays side-by-side when wrapped in mc-group).
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `container` |
+| Allowed parents | `mc-section`, `mc-group` |
+| Allowed children | `mc-button`, `mc-divider`, `mc-image`, `mc-list`, `mc-raw`, `mc-spacer`, `mc-table`, `mc-text` |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<td>`, `<div>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `w-1/2` | Utility classes. |
+| `id` | `string` | — | `main-col` | Unique identifier. |
+| `width` | `css-value` | — | `300px` | Column width. |
+| `vertical-align` | `top` \| `middle` \| `bottom` | `top` | `top` | Vertical alignment of column content. |
+| `background-color` | `color` | — | `#ffffff` | Column background color. |
+| `padding` | `css-value` | `0` | `16px` | Inner padding shorthand. |
+| `padding-top` | `css-value` | — | `16px` | Top padding. |
+| `padding-right` | `css-value` | — | `16px` | Right padding. |
+| `padding-bottom` | `css-value` | — | `16px` | Bottom padding. |
+| `padding-left` | `css-value` | — | `16px` | Left padding. |
+| `border` | `css-value` | — | `1px solid #e5e7eb` | CSS border shorthand. |
+| `border-top` | `css-value` | — | `2px solid #e5e7eb` | Top border. |
+| `border-right` | `css-value` | — | `1px solid #e5e7eb` | Right border. |
+| `border-bottom` | `css-value` | — | `2px solid #e5e7eb` | Bottom border. |
+| `border-left` | `css-value` | — | `4px solid #3b82f6` | Left border. |
+| `border-radius` | `css-value` | — | `8px` | Rounded corners (ENHANCE). |
+| `box-shadow` | `css-value` | — | `0 2px 8px rgba(0,0,0,0.08)` | Drop shadow on the column (ENHANCE — Outlook ignores). Supports single shadow, multi-comma stacked shadows, rgba(), and inset. |
+| `opacity` | `css-value` | — | `0.9` | Column opacity 0–1 (ENHANCE — Outlook ignores). |
+| `inner-background-color` | `color` | — | `#f9f9f9` | Background color of the inner content area. |
+
+
+## Compiles to
+
+Output elements: `<td>`, `<div>`.
+
+td for Outlook fixed-width layout, div with display:inline-block for modern clients.
+
+## Example markup
+
+```html
+<mc-column></mc-column>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-column')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

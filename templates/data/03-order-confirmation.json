@@ -1,0 +1,26 @@
+{
+  "customer": {
+    "firstName": "Amaresh",
+    "lastName": "Kumar"
+  },
+  "order": {
+    "number": "ORD-20260417-8842",
+    "date": "17 April 2026",
+    "total": "$148.00",
+    "trackingUrl": "https://track.mailcraft.dev/ORD-20260417-8842",
+    "payment": {
+      "method": "Visa",
+      "last4": "4242"
+    },
+    "shipping": {
+      "address": {
+        "name": "Amaresh Kumar",
+        "line1": "42 Compiler Lane, Apt 7",
+        "city": "Bengaluru",
+        "state": "KA",
+        "zip": "560001",
+        "country": "India"
+      }
+    }
+  }
+}

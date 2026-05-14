@@ -1,0 +1,44 @@
+---
+title: mc
+description: "Document root. Every mailc template must have exactly one <mc> element."
+---
+
+Document root. Every mailc template must have exactly one `<mc>` element.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `container` |
+| Allowed parents | _(none)_ |
+| Allowed children | `mc-body`, `mc-head` |
+| Accepts text content | no |
+| Accepts `class` attribute | no |
+| Compiles to |  |
+
+## Required attributes
+
+_(none)_
+
+
+## Compiles to
+
+Output elements: .
+
+Transparent wrapper — delegates to mc-head + mc-body compilers. Produces no HTML output of its own.
+
+## Example markup
+
+```html
+<mc></mc>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

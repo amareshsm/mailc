@@ -1,0 +1,79 @@
+---
+title: CSS checking
+description: Check CSS declarations against email-client compatibility using caniemail data.
+---
+
+mailc ships a caniemail-aware checker that flags CSS properties unsupported (or partially supported) by your target email clients. It powers internal compile-time warnings and is also exposed as a public API for use in editors, linters, and CI pipelines.
+
+```ts
+import { checkCss } from 'mailc'
+```
+
+## checkCss()
+
+```ts
+function checkCss(css: string, clients?: string[]): CSSCheckResult
+```
+
+Convenience entry point. Accepts a raw CSS declarations string (the kind you'd write inside a `style="..."` attribute) and an optional list of target client globs. Returns a `CSSCheckResult` with any compatibility issues.
+
+```ts
+import { checkCss } from 'mailc'
+
+const result = checkCss(
+  'display: flex; gap: 16px; color: red',
+  ['gmail.*', 'outlook.*'],
+)
+
+if (!result.success) {
+  for (const issue of result.issues) {
+    console.warn(`${issue.property}: ${issue.message}`)
+  }
+}
+```
+
+`clients` defaults to `['*']` (all clients). Use globs from caniemail — for example `gmail.*`, `outlook.windows.*`, `apple-mail.*`.
+
+## CSSCheckResult
+
+```ts
+interface CSSCheckResult {
+  /** All compatibility issues found. */
+  issues: CSSCheckIssue[]
+  /** True if no errors were found (warnings are ok). */
+  success: boolean
+}
+
+interface CSSCheckIssue {
+  /** The CSS property that has an issue. */
+  property: string
+  /** Human-readable description of the issue. */
+  message: string
+  /** Email clients where the property is unsupported or partial. */
+  affectedClients: string[]
+  /** Whether this is a hard error or a partial-support warning. */
+  severity: 'error' | 'warning'
+}
+```
+
+## checkCss() vs checkCSS()
+
+Both are exported. They serve different layers:
+
+| API | Input | When to use |
+|---|---|---|
+| `checkCss(css: string, clients?: string[])` | Raw CSS string | You have a `style="..."` value, a small CSS snippet, or you want the simplest possible call site. **Default choice.** |
+| `checkCSS(props: CSSProperty[], clients: string[])` | Pre-parsed `CSSProperty` array | You already have parsed properties (e.g. inside the compiler) and want to skip re-parsing. Used internally; exposed for tooling that already has structured CSS. |
+
+The lowercase `checkCss()` is the headline API — it parses the string, calls `checkCSS()` under the hood, and returns the same result shape. Use it unless you have a specific reason to drop down a layer.
+
+## Caching
+
+`checkCSS()` memoizes results by `(css + clients)` key for fast re-checks. The convenience `checkCss()` clears this cache on every call to guarantee fresh results — fine for editor/CI use but not for hot loops. If you need raw throughput, parse once and call `checkCSS()` directly.
+
+## Severity model
+
+- `error` — the property is **unsupported** in at least one target client. The output may render incorrectly there.
+- `warning` — the property is **partially supported** (e.g. works but ignored on some clients, or works only with a `-webkit-` prefix).
+
+Issues with severity `error` flip `result.success` to `false`. Warnings do not.

@@ -1,0 +1,147 @@
+---
+title: Styling modes
+description: attribute (default) vs class — how you express styles on components.
+---
+
+mailc supports two styling modes, controlled by `templateStyle` (project-wide) or per `compile()` call.
+
+The two modes are mutually exclusive — each one allows exactly one styling mechanism and rejects the other with a hard compile error. This avoids ambiguity for both humans and AI agents generating templates.
+
+## attribute (default)
+
+CSS-property attributes go directly on components. The `class` attribute is rejected.
+
+```html
+<mc-text color="#0a0a0f" font-size="14px" padding="16px">
+  Hello
+</mc-text>
+```
+
+The compiler reads the attributes, classifies each one, and inlines them as styles.
+
+- **Pros**: Simple, immediate, no CSS knowledge required
+- **Cons**: Verbose for many styles; no responsive/dark-mode sugar
+
+```ts
+// mailc.config.ts
+export default defineConfig({
+  styling: { templateStyle: 'attribute' },  // default
+})
+```
+
+Writing `<mc-text class="...">` in attribute mode produces a `CLASS_ATTR_IN_ATTRIBUTE_MODE` error. Either drop the `class=` and use attributes, or switch the whole template to `class` mode.
+
+## class (limited support)
+
+Bans CSS-property attributes; expects Tailwind-style utility classes:
+
+```html
+<mc-text class="text-zinc-900 text-sm p-4">
+  Hello
+</mc-text>
+```
+
+The compiler resolves utility classes against your [theme](/docs/configuration/theme), classifies the underlying properties, and inlines them.
+
+- **Pros**: Concise, responsive sugar (`sm:`), dark-mode sugar, theme-driven, reusable utility patterns
+- **Cons**: Limited utility coverage today (typography, layout, color, spacing, sizing). Not every Tailwind utility maps to email-safe CSS
+
+```ts
+export default defineConfig({
+  styling: { templateStyle: 'class' },
+})
+```
+
+Writing `<mc-text color="...">` in class mode produces a `CSS_ATTR_IN_CLASS_MODE` error pointing you to use `text-[#...]` instead.
+
+## Why the modes are strict
+
+Both gates exist for the same reason: one mode, one mechanism, no silent surprises. In particular, allowing `class=` in attribute mode would let users (or AI agents) reference rules defined inside `<mc-style>` blocks — and `<mc-style>` content is not classified by the email-compatibility pipeline. That would create a quiet bypass of the classifier with no signal that the template had left the classified path. Forcing a single mechanism per mode keeps the contract clear: what you write is what gets classified.
+
+If you genuinely need the raw-CSS escape hatch (rare), `<mc-style>` is still available — but its use becomes a deliberate, visible choice rather than an indirect side-effect of `class=`.
+
+## Per-call override
+
+```ts
+compile(source, { templateStyle: 'class' })
+```
+
+## Mixed teams
+
+Many teams use `attribute` mode for hand-authored marketing emails (designers comfortable with HTML attributes) and `class` mode for componentised transactional emails (engineers comfortable with Tailwind). Two `mailc.config.ts` files, two build scripts.
+
+## Responsive utilities (class mode)
+
+```html
+<mc-section class="p-4 sm:p-8">
+  <!-- 16px elsewhere, 32px on mobile -->
+</mc-section>
+```
+
+Wait — that's actually backwards. Let's get the semantics right:
+
+- The **base** class (`p-4`) compiles to an inline style on the element. It applies everywhere by default.
+- The `sm:` class (`sm:p-8`) compiles to a CSS rule inside an `@media (max-width: <breakpoint>) { ... }` block, scoped under a generated class on the element.
+- When the viewport is **narrower** than the breakpoint, the media query activates, the `sm:` rule wins (with `!important`), and the mobile-specific value applies.
+
+So `class="p-4 sm:p-8"` means: 16px padding by default; 32px padding on mobile (up to 480px wide).
+
+### Generated output
+
+For input:
+
+```html
+<mc-section class="p-4 sm:p-8">
+  ...
+</mc-section>
+```
+
+mailc emits (relevant excerpt):
+
+```html
+<head>
+  <style>
+    @media only screen and (max-width: 480px) {
+      .sm-p-8 { padding: 32px !important; }
+    }
+  </style>
+</head>
+<table style="padding: 16px;" class="sm-p-8">
+  ...
+</table>
+```
+
+The base `p-4` ends up as an inline `style="padding: 16px"`. The `sm:p-8` becomes a media-scoped class that the table picks up. On a narrow viewport, the media query overrides the inline style.
+
+### Breakpoint
+
+Default is **480 px** — chosen to match the typical mobile email viewport (iPhone, Android Mail). Configure via:
+
+```ts
+responsive: {
+  enabled: true,
+  breakpoint: 480,   // or 600, 768 — match your design system
+}
+```
+
+The query is always `max-width:` (mobile-first inverse). Increasing the breakpoint widens the "mobile" range. Setting `enabled: false` disables `@media` block emission entirely; `sm:` classes silently no-op.
+
+### What's supported under `sm:`
+
+Any utility mailc supports under base classes (typography, spacing, sizing, color, background, border) works the same way under `sm:`. Properties classified as `STRIP` are still removed — `sm:flex` won't suddenly become safe just because it's behind a media query. In strict mode, `ENHANCE` properties are stripped from both base and `sm:` rules.
+
+### Single breakpoint only
+
+mailc only generates **one** breakpoint. There's no `md:`, `lg:`, `xl:` set. Email design rarely benefits from multi-breakpoint layouts — most clients render in a fixed-width container regardless of viewport — and the cost of carrying multiple `@media` blocks (CSS bloat, Outlook parsing edge cases, the Gmail clip budget) outweighs the design flexibility.
+
+## Dark-mode utilities (class mode)
+
+When `darkMode.enabled` is true:
+
+```html
+<mc-text class="text-zinc-900 dark:text-zinc-100">
+  Hello
+</mc-text>
+```
+
+Strategy `media-query` emits `@media (prefers-color-scheme: dark)`; strategy `class` emits `.dark-mode` selectors. See [DarkModeConfig](/docs/configuration#darkmodeconfig).

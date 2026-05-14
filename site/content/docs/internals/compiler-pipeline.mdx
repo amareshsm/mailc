@@ -1,0 +1,147 @@
+---
+title: Compiler pipeline
+description: How mailc transforms .mc markup into email-safe HTML — phase by phase.
+---
+
+mailc compiles `.mc` source in a single synchronous pass. Every stage runs in order;
+a fatal error in tokenize or parse short-circuits the pipeline and returns `null` HTML.
+Non-fatal stages push diagnostics into `result.errors` / `result.warnings` but never stop compilation.
+
+## Pipeline overview
+
+<CompilePhasesFlow />
+
+Drag to pan, scroll to zoom. The classifier branch (right) runs in parallel with stages 1–3 and feeds its output into Stage 4.
+
+## Stage-by-stage breakdown
+
+#### Stage 1 · Tokenize
+
+**Module**: `src/tokenizer/index.ts` · **Failure**: fatal
+
+Scans the source character by character into a flat typed token list (`TAG_OPEN`, `ATTR_NAME`, `ATTR_VALUE`, `TEXT`, `SELF_CLOSE`, …). No nesting at this stage.
+
+```ts
+tokenize('<mc><mc-body>Hello</mc-body></mc>')
+// → [ TAG_OPEN "mc", TAG_CLOSE, TAG_OPEN "mc-body", TEXT "Hello", … ]
+```
+
+#### Stage 2 · Parse
+
+**Module**: `src/parser/index.ts` · **Failure**: fatal
+
+Builds a tree of `ASTNode` objects from the token list, detecting unclosed tags and structural malformations. The root is a synthetic `"root"` node; its first child must be `<mc>`.
+
+#### CSS Classifier — parallel, feeds Stage 4
+
+**Module**: `src/css/classifier.ts` · **Skipped** when `targetClients` is omitted (the default)
+
+Probes a known set of CSS properties against the caniemail database, restricted to the configured `targetClients`. Produces a `ClassificationMap` (property → `SAFE | ENHANCE | BREAKING | NO_EFFECT`) reused by every component in Stage 4.
+
+When `targetClients` is omitted (the default), the caniemail-driven classification step is skipped and replaced by a passthrough map that marks ENHANCE properties as SAFE. Hardcoded `ALWAYS_BREAKING` / `ALWAYS_NO_EFFECT` rules still run, so structurally unsafe CSS (`display:flex`, `position:absolute`, `transition`, …) is stripped regardless. Users opt INTO client-specific gating by passing `targetClients: 'default'` (curated 5-client preset) or a custom `string[]`.
+
+See [Compatibility mode](/docs/configuration/compatibility-mode) for how this map drives strict vs liberal rendering.
+
+#### Stage 3 · Validate
+
+**Module**: `src/validator/index.ts` · **Failure**: partial
+
+Checks structural rules — required parents, required children, unknown component names, duplicate `id` attributes. Errors do **not** stop compilation; they set `result.partial = true` so callers can gate production sends on `result.errors.length`.
+
+#### Stage 3b · Template Resolution — only when `data` is provided
+
+**Module**: `src/template/index.ts`
+
+Walks the AST resolving `{{ variable }}` / `{{ variable | formatter }}`, evaluating `mc-if` / `mc-else` chains, and expanding `mc-for-each` loops. Skipped entirely when `options.data` is absent.
+
+With `config.templateEngine.strictVariables = true`, any unresolved path emits an `UNDEFINED_VARIABLE` error instead of rendering blank.
+
+#### Stage 4 · Compile
+
+**Module**: `src/compiler/index.ts` · **Core stage**
+
+Walks the AST top-down, dispatching each node to its registered component compiler. Per component:
+
+1. `getEffectiveAttributes()` — merge defaults with node attrs
+2. `stripClassModeAttributes()` — enforce `templateStyle` rules
+3. `filterAttributesByCompatibility()` — strip BREAKING / NO_EFFECT / ENHANCE (strict) attrs via the classification map
+4. `collectAndInline()` → `classifyProperties()` — same classifier for Tailwind classes
+5. Emit Outlook-conditional HTML where required
+
+Both styling paths (Tailwind class and direct CSS-property attribute) pass through the same classifier, so `class="rounded-lg"` and `border-radius="8px"` are treated identically in strict mode.
+
+#### Stage 5 · Assemble
+
+**Module**: `src/post-processor/assembler.ts`
+
+Wraps compiled fragments into a complete email document — injects the responsive `@media` stacking block, ENHANCE property fallback rules, and the `<head>` content from `mc-head`.
+
+#### Stage 5.5 · Inline Style Rules
+
+**Module**: `src/post-processor/inline-styles.ts`
+
+Applies `<mc-style inline="true">` rules by scanning the assembled HTML and writing matching properties directly onto element `style` attributes.
+
+#### Stage 5.55 · Dark Mode
+
+**Module**: `src/post-processor/dark-mode.ts`
+
+Injects `<meta name="color-scheme">` and a `@media (prefers-color-scheme: dark)` block with resolved dark-mode token overrides when dark mode is configured.
+
+#### Stage 5.6 · Accessibility
+
+**Module**: `src/post-processor/accessibility.ts`
+
+Enforces `alt` on `<img>`, adds `role="presentation"` to layout tables, propagates `lang` from `<mc>` to `<html>`.
+
+#### Stage 5.7 · Contrast Check
+
+**Module**: `src/post-processor/contrast-checker.ts`
+
+Scans foreground/background color pairs; emits `CONTRAST_RATIO_LOW` warnings for combinations failing WCAG AA (4.5:1 normal, 3:1 large text). Runs only when `config.accessibility.checkContrast = true`.
+
+#### Stage 6 · Optimize
+
+**Module**: `src/post-processor/optimizer.ts`
+
+Strips HTML comments (except Outlook conditionals), collapses inter-element whitespace, and minifies when `config.output.minify = true`.
+
+#### Stage 6.5 · Email Budget
+
+**Module**: `src/compiler/email-budget.ts`
+
+Compares final HTML byte length against the Gmail 102 KB clip threshold. Emits `GMAIL_CLIP_RISK` when within 10% of the limit.
+
+#### Stage 7 · Build result
+
+Assembles `CompileResult`:
+
+```ts
+{
+  html: string | null,   // null only on fatal tokenize/parse error
+  errors: MCIssue[],
+  warnings: MCIssue[],
+  info: MCIssue[],
+  partial: boolean,      // true when errors.length > 0
+  stats: CompileStats,
+}
+```
+
+## Error severity model
+
+| `partial` | `html` | Meaning |
+|---|---|---|
+| `false` | `string` | Clean compile — safe to send |
+| `true` | `string` | Best-effort output with validation errors — gate on `errors.length` |
+| `false` | `null` | Fatal tokenize/parse failure — nothing to send |
+
+Warnings and info entries are always non-blocking regardless of `partial`.
+
+## Source maps
+
+When `options.debug = true` or `options.sourceMap = true`, each component compiler records a mapping from its HTML output range back to the source `.mc` file and line.
+
+- **`debug: true`** — marker-based offsets (VS Code extension hover)
+- **`sourceMap: true`** — `data-mc-id` attribute offsets (analytics integrations)
+
+See [Source maps](/docs/api/source-maps) for the public API.

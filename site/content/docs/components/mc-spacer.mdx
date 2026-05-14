@@ -1,0 +1,59 @@
+---
+title: mc-spacer
+description: "Vertical whitespace block."
+---
+
+Vertical whitespace block.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `content` |
+| Allowed parents | `mc-column`, `mc-hero` |
+| Allowed children | _(none)_ |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<table>`, `<tr>`, `<td>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `h-8` | Utility classes. |
+| `id` | `string` | — | `spacer-1` | Unique identifier. |
+| `height` | `css-value` | `20px` | `32px` | Height of the spacer. |
+| `padding` | `css-value` | — | `0` | Padding (rarely needed on spacer). |
+| `padding-top` | `css-value` | — | `0` | Top padding. |
+| `padding-right` | `css-value` | — | `0` | Right padding. |
+| `padding-bottom` | `css-value` | — | `0` | Bottom padding. |
+| `padding-left` | `css-value` | — | `0` | Left padding. |
+| `container-background-color` | `color` | — | `#ffffff` | Background color of the spacer cell. |
+
+
+## Compiles to
+
+Output elements: `<table>`, `<tr>`, `<td>`.
+
+Empty table cell with explicit height — the only reliable spacer in Outlook.
+
+## Example markup
+
+```html
+<mc-spacer />
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-spacer')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

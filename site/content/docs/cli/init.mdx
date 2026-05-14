@@ -1,0 +1,88 @@
+---
+title: mailc init
+description: Scaffold a new mailc project.
+---
+
+```bash
+mailc init [directory] [options]
+```
+
+Creates a new mailc project with a `mailc.config.ts`, an example `.mc` template, and a starter `package.json`.
+
+## Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `[directory]` | no | Where to create the project. Defaults to the current working directory |
+
+## Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `-y, --yes` | bool | false | Skip interactive prompts and use defaults |
+
+## Examples
+
+### Interactive
+
+```bash
+mailc init my-emails
+```
+
+Prompts you for project name, target clients, compatibility mode.
+
+### Non-interactive
+
+```bash
+mailc init my-emails --yes
+```
+
+Useful in scripts and CI bootstrapping.
+
+## What gets generated
+
+```
+my-emails/
+├── mailc.config.ts        # project config
+├── src/
+│   └── welcome.mc         # example template
+├── package.json
+└── README.md
+```
+
+After `init`, enter the project:
+
+```bash
+cd my-emails
+```
+
+Install dependencies:
+
+<Tabs items={['npm', 'pnpm', 'yarn', 'bun']}>
+  <Tab value="npm">
+```bash
+npm install
+```
+  </Tab>
+  <Tab value="pnpm">
+```bash
+pnpm install
+```
+  </Tab>
+  <Tab value="yarn">
+```bash
+yarn
+```
+  </Tab>
+  <Tab value="bun">
+```bash
+bun install
+```
+  </Tab>
+</Tabs>
+
+Then run the example build:
+
+```bash
+npm run build
+```

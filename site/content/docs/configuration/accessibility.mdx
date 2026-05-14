@@ -1,0 +1,136 @@
+---
+title: Accessibility
+description: What accessibility.enabled actually does at compile time — alt-text checks, contrast validation, ARIA injection.
+---
+
+mailc has built-in accessibility checks that run as part of the compile pipeline. They're **opt-in** — `accessibility.enabled` is `false` by default.
+
+## Configuration
+
+```ts
+// mailc.config.ts
+export default defineConfig({
+  accessibility: {
+    enabled: true,           // master switch
+    warnMissingAlt: true,    // default — warn when <mc-image> has no alt
+    enforceAltText: false,   // promote alt warnings to errors
+    checkContrast: true,     // default — WCAG AA contrast validation
+  },
+})
+```
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `enabled` | `boolean` | `false` | Master switch. Without this `true`, none of the below run |
+| `warnMissingAlt` | `boolean` | `true` | Emit `MISSING_ALT` warning when `<mc-image>` has no `alt` |
+| `enforceAltText` | `boolean` | `false` | Promote `MISSING_ALT` from warning to error (blocks production builds) |
+| `checkContrast` | `boolean` | `true` | Run WCAG AA contrast validation on the compiled HTML |
+
+## Alt-text checks
+
+Run for every `<mc-image>` during component compilation.
+
+| Code | Severity (default) | Severity if `enforceAltText: true` | Trigger |
+|---|---|---|---|
+| `MISSING_ALT` | warning | error | `<mc-image>` has no `alt` attribute |
+| `LINKED_IMAGE_EMPTY_ALT` | info | info | Linked image with `alt=""` (functional image marked decorative) |
+
+`alt=""` on a non-linked image is **valid** — it explicitly marks the image as decorative for screen readers.
+
+```html
+<!-- Triggers MISSING_ALT -->
+<mc-image src="hero.png" />
+
+<!-- Clean — explicitly decorative -->
+<mc-image src="divider.png" alt="" />
+
+<!-- Clean — descriptive -->
+<mc-image src="hero.png" alt="Welcome banner showing the Acme team" />
+```
+
+## Contrast checking
+
+When `checkContrast: true`, mailc walks the compiled HTML, parses inline `color` and `background-color` styles, and checks every text element's contrast ratio against [WCAG AA](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html).
+
+### Thresholds
+
+| Ratio | Severity | Code | Meaning |
+|---|---|---|---|
+| `< 3:1` | **warning** | `LOW_CONTRAST` | Fails AA Large — genuinely inaccessible even for big bold text |
+| `3:1` to `< 4.5:1` | **info** | `LOW_CONTRAST` | Passes AA Large but fails AA Normal — acceptable only for headings (≥ 18pt or ≥ 14pt bold) |
+| `≥ 4.5:1` | — | — | Passes AA Normal. No issue emitted |
+
+### Example
+
+```html
+<mc-text color="#ffffff" style="background-color: #f0f0f0;">
+  Low contrast
+</mc-text>
+```
+
+Compiles cleanly but emits:
+
+```ts
+{
+  code: 'LOW_CONTRAST',
+  message: 'Low color contrast: #ffffff on #f0f0f0 (ratio 1.05:1, fails WCAG AA even for large text — needs 3:1).',
+  severity: 'warning',
+  loc: { line: 5, col: 1 },
+}
+```
+
+### Background discovery
+
+When the element doesn't have its own `background-color`, the checker walks **upward** through the rendered DOM to find the nearest ancestor with a background. That's where the contrast comparison happens — e.g. text inside a column inside a section that has `background-color: #fff` is compared against `#fff`.
+
+### What's skipped
+
+- Elements with `display: none`, `visibility: hidden`, or `opacity: 0` (invisible regardless)
+- Elements without a resolvable background (no ancestor sets one)
+- Outlook-conditional content (the checker strips MSO blocks before walking)
+
+## ARIA / role injection
+
+When `accessibility.enabled: true`, the post-processor adds:
+
+- `role="article"` on the root email body
+- `role="heading"` on `mc-title` output
+- `aria-label` on landmark containers (e.g. `mc-section` with `aria-label` attribute set)
+
+These are the bare minimum to make screen-reader navigation work. mailc deliberately stays conservative here — invasive ARIA injection causes more problems than it solves.
+
+## Reading issues from `result`
+
+```ts
+const result = compile(source, {
+  config: { accessibility: { enabled: true, enforceAltText: true } },
+})
+
+const altErrors = result.errors.filter((e) => e.code === 'MISSING_ALT')
+const contrastWarnings = result.warnings.filter((e) => e.code === 'LOW_CONTRAST')
+
+if (altErrors.length > 0) {
+  console.error('Block deploy: images missing alt text', altErrors)
+  process.exit(1)
+}
+
+if (contrastWarnings.length > 0) {
+  console.warn(`${contrastWarnings.length} contrast warnings — review before sending`)
+}
+```
+
+For all error and warning codes, see [Error codes](/docs/api/error-codes).
+
+## Recommended per-environment config
+
+| Environment | Recommended | Why |
+|---|---|---|
+| Local dev | `enabled: true, enforceAltText: false` | See contrast / alt issues without blocking iteration |
+| CI | `enabled: true, enforceAltText: true` | Hard-fail on missing alt — catches regressions before deploy |
+| Production runtime | `enabled: false` | Once your CI gates these, runtime checks are wasted compile time |
+
+## Limitations
+
+- **Contrast checking only sees inline styles**, not classes that resolve at runtime in the recipient's client (e.g. dark-mode overrides). Pair with [Dark mode](/docs/configuration/dark-mode) to cover both modes.
+- **Alt-text checking** doesn't validate quality (no detection of bad strings like "image" or "img.png" as alt text). Use a CMS-side check for that.
+- **Reading order / heading hierarchy** isn't validated. Tools like Litmus a11y or HTML accessibility scanners cover this layer.

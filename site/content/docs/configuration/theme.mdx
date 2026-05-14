@@ -1,0 +1,103 @@
+---
+title: Theme tokens
+description: Override or extend mailc's design tokens — colors, spacing, typography, etc.
+---
+
+mailc ships with a Tailwind-flavoured token system. You can extend any scale via `theme.extend` in `mailc.config.ts` or via the `theme` option on `compile()`.
+
+## Scales
+
+All twelve scales are extendable:
+
+| Scale | Used by | Example |
+|---|---|---|
+| `colors` | `bg-*`, `text-*`, `border-*` | `{ brand: '#e11d48' }` enables `bg-brand` |
+| `spacing` | `p-*`, `m-*`, `gap-*` | `{ '72': '288px' }` enables `p-72`, `mt-72` |
+| `fontSize` | `text-*` | `{ hero: '48px' }` enables `text-hero` |
+| `fontFamily` | `font-*` | `{ display: ['Inter', 'sans-serif'] }` |
+| `fontWeight` | `font-*` | `{ heavy: '900' }` |
+| `lineHeight` | `leading-*` | `{ tight: '1.1' }` |
+| `letterSpacing` | `tracking-*` | `{ tightest: '-0.05em' }` |
+| `borderRadius` | `rounded-*` | `{ pill: '9999px' }` |
+| `borderWidth` | `border-*` | `{ thick: '4px' }` |
+| `maxWidth` | `max-w-*` | `{ email: '600px' }` |
+| `width` | `w-*` | `{ avatar: '40px' }` |
+| `height` | `h-*` | `{ hero: '320px' }` |
+
+## Example
+
+```ts
+// mailc.config.ts
+import { defineConfig } from 'mailc'
+
+export default defineConfig({
+  theme: {
+    extend: {
+      colors: {
+        brand: '#4f46e5',
+        accent: { DEFAULT: '#e11d48', dark: '#9f1239' },
+      },
+      spacing: {
+        '18': '72px',
+      },
+      fontFamily: {
+        display: ['Inter', 'system-ui', 'sans-serif'],
+      },
+    },
+  },
+})
+```
+
+Now usable in templates:
+
+```html
+<mc-section class="bg-brand p-18">
+  <mc-text class="font-display text-accent-dark">Hello</mc-text>
+</mc-section>
+```
+
+## Nested colors
+
+Color values can be either strings or objects with a `DEFAULT` plus shades:
+
+```ts
+colors: {
+  brand: '#e11d48',                                   // bg-brand
+  primary: { DEFAULT: '#4f46e5', dark: '#3730a3' },   // bg-primary, bg-primary-dark
+}
+```
+
+## Font sizes with line height
+
+Tuple form lets you bundle line height with size:
+
+```ts
+fontSize: {
+  hero: ['48px', { lineHeight: '56px' }],
+  body: ['14px', { lineHeight: '1.6', letterSpacing: '-0.01em' }],
+}
+```
+
+## Per-call overrides
+
+You can pass `theme` directly to `compile()` for one-off overrides without touching the config file:
+
+```ts
+compile(source, {
+  theme: {
+    extend: {
+      colors: { brand: req.tenant.brandColor },
+    },
+  },
+})
+```
+
+Useful for multi-tenant systems where each tenant has its own brand colors.
+
+## Units
+
+`rem` values are auto-converted to `px` (using the standard 16px base) — email clients are inconsistent about `rem`, so mailc emits `px` to be safe.
+
+```ts
+spacing: { '4': '1rem' }   // emitted as 16px in inline styles
+```

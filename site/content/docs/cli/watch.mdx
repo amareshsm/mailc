@@ -1,0 +1,55 @@
+---
+title: mailc watch
+description: Watch a .mc file and recompile on change, with optional live-reload preview.
+---
+
+```bash
+mailc watch <input> -o <output> [options]
+```
+
+Recompiles `<input>` every time it (or its dependencies) change. With `--serve`, also boots a live-reload preview server.
+
+## Arguments
+
+| Argument | Required | Description |
+|---|---|---|
+| `<input>` | yes | Path to a single `.mc` file |
+
+## Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `-o, --output <path>` | string | **required** | Output HTML file path |
+| `--serve` | bool | false | Start a live-reload preview server |
+| `--port <number>` | number | `3000` | Port for the preview server (only used with `--serve`) |
+| `--open` | bool | false | Open the preview in your default browser when the server starts |
+| `-v, --verbose` | bool | false | Print warnings and per-rebuild stats |
+
+## Examples
+
+### Watch only
+
+```bash
+mailc watch welcome.mc -o welcome.html
+```
+
+Recompiles `welcome.html` on every save. No server.
+
+### Live-reload preview
+
+```bash
+mailc watch welcome.mc -o welcome.html --serve --open
+```
+
+Opens `http://localhost:3000` showing the rendered email. The page reloads automatically on every recompile.
+
+### Custom port
+
+```bash
+mailc watch welcome.mc -o welcome.html --serve --port 4000
+```
+
+## Limitations
+
+- Watches a single file. For directories, use a build script with a file watcher (chokidar, fs.watch) calling [`compile()`](/docs/api#compile) directly.
+- The preview server is for development only — don't expose it publicly.

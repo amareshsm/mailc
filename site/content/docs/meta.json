@@ -1,0 +1,4 @@
+{
+  "title": "mailc",
+  "pages": ["index", "getting-started", "cli", "configuration", "components", "templating", "api", "internals"]
+}

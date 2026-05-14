@@ -1,0 +1,54 @@
+---
+title: mc-body
+description: "Email body container. Must be a direct child of <mc>."
+---
+
+Email body container. Must be a direct child of `<mc>`.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `container` |
+| Allowed parents | _(none)_ |
+| Allowed children | `mc-hero`, `mc-raw`, `mc-section` |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<table>`, `<tr>`, `<td>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `bg-gray-50` | Utility classes. |
+| `id` | `string` | — | `email-body` | Unique identifier. |
+| `background-color` | `color` | — | `#f5f5f5` | Background color of the entire email canvas. |
+| `width` | `css-value` | `600px` | `600px` | Max width of the email content area. |
+
+
+## Compiles to
+
+Output elements: `<table>`, `<tr>`, `<td>`.
+
+Top-level 100%-width table for full-width email wrapper.
+
+## Example markup
+
+```html
+<mc-body></mc-body>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-body')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

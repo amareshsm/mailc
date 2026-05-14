@@ -1,0 +1,155 @@
+{
+  "product": {
+    "name": "mailc",
+    "nameUpper": "MAILC",
+    "badge": "✦ NOW IN PUBLIC BETA",
+    "tagline": "The modern email compiler that speaks your language.",
+    "previewText": "Introducing mailc — compile beautiful, responsive emails from clean markup. Now in public beta.",
+    "heroImage": "https://placehold.co/560x320/18181b/a78bfa?text=mailc+v0.1&font=raleway",
+    "ctaUrl": "https://mailcraft.dev/get-started",
+    "ctaLabel": "Start building for free →",
+    "ctaSubtext": "No credit card required · Works in every email client",
+    "finalCtaCopy": "Join 12,000+ developers who ship pixel-perfect emails in minutes, not hours. Zero config. Browser and Node.js.",
+    "company": "Mailcraft Labs",
+    "address": "Building the future of email, one compile at a time."
+  },
+  "stats": {
+    "metric1Icon": "👥",
+    "metric1Value": "12k+",
+    "metric1Label": "DEVELOPERS",
+    "metric1Sub": "and growing daily",
+    "metric2Icon": "⚡",
+    "metric2Value": "4.2M",
+    "metric2Label": "EMAILS COMPILED",
+    "metric2Sub": "this month alone",
+    "metric3Icon": "✅",
+    "metric3Value": "99.7%",
+    "metric3Label": "CLIENT COVERAGE",
+    "metric3Sub": "across 50+ clients",
+    "featuredLine": "Used by engineers at Vercel · Resend · Postmark · Buttondown · Loops"
+  },
+  "features": [
+    {
+      "icon": "⚡",
+      "title": "Blazing fast compilation",
+      "description": "Compiles a full newsletter in under 5ms."
+    },
+    {
+      "icon": "🎨",
+      "title": "Tailwind-style classes",
+      "description": "Write bg-purple-600, text-sm, p-4 — we expand to email-safe inline CSS at compile time."
+    },
+    {
+      "icon": "📱",
+      "title": "Responsive by default",
+      "description": "Every component outputs fluid-hybrid HTML. Works in Gmail, Outlook, Apple Mail, and 50+ clients."
+    },
+    {
+      "icon": "🧩",
+      "title": "Component-based authoring",
+      "description": "mc-section, mc-column, mc-button, mc-image — clean semantic markup that compiles to battle-tested table HTML."
+    },
+    {
+      "icon": "🌙",
+      "title": "Dark mode support",
+      "description": "Automatic dark mode meta tags and color-scheme declarations. Your emails look great everywhere."
+    },
+    {
+      "icon": "🔧",
+      "title": "Template engine built in",
+      "description": "Variables, loops, conditionals — all resolved at compile time. No runtime dependencies."
+    }
+  ],
+  "pricing": {
+    "billingNote": "No credit card required to start. Cancel anytime.",
+    "billingCycle": "monthly",
+    "freeFeatures": [
+      { "label": "Up to 3 templates" },
+      { "label": "100 compiles / day" },
+      { "label": "All core components" },
+      { "label": "HTML export" },
+      { "label": "Community support" }
+    ],
+    "proPrice": "$9",
+    "proFeatures": [
+      { "label": "Unlimited templates" },
+      { "label": "Unlimited compiles" },
+      { "label": "Custom theme tokens" },
+      { "label": "Team collaboration" },
+      { "label": "Priority support" },
+      { "label": "Early access to new features" }
+    ],
+    "showEarlyBird": true,
+    "earlyBirdOffer": "Lock in $5/mo forever — ends June 1st",
+    "ctaUrl": "https://mailcraft.dev/pricing",
+    "ctaLabel": "Start Pro trial →",
+    "footerNote": "All plans include a 14-day Pro trial. No lock-in. Pause or cancel anytime."
+  },
+  "testimonials": [
+    {
+      "quote": "mailc replaced our entire email toolchain. We went from 45 minutes per template to 5 minutes. The compiler output is cleaner than hand-written HTML.",
+      "name": "Sarah Chen",
+      "role": "Lead Engineer at Vercel"
+    },
+    {
+      "quote": "Finally, an email tool that doesn't make me want to quit programming. The Tailwind-style classes are genius.",
+      "name": "Marcus Webb",
+      "role": "Founder of Buttondown"
+    },
+    {
+      "quote": "We compile 200k transactional emails per day with mailc. It's rock solid and the output renders perfectly in Outlook.",
+      "name": "Priya Sharma",
+      "role": "Platform Lead at Resend"
+    }
+  ],
+  "showFaq": true,
+  "faqs": [
+    {
+      "question": "Does mailc work in the browser?",
+      "answer": "Yes! mailc ships ESM and IIFE browser bundles. Use it from a CDN, in a bundler, or server-side with Node.js."
+    },
+    {
+      "question": "What email clients are supported?",
+      "answer": "All of them. Gmail, Outlook (all versions), Apple Mail, Yahoo, AOL, Samsung Mail, and 50+ more. We test against caniemail.com data."
+    }
+  ],
+  "footer": {
+    "sentTo": "You're receiving this because you signed up at mailcraft.dev",
+    "socialLine": "𝕏 @mailcraft_dev  ·  GitHub  ·  Discord",
+    "unsubscribeUrl": "https://mailcraft.dev/unsubscribe",
+    "colProduct": [
+      { "label": "Features", "url": "https://mailcraft.dev/features" },
+      { "label": "Pricing", "url": "https://mailcraft.dev/pricing" },
+      { "label": "Changelog", "url": "https://mailcraft.dev/changelog" },
+      { "label": "Roadmap", "url": "https://mailcraft.dev/roadmap" }
+    ],
+    "colDevelopers": [
+      { "label": "Documentation", "url": "https://mailcraft.dev/docs" },
+      { "label": "API Reference", "url": "https://mailcraft.dev/docs/api" },
+      { "label": "GitHub", "url": "https://github.com/mailcraft/mailc" },
+      { "label": "npm", "url": "https://npmjs.com/package/mailc" }
+    ],
+    "colCompany": [
+      { "label": "About", "url": "https://mailcraft.dev/about" },
+      { "label": "Blog", "url": "https://mailcraft.dev/blog" },
+      { "label": "Twitter", "url": "https://twitter.com/mailcraft_dev" },
+      { "label": "Discord", "url": "https://discord.gg/mailcraft" }
+    ],
+    "colLegal": [
+      { "label": "Privacy", "url": "https://mailcraft.dev/privacy" },
+      { "label": "Terms", "url": "https://mailcraft.dev/terms" },
+      { "label": "Security", "url": "https://mailcraft.dev/security" },
+      { "label": "Cookies", "url": "https://mailcraft.dev/cookies" }
+    ]
+  },
+  "integrations": {
+    "item1Name": "Node.js",
+    "item1Sub": "CommonJS + ESM",
+    "item2Name": "React",
+    "item2Sub": "JSX / RSC ready",
+    "item3Name": "Bun",
+    "item3Sub": "Native speed",
+    "item4Name": "Browser",
+    "item4Sub": "CDN + Bundler"
+  }
+}

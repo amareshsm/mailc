@@ -1,0 +1,156 @@
+---
+title: Formatters
+description: A minimal escape hatch for transforming variable output. Most of the time, format in your backend instead.
+---
+
+mailc ships **zero built-in formatters**. The pipe syntax exists only as an escape hatch for cases where you cannot pre-format a value in your backend — but pre-formatting **is** the default path. This page explains why, what formatters can do, and when to use them.
+
+## Default path: pre-format in your backend
+
+mailc is a renderer, not a runtime. Computation belongs upstream:
+
+```ts
+// In your application code (not the template):
+const data = {
+  order: {
+    formattedTotal: '$49.00',                     // formatted before passing in
+    formattedDate: 'May 6, 2026',
+  },
+  user: {
+    displayName: user.firstName.toUpperCase(),    // upper-cased before passing in
+  },
+}
+
+compile(source, { data })
+```
+
+```html
+<mc-text>Total: {{order.formattedTotal}}</mc-text>
+<mc-text>Placed on {{order.formattedDate}}</mc-text>
+<mc-text>Hi {{user.displayName}},</mc-text>
+```
+
+Pre-formatting:
+
+- Keeps templates simple and review-friendly
+- Lets you use the full power of your backend (Intl APIs, date libraries, business logic)
+- Avoids tying the template to a specific formatter implementation
+- Stays consistent with everything else mailc deliberately leaves out (arithmetic, function calls, ternaries — see [What's not supported](/docs/templating#whats-not-supported))
+
+## Escape hatch: user-provided formatters
+
+If pre-formatting isn't possible — e.g. you have multiple recipients with different locales but only one `compile()` call, or you need a value derived from loop metadata — pass formatter callbacks via `options.formatters`.
+
+### Syntax
+
+```html
+{{value | formatterName}}
+{{value | formatterName: 'arg'}}
+{{value | formatterName: 'arg1', 'arg2'}}
+```
+
+The pipe `|` separates the value from the formatter. Arguments come after a colon, comma-separated, **always quoted as strings**.
+
+### Defining formatters
+
+```ts
+compile(source, {
+  data: { user: { name: 'alex' } },
+  formatters: {
+    upper: (v) => String(v).toUpperCase(),
+  },
+})
+```
+
+```html
+<mc-text>Hi {{user.name | upper}},</mc-text>
+<!-- → Hi ALEX, -->
+```
+
+### Signature
+
+```ts
+type Formatter = (value: unknown, ...args: string[]) => string
+```
+
+- The first argument is the resolved value — your formatter coerces it
+- Subsequent arguments are the strings from the template
+- The return value must be a string
+- Formatters must be **synchronous** — no `async`
+- Output is capped at 10 KB per invocation as a runaway-protection guard
+
+### Chaining
+
+Formatters chain left-to-right; each receives the previous one's output:
+
+```html
+{{user.name | trim | upper}}
+```
+
+Resolution order is strictly left-to-right. The output of each formatter is coerced to a string before the next one runs.
+
+### How formatters are resolved
+
+The actual algorithm is small enough to spell out:
+
+1. The expression `value` is resolved (with fallback if applicable).
+2. For each formatter call in the pipeline, in order:
+   - If the named formatter is **not** in `options.formatters`, skip silently and pass the value through unchanged.
+   - Otherwise, call `formatter(currentValue, ...args)`.
+   - Coerce the return to a string with `String(result)`.
+   - **If the resulting string is longer than 10,240 characters, it's truncated to that length.** This is a hard cap to prevent runaway formatters; you'll never see a value longer than 10 KB come out of a formatter.
+3. The final value is concatenated into the surrounding text.
+
+The cap applies per-formatter, not per-pipeline, so a chain of formatters can each emit up to 10 KB. In practice, hitting the cap means something's wrong (a formatter that loops, a formatter passed an enormous value); legitimate use never approaches it.
+
+### Combined with fallbacks
+
+```html
+{{user.name || "guest" | upper}}
+```
+
+Fallback runs first, then the formatter pipeline runs against the result.
+
+### Missing formatters are silent
+
+Reference a formatter that wasn't passed in `options.formatters`, and mailc skips it — the unformatted value passes through:
+
+```html
+{{user.name | upper}}
+```
+
+```ts
+compile(source, { data: { user: { name: 'alex' } } })  // no formatters passed
+// → 'alex' (output unchanged, no error)
+```
+
+This is intentional: a missing formatter shouldn't fail the entire compile. Use [`mailc validate`](/docs/cli/validate) and [`introspect.dataContract()`](/docs/api/introspect#introspect-datacontract) in CI to catch typos.
+
+## When formatters are genuinely the right tool
+
+Reach for a formatter only when **all** of these are true:
+
+- The value depends on something you only know inside the template (loop index, condition outcome)
+- Pre-computing per-recipient is impractical (e.g. one compile, many locales)
+- The transformation is small and stateless (a few lines)
+
+Examples that fit:
+
+```html
+<mc-for-each collection="items" as="item">
+  <mc-text>{{_index | plus1}}. {{item.name}}</mc-text>
+</mc-for-each>
+```
+
+```ts
+formatters: { plus1: (v) => String(Number(v) + 1) }
+```
+
+If the formatter is doing date math, currency conversion, locale-aware number formatting, Markdown rendering, or anything that brings in a library — that work belongs **before** `compile()`, in your backend.
+
+## Limitations
+
+- **Synchronous only** — no async formatters
+- **String args only** — coerce inside the formatter if you need numbers/booleans
+- **No closures over template scope** — formatters can't access loop metadata directly. If you need that, compute the value in `options.data` before compile
+- **No built-in formatters** — every formatter you use has to be passed via `options.formatters`. There is no global registry, by design

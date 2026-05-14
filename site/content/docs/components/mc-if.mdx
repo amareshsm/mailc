@@ -1,0 +1,54 @@
+---
+title: mc-if
+description: "Conditional block. Renders children only when condition is truthy."
+---
+
+Conditional block. Renders children only when condition is truthy.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `logic` |
+| Allowed parents | _(none)_ |
+| Allowed children | _(none)_ |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to |  |
+
+## Required attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `condition` | `string` | — | `user.plan === "pro"` | Template expression evaluated at render time. |
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | — | Utility classes. |
+| `id` | `string` | — | — | Unique identifier. |
+
+
+## Compiles to
+
+Output elements: .
+
+Compile-time conditional — no HTML wrapper emitted.
+
+## Example markup
+
+```html
+<mc-if condition="user.plan === "pro""></mc-if>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-if')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

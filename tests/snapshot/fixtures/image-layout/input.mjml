@@ -1,0 +1,28 @@
+<mjml>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-image src="https://example.com/hero.jpg" alt="Hero banner" width="600px" />
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column width="33%">
+        <mj-image src="https://example.com/feature1.png" alt="Feature one" width="180px" />
+        <mj-text font-size="14px" align="center">Feature One</mj-text>
+      </mj-column>
+      <mj-column width="33%">
+        <mj-image src="https://example.com/feature2.png" alt="Feature two" width="180px" />
+        <mj-text font-size="14px" align="center">Feature Two</mj-text>
+      </mj-column>
+      <mj-column width="33%">
+        <mj-image src="https://example.com/feature3.png" alt="Feature three" width="180px" />
+        <mj-text font-size="14px" align="center">Feature Three</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column>
+        <mj-image src="https://example.com/logo.png" alt="Company logo" width="120px" href="https://example.com" />
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

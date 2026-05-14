@@ -1,0 +1,108 @@
+---
+title: Low-level primitives
+description: Internal building blocks — tokenize, parse, COMPONENT_COMPILERS, resolveTemplate. Escape hatches for tooling.
+---
+
+mailc exposes the individual pipeline phases as public functions so tooling (visual builders, language servers, AI agents) can plug into the same primitives the high-level `compile()` orchestrator uses. **You should not need these for normal email rendering** — `compile()` and `compileFromJSON()` handle the full pipeline. Reach for these only when you're building tooling on top of mailc.
+
+```ts
+import { tokenize, parse, COMPONENT_COMPILERS, resolveTemplate } from 'mailc'
+```
+
+These APIs are public but considered **unstable** — they may change between minor versions to track compiler refactors. Pin to a specific mailc version if you depend on them.
+
+## tokenize()
+
+```ts
+function tokenize(source: string): Token[]
+```
+
+Phase 1 of the pipeline. Converts a `.mc` source string into a flat array of tokens (tag-open, attribute, text, expression, EOF, …). Tokens carry source-location info, which is what the source map ultimately threads through to the output.
+
+```ts
+import { tokenize, TokenType } from 'mailc'
+
+const tokens = tokenize('<mc-text>Hi {{user.name}}</mc-text>')
+// [{ type: 'tag-open', value: 'mc-text', loc: {...} }, ...]
+```
+
+Useful for syntax highlighters, error recovery, or anything that needs to walk the source at sub-AST granularity.
+
+## parse()
+
+```ts
+function parse(tokens: Token[]): ASTNode
+```
+
+Phase 2. Takes the token stream from `tokenize()` and returns the root `ASTNode` (`type: 'root'`). The AST is what the validator, compiler, and source-map collector all consume.
+
+```ts
+import { tokenize, parse } from 'mailc'
+
+const ast = parse(tokenize(source))
+// { type: 'root', children: [{ type: 'mc', children: [...] }] }
+```
+
+`parse()` does not validate — it produces an AST even from structurally-broken input. Pair with `validate()` if you need correctness checks.
+
+## COMPONENT_COMPILERS
+
+```ts
+const COMPONENT_COMPILERS: Record<string, ComponentCompiler>
+```
+
+The runtime registry of `componentType → compile function`. Built-in `<mc-*>` components and any plugins registered via `defineComponent()` both live here. Read it to discover what's currently available; **do not mutate it directly** (use `defineComponent()` for that — it enforces the lock-after-first-compile invariant).
+
+```ts
+import { COMPONENT_COMPILERS } from 'mailc'
+
+Object.keys(COMPONENT_COMPILERS)
+// ['mc', 'mc-body', 'mc-section', 'mc-text', ...]
+```
+
+For richer metadata (allowed parents, attribute schemas, examples) use [`introspect`](/docs/api/introspect) instead of reading the registry.
+
+## resolveTemplate()
+
+```ts
+function resolveTemplate(
+  ast: ASTNode,
+  data: TemplateData,
+  formatters?: FormatterMap,
+  debugMode?: boolean,
+): ASTNode
+```
+
+The template-engine pass. Walks an AST and replaces `{{ expressions }}`, evaluates `<mc-if>` branches, and expands `<mc-each>` loops against the supplied data. Returns a new AST — the input is not mutated.
+
+```ts
+import { tokenize, parse, resolveTemplate } from 'mailc'
+
+const ast = parse(tokenize(source))
+const resolved = resolveTemplate(ast, { user: { name: 'Priya' } })
+```
+
+`compile()` calls this internally when you pass `data`. Reach for it directly when you want to inspect / cache the resolved AST without going through to HTML.
+
+### Companion exports
+
+The same module exports lower-level helpers if you need to build your own resolution flow:
+
+| Export | Purpose |
+|---|---|
+| `resolvePath(data, path)` | Look up a dotted path in the data object |
+| `parseExpression(src)` | Parse a `{{ ... }}` body into structured form |
+| `resolveContent(text, data, formatters?)` | Replace expressions inside a single text string |
+| `resolveAttributes(attrs, data, formatters?)` | Resolve every attribute value on a node |
+| `evaluateCondition(expr, data)` | Evaluate an `mc-if` condition expression |
+| `expandForEach(node, data, formatters?)` | Expand a single `mc-each` block |
+| `applyFormatters(value, calls, formatters?)` | Apply a chain of formatter calls to a value |
+
+## Stability
+
+| API | Stability |
+|---|---|
+| `compile()`, `compileFromJSON()`, `validate()`, `checkCss()`, `lintEmailHtml()`, `defineComponent()`, `introspect.*` | **Stable** — semver guarantees |
+| `tokenize()`, `parse()`, `COMPONENT_COMPILERS`, `resolveTemplate()` and friends | **Unstable** — may change between minor versions |
+
+If you find yourself reaching for the unstable APIs to do something that feels like it should be a stable API, please open an issue — that's a gap we'd like to close.

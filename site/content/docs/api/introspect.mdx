@@ -1,0 +1,171 @@
+---
+title: introspect.*
+description: Static-analysis API — component schemas, validation, data contracts.
+---
+
+```ts
+import { introspect } from 'mailc'
+```
+
+Every function is **synchronous, pure, side-effect-free** and safe in browser/Node/edge runtimes. The introspect API exposes the same component schemas the compiler uses internally — no separate documentation source.
+
+## Functions
+
+| Function | Returns | Purpose |
+|---|---|---|
+| [`introspect.component(type)`](#introspect-component) | `ComponentSpec \| undefined` | Full spec for one component |
+| [`introspect.all()`](#introspect-all) | `ComponentSpec[]` | Specs for every registered component |
+| [`introspect.canNest(child, parent)`](#introspect-cannest) | `boolean` | Is `child` allowed inside `parent`? |
+| [`introspect.nesting()`](#introspect-nesting) | `NestingMatrix` | Full parent↔child matrix + required paths |
+| [`introspect.validate(node, parent?, opts?)`](#introspect-validate) | `IntrospectValidationResult` | Pre-flight check on a single AST node |
+| [`introspect.validClasses(type, opts?)`](#introspect-validclasses) | `ValidClassesResult` | Tailwind classes split into safe / enhance / rejected |
+| [`introspect.compilesTo(type)`](#introspect-compilesto) | `CompilesToSpec \| undefined` | What HTML elements a component produces, and why |
+| [`introspect.dataContract(ast)`](#introspect-datacontract) | `DataContract` | Required/optional data fields and loops in a parsed AST |
+| [`introspect.propertiesForCategory(c)`](#introspect-propertiesforcategory) | `string[]` | CSS property names in a category |
+| [`introspect.categoryForProperty(p)`](#introspect-categoryforproperty) | `CSSCategory \| undefined` | Reverse lookup |
+| [`introspect.categories()`](#introspect-categories) | `CSSCategory[]` | All defined CSS categories |
+
+## introspect.component
+
+```ts
+introspect.component(type: string): ComponentSpec | undefined
+```
+
+Returns the full schema for one component, or `undefined` if the type is unknown.
+
+```ts
+const spec = introspect.component('mc-button')
+// spec.type, spec.category, spec.allowedParents, spec.requiredAttributes,
+// spec.optionalAttributes, spec.compilesTo, spec.example, spec.commonMistakes...
+```
+
+## introspect.all
+
+```ts
+introspect.all(): ComponentSpec[]
+```
+
+Every registered component (built-ins + plugins) in registration order. The playground's component browser is built on this.
+
+## introspect.canNest
+
+```ts
+introspect.canNest(childType: string, parentType: string): boolean
+```
+
+`true` iff `childType` is structurally allowed directly inside `parentType`. Returns `false` for unknown types and for logic components (which have looser nesting rules).
+
+```ts
+introspect.canNest('mc-button', 'mc-column')   // true
+introspect.canNest('mc-text', 'mc-body')       // false — mc-text needs a column
+```
+
+Use this to gate drop targets in drag-and-drop builders.
+
+## introspect.nesting
+
+```ts
+introspect.nesting(): NestingMatrix
+```
+
+Returns the complete parent↔child matrix plus the canonical path from `<mc>` to every component. Cached.
+
+```ts
+const m = introspect.nesting()
+m.children['mc-section']       // ['mc-column']
+m.requiredPath['mc-text']      // ['mc', 'mc-body', 'mc-section', 'mc-column']
+```
+
+## introspect.validate
+
+```ts
+introspect.validate(
+  node: ValidateNodeInput,
+  parentType?: string,
+  options?: ValidateNodeOptions,
+): IntrospectValidationResult
+```
+
+Pre-flight check on a single AST node. No markup parsing, no HTML generation — pure schema validation.
+
+```ts
+const result = introspect.validate(
+  { type: 'mc-button', attributes: {} },
+  'mc-column',
+  { templateStyle: 'class' },
+)
+// result.valid: false
+// result.errors: [{ code: 'MISSING_REQUIRED_ATTRIBUTE', message: '...', fix: '...' }]
+```
+
+`options.templateStyle: 'class'` adds CSS-property-attribute violations to the error list.
+
+## introspect.validClasses
+
+```ts
+introspect.validClasses(
+  type: string,
+  options?: { theme?: ResolvedTheme; targetClients?: string[] },
+): ValidClassesResult
+```
+
+Returns every Tailwind-style class valid for a given component, split into safe / enhance / rejected. Useful for autocomplete in editors.
+
+```ts
+const r = introspect.validClasses('mc-text')
+// r.safe: [{ class: 'text-zinc-900', ... }, ...]
+// r.enhance: [{ class: 'opacity-50', ... }, ...]
+// r.rejected: [{ class: 'flex', reason: '...' }, ...]
+```
+
+## introspect.compilesTo
+
+```ts
+introspect.compilesTo(type: string): CompilesToSpec | undefined
+```
+
+What HTML elements a component produces, plus the email-client compatibility reason behind the choice.
+
+```ts
+introspect.compilesTo('mc-button')
+// {
+//   outputElements: ['table', 'tr', 'td', 'a'],
+//   reason: 'Outlook ignores margin on <a>; wrapping <table> is required for spacing',
+//   annotatedExample: { input: '...', output: '...' },
+// }
+```
+
+## introspect.dataContract
+
+```ts
+introspect.dataContract(ast: ASTNode): DataContract
+```
+
+Pure static analysis on a parsed AST — extracts every `{{var}}`, `<mc-if condition>`, and `<mc-each items as>` and produces a contract describing what `options.data` must look like.
+
+```ts
+import { parse } from 'mailc'
+
+const ast = parse(source)
+const contract = introspect.dataContract(ast)
+// contract.required: [{ path: 'user.firstName', type: 'string', loc: {...} }, ...]
+// contract.optional: [{ path: 'user.isPremium', type: 'boolean', loc: {...} }, ...]
+// contract.loops: [{ collection: 'cart.items', as: 'item', loc: {...} }, ...]
+```
+
+The CLI's [`mailc contract`](/docs/cli/contract) command wraps this.
+
+## introspect.propertiesForCategory / categoryForProperty / categories
+
+CSS-category lookup helpers.
+
+```ts
+introspect.categories()
+// ['typography', 'background', 'border', 'spacing', 'sizing', ...]
+
+introspect.propertiesForCategory('typography')
+// ['color', 'font-family', 'font-size', 'font-weight', 'line-height', ...]
+
+introspect.categoryForProperty('padding')
+// 'spacing'
+```

@@ -1,0 +1,92 @@
+---
+title: lintEmailHtml()
+description: Lint compiled email HTML against email best-practice rules.
+---
+
+mailc ships an HTML linter that runs against compiled output to catch missing structural elements (`<!doctype>`, `xmlns`, `<meta charset>`), table-shape problems, image issues, and a set of opt-in accessibility rules.
+
+```ts
+import { lintEmailHtml } from 'mailc'
+```
+
+## lintEmailHtml()
+
+```ts
+function lintEmailHtml(html: string, options?: LintOptions): LintIssue[]
+```
+
+Runs every registered rule against the supplied HTML and returns a flat array of issues. An empty array means the HTML is clean. Accessibility-only rules are skipped unless explicitly enabled.
+
+```ts
+import { compile, lintEmailHtml } from 'mailc'
+
+const result = compile(source)
+const issues = lintEmailHtml(result.html, { accessibilityEnabled: true })
+
+for (const issue of issues) {
+  console.log(`[${issue.severity}] ${issue.ruleId}: ${issue.message}`)
+}
+```
+
+## LintOptions
+
+```ts
+interface LintOptions {
+  /** Rule IDs to skip — e.g. ['table-has-role']. */
+  disable?: LintRuleId[]
+  /** Run accessibility-only rules (off by default). */
+  accessibilityEnabled?: boolean
+}
+```
+
+## LintIssue
+
+```ts
+interface LintIssue {
+  ruleId: LintRuleId
+  message: string
+  severity: 'error' | 'warning' | 'info'
+  /** 1-based line number, when the rule can locate it. */
+  line?: number
+}
+```
+
+## Discovering rules
+
+```ts
+import { getLintRuleIds, getLintRule } from 'mailc'
+
+const ids = getLintRuleIds()
+// ['has-doctype', 'has-xmlns', 'has-meta-charset', ...]
+
+const rule = getLintRule('has-doctype')
+// { id, description, category, severity, ... }
+```
+
+`getLintRuleIds()` returns every rule ID that can appear in a `LintIssue`. `getLintRule(id)` returns the rule's metadata — useful for building config UIs that let users disable rules by name.
+
+## Rule categories
+
+Rules are grouped into categories (`structure`, `tables`, `images`, `styles`, `outlook`, `accessibility`, …). Accessibility rules don't run unless `accessibilityEnabled: true` is passed — they intentionally lean strict (alt-text, table roles, contrast hints) and would otherwise drown out the structural feedback most users care about first.
+
+## Typical patterns
+
+**Block CI on errors only:**
+
+```ts
+const issues = lintEmailHtml(html)
+const errors = issues.filter((i) => i.severity === 'error')
+if (errors.length) process.exit(1)
+```
+
+**Show everything in an editor sidebar:**
+
+```ts
+const issues = lintEmailHtml(html, { accessibilityEnabled: true })
+```
+
+**Suppress one noisy rule project-wide:**
+
+```ts
+const issues = lintEmailHtml(html, { disable: ['has-meta-viewport'] })
+```

@@ -1,0 +1,98 @@
+---
+title: compile() options
+description: Every option you can pass to compile(source, options).
+---
+
+`compile(source, options)` accepts a `CompileOptions` object. All fields are optional. Per-call options override `mailc.config.ts`.
+
+## Options
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `data` | `Record<string, unknown>` | — | Template data for `{{var}}`, `<mc-if>`, `<mc-each>`. When omitted, templating is skipped |
+| `formatters` | `Record<string, (v, ...args) => string>` | — | Named formatters for `{{var \| name}}` and `{{var \| name: 'arg'}}` |
+| `compatibilityMode` | `'liberal' \| 'strict'` | `'liberal'` | See [Compatibility mode](/docs/configuration/compatibility-mode) |
+| `targetClients` | `string[]` | `DEFAULT_CLIENTS` | caniemail client globs. See [Target clients](/docs/configuration/target-clients) |
+| `templateStyle` | `'attribute' \| 'class'` | `'attribute'` | See [Modes](/docs/configuration/modes) |
+| `theme` | `UserThemeConfig` | — | Theme token overrides. See [Theme](/docs/configuration/theme) |
+| `config` | `Partial<MailcConfig>` | — | Full config overrides; merged on top of the file config |
+| `filename` | `string` | — | Source file path for error reporting |
+| `templating` | `boolean` | `true` | Enable templating (only respected by `compileFromJSON()` today) |
+| `debug` | `boolean` | `false` | Inject `<!-- mc:source -->` comments and attach `result.sourceMap` |
+| `sourceMap` | `boolean` | `false` | Inject `data-mc-id` attributes and attach `result.sourceMap` (HTML stays clean) |
+
+To control output shape (pretty vs minified), use `config.output.minify` — see [OutputConfig](/docs/configuration#outputconfig).
+
+## Examples
+
+### Templating
+
+```ts
+const result = compile(source, {
+  data: { user: { firstName: 'Alex' }, items: [{ name: 'Lamp' }] },
+})
+```
+
+mailc ships **zero built-in formatters** — pre-format values in your backend and pass them in as strings. `options.formatters` is an escape hatch for advanced cases; see [Formatters](/docs/templating/formatters).
+
+### Strict mode for B2B / Outlook-heavy audiences
+
+```ts
+const result = compile(source, {
+  compatibilityMode: 'strict',
+  targetClients: ['outlook.windows.*', 'gmail.*'],
+})
+```
+
+In strict mode, ENHANCE properties (`box-shadow`, `border-radius`, `opacity`, `background-image`) are stripped and a warning is emitted per occurrence.
+
+### Output shape — pretty vs minified
+
+```ts
+// Default — pretty multi-line HTML
+compile(source)
+
+// Minified single-line HTML
+compile(source, { config: { output: { minify: true } } })
+```
+
+### Source maps
+
+```ts
+// Pretty HTML + source map (line numbers point to the pretty output)
+compile(source, { sourceMap: true })
+
+// Minified HTML + source map (line numbers all = 1)
+compile(source, {
+  sourceMap: true,
+  config: { output: { minify: true } },
+})
+```
+
+`result.html` always contains the final HTML. `result.sourceMap` and `result.sourceMapJSON` are attached when `sourceMap: true`.
+
+See [API → CompileResult](/docs/api/compile#compileresult) for the source-map shape.
+
+### Inline config override
+
+```ts
+const result = compile(source, {
+  config: {
+    width: 800,
+    darkMode: { enabled: true, strategy: 'class' },
+  },
+})
+```
+
+The `config` field is partial — only specified subobjects are merged.
+
+## debug vs sourceMap
+
+Both flags emit a `result.sourceMap` and `result.sourceMapJSON`. They differ in what they inject into the HTML:
+
+| Flag | HTML injection | Use case |
+|---|---|---|
+| `debug: true` | `<!-- mc:source -->` comments | Local development, "view source" debugging |
+| `sourceMap: true` | `data-mc-id="entry-N"` attributes | Production / dev tools that need clean HTML but still want a map |
+
+The two can be combined.

@@ -1,0 +1,143 @@
+---
+title: compile()
+description: Compile mailc source to email-safe HTML.
+---
+
+```ts
+function compile(source: string, options?: CompileOptions): CompileResult
+```
+
+Takes `.mc` markup as a string and returns the compiled HTML plus diagnostics, statistics, and (optionally) a source map.
+
+## Signature
+
+```ts
+import { compile } from 'mailc'
+
+const result = compile(source, options)
+```
+
+## Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| `source` | `string` | The `.mc` markup |
+| `options` | `CompileOptions` | See [compile options](/docs/configuration/compile-options) |
+
+## CompileResult
+
+| Field | Type | Description |
+|---|---|---|
+| `html` | `string \| null` | Compiled HTML. `null` only when compilation could not start (unparseable source, missing `<mc>` root, internal crash). When errors exist but a partial result was built, this is best-effort — always check `errors` before sending |
+| `partial` | `boolean` | `true` when `html` was produced despite validation errors. `false` on a clean compile or when `html` is `null` |
+| `errors` | `MCIssue[]` | Compilation errors. Check before sending to production |
+| `warnings` | `MCIssue[]` | Non-blocking warnings (deprecations, strict-mode property strips, etc.) |
+| `info` | `MCIssue[]` | Informational messages |
+| `stats` | `CompileStats` | Compile-time metrics — `inputSize`, `outputSize`, `compileTime`, `components`, `cssPropertiesInlined`, `cssPropertiesStripped`, `mediaQueriesGenerated`, `gmailClipRisk` |
+| `sourceMap` | `EmailSourceMap?` | Structured source map. Present when `options.debug` or `options.sourceMap` is true |
+| `sourceMapJSON` | `string?` | Pre-serialised JSON of `sourceMap` |
+| `sourceMapComments` | `boolean?` | `true` when `<!-- mc:source -->` debug comments were injected |
+| `sourceMapIds` | `boolean?` | `true` when `data-mc-id` attributes were injected |
+
+## MCIssue
+
+```ts
+interface MCIssue {
+  code: string                                         // e.g. 'INVALID_NESTING'
+  message: string                                      // human-readable
+  severity: 'error' | 'warning' | 'info'
+  loc?: { line: number; col: number; file?: string }
+  fix?: string                                         // suggested fix, when known
+}
+```
+
+## Examples
+
+### Minimal
+
+```ts
+const result = compile('<mc><mc-body><mc-text>Hello</mc-text></mc-body></mc>')
+console.log(result.html)
+```
+
+### With templating
+
+```ts
+const result = compile(source, {
+  data: {
+    user: { firstName: 'Alex' },
+    // Note: format values upstream. mailc deliberately ships zero built-in formatters.
+    items: [{ name: 'Lamp', formattedPrice: '$49.00' }],
+  },
+})
+```
+
+See [Templating](/docs/templating) for the full reference — variables, conditionals, loops, and the formatter escape hatch.
+
+### Production-ready check
+
+```ts
+const result = compile(source, { sourceMap: true })
+
+if (result.errors.length > 0) {
+  console.error('Compilation errors:', result.errors)
+  process.exit(1)
+}
+
+if (result.partial) {
+  console.warn('Best-effort output; review before sending')
+}
+
+await sendEmail(result.html!)
+```
+
+### Strict mode
+
+```ts
+const result = compile(source, {
+  compatibilityMode: 'strict',
+  targetClients: ['outlook.windows.*', 'gmail.*'],
+})
+
+// result.warnings now includes one entry per stripped ENHANCE property
+```
+
+## compileFromJSON
+
+```ts
+function compileFromJSON(node: ASTNode, options?: CompileOptions): CompileResult
+```
+
+Same as `compile()` but takes a parsed JSON AST instead of markup. Useful when you've stored templates as JSON or built them programmatically (drag-and-drop builders).
+
+```ts
+import { compileFromJSON } from 'mailc'
+
+const ast = JSON.parse(jsonString)
+const result = compileFromJSON(ast, { data: {...} })
+```
+
+`compileFromJSON()` respects an extra option:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `templating` | `boolean` | `true` | When `false`, content strings pass through verbatim and template resolution is skipped — useful for builders that do their own data binding |
+
+## Templating
+
+When `options.data` is provided, the compiler resolves three primitives before generating HTML:
+
+- `{{var}}` and `{{var.path | formatter}}` — interpolation
+- `<mc-if condition="...">` / `<mc-else-if>` / `<mc-else>` — conditionals
+- `<mc-each items="X" as="Y">` and `<mc-for-each collection="X" as="Y">` — loops
+
+Inside a loop, the iteration injects `_index`, `_first`, `_last`, `_total` (and the optional named `index` alias).
+
+```html
+<mc-for-each collection="cart.items" as="item" index="i">
+  <mc-section>
+    <mc-text>{{i}}. {{item.name}} — {{item.formattedPrice}}</mc-text>
+  </mc-section>
+</mc-for-each>
+```
+

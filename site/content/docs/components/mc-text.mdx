@@ -1,0 +1,74 @@
+---
+title: mc-text
+description: "Rich text content block. Accepts HTML inside."
+---
+
+Rich text content block. Accepts HTML inside.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `content` |
+| Allowed parents | `mc-column`, `mc-hero` |
+| Allowed children | _(none)_ |
+| Accepts text content | yes |
+| Accepts `class` attribute | yes |
+| Compiles to | `<div>`, `<p>`, `<span>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | `text-gray-700 text-base` | Utility classes. |
+| `id` | `string` | — | `intro-text` | Unique identifier. |
+| `color` | `color` | — | `#333333` | Text color. |
+| `background-color` | `color` | — | `#f5f5f5` | Background color behind the text block. |
+| `width` | `css-value` | — | `100%` | Width of the text block. |
+| `font-family` | `string` | — | `Georgia, serif` | Font family. |
+| `font-size` | `css-value` | — | `16px` | Font size. |
+| `font-weight` | `normal` \| `bold` | — | `normal` | Font weight. |
+| `font-style` | `normal` \| `italic` \| `oblique` | — | `italic` | Font style. |
+| `line-height` | `css-value` | — | `1.6` | Line height. |
+| `letter-spacing` | `css-value` | — | `0.02em` | Letter spacing. |
+| `text-decoration` | `none` \| `underline` \| `line-through` | — | `none` | Text decoration. |
+| `text-transform` | `none` \| `uppercase` \| `lowercase` \| `capitalize` | — | `none` | Text transform. |
+| `text-align` | `left` \| `center` \| `right` \| `justify` | — | `left` | Text alignment. |
+| `padding` | `css-value` | — | `16px` | Padding shorthand. |
+| `padding-top` | `css-value` | — | `16px` | Top padding. |
+| `padding-right` | `css-value` | — | `16px` | Right padding. |
+| `padding-bottom` | `css-value` | — | `16px` | Bottom padding. |
+| `padding-left` | `css-value` | — | `16px` | Left padding. |
+| `margin-top` | `css-value` | — | `16px` | Top margin. |
+| `margin-right` | `css-value` | — | `0` | Right margin. |
+| `margin-bottom` | `css-value` | — | `16px` | Bottom margin. |
+| `margin-left` | `css-value` | — | `0` | Left margin. |
+| `align` | `left` \| `center` \| `right` | — | `left` | Block alignment. |
+
+
+## Compiles to
+
+Output elements: `<div>`, `<p>`, `<span>`.
+
+Div wrapper preserves block layout; p and span for inline text formatting.
+
+## Example markup
+
+```html
+<mc-text>Rich text content block</mc-text>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-text')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

@@ -1,0 +1,53 @@
+---
+title: mc-style
+description: "Injects raw CSS into the email <head>. This is the explicit escape hatch for CSS that mailc's structured API does not cover (media queries, pseudo-classes, custom selectors, dark-mode rules). Content passes through without classification."
+---
+
+Injects raw CSS into the email `<head>`. This is the explicit escape hatch for CSS that mailc's structured API does not cover (media queries, pseudo-classes, custom selectors, dark-mode rules). Content passes through without classification.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `head` |
+| Allowed parents | `mc-head` |
+| Allowed children | _(none)_ |
+| Accepts text content | yes |
+| Accepts `class` attribute | yes |
+| Compiles to | `<style>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `class` | `tailwind-classes` | — | — | Utility classes. |
+| `id` | `string` | — | `custom-styles` | Unique identifier. |
+| `inline` | `boolean` | — | `true` | If true, styles are inlined into elements. |
+
+
+## Compiles to
+
+Output elements: `<style>`.
+
+Content placed verbatim inside a `<style>` block in the generated `<head>`. Not gated by compatibilityMode — even in strict mode, mc-style content is NOT inspected, classified, or stripped. If you write box-shadow / opacity / border-radius (or any ENHANCE property) inside mc-style, it ships untouched. This is by design: mc-style exists so power users can write CSS that the structured attribute / class API does not expose. If you need full strict enforcement for CI, lint mc-style content separately.
+
+## Example markup
+
+```html
+<mc-style>Injects raw CSS into the email <head></mc-style>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-style')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

@@ -1,0 +1,5 @@
+{
+  "title": "API",
+  "defaultOpen": true,
+  "pages": ["index", "compile", "json", "css-checking", "lint", "introspect", "define-component", "low-level", "source-maps", "error-codes", "mcp-server"]
+}

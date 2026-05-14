@@ -1,0 +1,65 @@
+---
+title: mc-hero
+description: "Full-width banner with background image support. Uses VML in Outlook, CSS background-image in modern clients."
+---
+
+Full-width banner with background image support. Uses VML in Outlook, CSS background-image in modern clients.
+
+## Quick facts
+
+| | |
+|---|---|
+| Category | `container` |
+| Allowed parents | `mc-body` |
+| Allowed children | `mc-button`, `mc-divider`, `mc-image`, `mc-list`, `mc-spacer`, `mc-text` |
+| Accepts text content | no |
+| Accepts `class` attribute | yes |
+| Compiles to | `<table>`, `<tr>`, `<td>`, `<div>`, `<v:rect>`, `<v:fill>`, `<v:textbox>` |
+
+## Required attributes
+
+_(none)_
+
+
+## Optional attributes
+
+| Attribute | Type | Default | Example | Description |
+|---|---|---|---|---|
+| `background-image` | `url` | — | `https://example.com/hero.jpg` | Absolute URL of the background image. Triggers dual CSS+VML output for Outlook compatibility. |
+| `background-color` | `color` | `#ffffff` | `#1e293b` | Background color. Required as Outlook VML fallback when background-image is set. |
+| `background-position` | `top` \| `center` \| `bottom` \| `left` \| `right` | `center` | `center` | Background image position (CSS only — Outlook VML always stretches to fill). |
+| `background-size` | `cover` \| `contain` \| `auto` | `cover` | `cover` | Background image size (CSS only — Outlook VML always stretches to fill). |
+| `height` | `css-value` | `300px` | `300px` | Hero height. Must be a fixed pixel value for Outlook VML (e.g. 300px). |
+| `padding` | `css-value` | `40px` | `60px 40px` | Inner padding around hero content. |
+| `align` | `left` \| `center` \| `right` | `center` | `center` | Horizontal alignment of hero content. |
+| `vertical-align` | `top` \| `middle` \| `bottom` | `middle` | `middle` | Vertical alignment of hero content. |
+| `width` | `css-value` | — | `600px` | Hero width in pixels. Defaults to the email config width (600px). Used for Outlook VML dimensions. |
+| `full-width` | `boolean` | `false` | `true` | Extend background to full viewport width. VML fallback shows solid background-color only (no image). |
+| `class` | `tailwind-classes` | — | `bg-slate-800 p-10` | Tailwind utility classes. bg-* and p-* classes are extracted as background-color and padding. |
+| `style` | `string` | — | `border-radius:8px;` | Raw inline CSS merged with class-derived styles. Explicit style wins over class-derived values. |
+| `border-radius` | `css-value` | — | `8px` | Rounded corners on the CSS background div. CSS only — Outlook ignores border-radius. |
+| `overlay-color` | `color` | — | `rgba(0,0,0,0.4)` | Absolute-positioned colour overlay on top of the background image. rgba() supported. CSS only. |
+| `aria-label` | `string` | — | `Product hero banner` | Accessible label for the hero region. Adds role="region" aria-label to the hero content div. |
+
+
+## Compiles to
+
+Output elements: `<table>`, `<tr>`, `<td>`, `<div>`, `<v:rect>`, `<v:fill>`, `<v:textbox>`.
+
+Dual CSS+VML output: CSS background-image div for modern clients, VML v:rect+v:fill for Outlook desktop which ignores CSS background-image on non-table elements.
+
+## Example markup
+
+```html
+<mc-hero></mc-hero>
+```
+
+## Programmatic access
+
+```ts
+import { introspect } from 'mailc'
+
+const spec = introspect.component('mc-hero')
+```
+
+See [`introspect.component(type)`](/docs/api/introspect#introspect-component) for the full `ComponentSpec` shape.

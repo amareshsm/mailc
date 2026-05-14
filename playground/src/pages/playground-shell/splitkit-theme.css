@@ -1,0 +1,28 @@
+/**
+ * Theme integration for react-splitkit's default styles.
+ *
+ * The kit ships a small set of CSS custom properties on `[data-splitkit-root]`.
+ * We re-point them at the playground's existing tokens so resizers, focus
+ * rings, and any other kit-styled chrome track light/dark mode automatically
+ * — no second source of truth.
+ *
+ * Tab strips and panel surfaces are styled directly on the chrome via
+ * Tailwind classes (`bg-card`, `bg-surface`, …) so the kit defaults for
+ * those are intentionally overridden to transparent.
+ */
+
+@import 'react-splitkit/styles.css';
+
+[data-splitkit-root] {
+  --sk-bg: transparent;
+  --sk-border: var(--border);
+  --sk-tab-bg: transparent;
+  --sk-tab-bg-active: transparent;
+  --sk-tab-fg: var(--muted-fg);
+  --sk-tab-fg-active: var(--fg);
+  --sk-accent: var(--accent);
+  --sk-resizer-bg: transparent;
+  --sk-resizer-bg-hover: rgb(var(--accent-glow) / 0.25);
+  --sk-resizer-bg-active: rgb(var(--accent-glow) / 0.4);
+  --sk-radius: 8px;
+}
