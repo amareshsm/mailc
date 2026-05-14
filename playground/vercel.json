@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "installCommand": "cd .. && pnpm install --frozen-lockfile",
-  "buildCommand": "cd .. && pnpm --filter mailc build && pnpm --filter mailc-playground build",
+  "buildCommand": "cd .. && pnpm build && pnpm --filter mailc-playground build",
   "outputDirectory": "dist"
 }
