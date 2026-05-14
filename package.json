@@ -1,7 +1,7 @@
 {
   "name": "mailc",
   "version": "0.1.0",
-  "description": "A modern email markup compiler — attribute or Tailwind styling, email-safe, developer-first.",
+  "description": "A modern email markup compiler — Tailwind-powered, email-safe, with native dynamic templating.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
