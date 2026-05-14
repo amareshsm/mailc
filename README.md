@@ -1,6 +1,6 @@
 # mailc
 
-**A modern email markup compiler — attribute or Tailwind styling, email-safe, developer-first with native dynamic templating. **
+**A modern email markup compiler — attribute or Tailwind styling, email-safe, developer-first with native dynamic templating.**
 
 Write emails as components. Compile to HTML that works in Gmail, Outlook, Apple Mail, and the rest of the long tail. Use Tailwind classes if you want; use plain CSS attributes if you don't.
 
