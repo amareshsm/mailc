@@ -296,7 +296,7 @@ describe('REJECTED_PATTERNS', () => {
 // ---------------------------------------------------------------------------
 // targetClients — dynamic classification consistency
 //
-// Ground truth (verified against live caniemail-tool data):
+// Ground truth (verified against live caniemail-sdk data):
 //
 //   Property        | gmail.*  | outlook.2021-x | apple-mail.*
 //   ----------------|----------|----------------|-------------

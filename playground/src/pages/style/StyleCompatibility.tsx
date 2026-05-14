@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { RelatedLinks } from '@/components/layout/RelatedLinks'
 
-// Full caniemail client list — sourced from caniemail-tool/dist/clients.d.ts.
+// Full caniemail client list — sourced from caniemail-sdk/dist/clients.d.ts.
 // Grouped by provider; each leaf is a real client pattern.
 interface ClientLeaf {
   /** Display label for the platform (e.g. "Windows"). */

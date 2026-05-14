@@ -1,19 +1,19 @@
 /**
  * CSS checker — validates CSS against email client support using caniemail.
  *
- * Wraps the `caniemail-tool` package to check CSS properties against the
+ * Wraps the `caniemail-sdk` package to check CSS properties against the
  * user's configured target email clients. Results are cached per
  * compilation to avoid redundant checks.
  *
  * @module css/checker
  */
-import { caniemail, groupIssues } from 'caniemail-tool';
-import type { IssueGroup } from 'caniemail-tool';
+import { caniemail, groupIssues } from 'caniemail-sdk';
+import type { IssueGroup } from 'caniemail-sdk';
 
 import type { CSSProperty, MCIssue, PropertySupport } from '../types.js';
 import { ErrorCode } from '../errors/codes.js';
 
-/** Feature issue type extracted from caniemail-tool's IssueGroup. */
+/** Feature issue type extracted from caniemail-sdk's IssueGroup. */
 type FeatureIssue = IssueGroup['issue'];
 
 /** Map from CSS property name to per-client support breakdown. */
@@ -141,7 +141,7 @@ export function buildPropertySupportMap(
 /**
  * Checks an array of CSS properties against target email clients.
  *
- * Converts properties to a CSS string, runs it through `caniemail-tool`,
+ * Converts properties to a CSS string, runs it through `caniemail-sdk`,
  * and returns structured issues. Results are cached per unique CSS+clients
  * combination.
  *

@@ -106,7 +106,7 @@
   },
   "dependencies": {
     "@types/picomatch": "^4.0.3",
-    "caniemail-tool": "file:../caniemail-toolkit",
+    "caniemail-sdk": "^1.0.0",
     "chokidar": "^5.0.0",
     "commander": "^14.0.0",
     "picomatch": "^4.0.4"

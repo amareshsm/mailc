@@ -211,7 +211,7 @@ The current playground is **honest and dense**, but the marketing site needs to 
 - **Compiler**: TypeScript, zero runtime deps, Browser + Node bundles
 - **Playground**: React 19, Vite, Tailwind, framer-motion, @dnd-kit, prism-react-renderer, CodeMirror
 - **AI**: Model Context Protocol (MCP) server with 7 tools
-- **Validation**: caniemail-tool for client compatibility, internal a11y/contrast pipelines
+- **Validation**: caniemail-sdk for client compatibility, internal a11y/contrast pipelines
 
 ---
 

@@ -3,7 +3,7 @@
  * probe call throws for at least one (property × client) pair.
  *
  * The bug being guarded against: when ANY one probe-property is missing in
- * ANY one target-client's dataset, caniemail-tool throws — and the old
+ * ANY one target-client's dataset, caniemail-sdk throws — and the old
  * `try { ... } catch { /* silent SAFE fallback *\/ }` block discarded the
  * other ~70 properties' results too. The result: broad client lists
  * (`['*']`, `['thunderbird.*']`, or any combination including thunderbird)
@@ -26,7 +26,7 @@ import { buildClassificationMap } from '../../src/css/classifier.js';
 /**
  * Including `thunderbird.*` triggers caniemail's
  *   `Feature "table-layout" not found on "thunderbird.macos"`
- * Verified empirically against caniemail-tool 1.x. If caniemail later adds
+ * Verified empirically against caniemail-sdk 1.x. If caniemail later adds
  * `table-layout` data for thunderbird.macos, this test's bulk-throw
  * assumption no longer holds — pick a different known-missing pair.
  */

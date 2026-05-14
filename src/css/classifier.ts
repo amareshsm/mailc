@@ -18,7 +18,7 @@
  *
  * @module css/classifier
  */
-import { caniemail, groupIssues } from 'caniemail-tool';
+import { caniemail, groupIssues } from 'caniemail-sdk';
 
 import type {
   CSSProperty,
@@ -474,7 +474,7 @@ function featureTitleToProperties(title: string): string[] {
  * `/^[a-z][a-z-]*$/` fallback in `featureTitleToProperties`.
  *
  * Keys must exactly match the lowercase title returned by caniemail. Verified
- * against live caniemail-tool output — titles are plain property names with NO
+ * against live caniemail-sdk output — titles are plain property names with NO
  * `"CSS "` prefix.
  */
 const FEATURE_TITLE_MAP: Record<string, string[]> = {
