@@ -119,7 +119,6 @@ export const componentRegistry: Record<ComponentType, ComponentDefinition> = {
     defaultAttributes: {
       'background-color': '#18181b',
       'height': '300px',
-      'mode': 'fluid-height',
       'padding': '40px 0',
       'vertical-align': 'middle',
     },
@@ -136,7 +135,7 @@ export const attributeDefinitions: Record<string, AttributeDefinition[]> = {
     { key: 'border', label: 'Border', type: 'text', placeholder: '1px solid #ccc' },
     { key: 'border-radius', label: 'Border Radius', type: 'text', placeholder: '0px' },
     { key: 'full-width', label: 'Full Width', type: 'select', options: ['', 'full-width'] },
-    { key: 'text-align', label: 'Text Align', type: 'select', options: ['left', 'center', 'right'] },
+    { key: 'text-align', label: 'Text Align', type: 'select', options: ['left', 'center', 'right', 'justify'] },
   ],
   'mc-column': [
     { key: 'background-color', label: 'Background', type: 'color' },
@@ -186,7 +185,7 @@ export const attributeDefinitions: Record<string, AttributeDefinition[]> = {
   'mc-divider': [
     { key: 'border-color', label: 'Color', type: 'color' },
     { key: 'border-width', label: 'Width', type: 'text', placeholder: '1px' },
-    { key: 'border-style', label: 'Style', type: 'select', options: ['solid', 'dashed', 'dotted'] },
+    { key: 'border-style', label: 'Style', type: 'select', options: ['solid', 'dashed', 'dotted', 'double', 'none'] },
     { key: 'padding', label: 'Padding', type: 'text', placeholder: '10px 25px' },
     { key: 'width', label: 'Line Width', type: 'text', placeholder: '100%' },
   ],
@@ -203,10 +202,15 @@ export const attributeDefinitions: Record<string, AttributeDefinition[]> = {
   'mc-hero': [
     { key: 'background-color', label: 'Background', type: 'color' },
     { key: 'background-image', label: 'BG Image URL', type: 'url', placeholder: 'https://...' },
-    { key: 'height', label: 'BG Height', type: 'text', placeholder: '300px' },
-    { key: 'mode', label: 'Mode', type: 'select', options: ['fluid-height', 'fixed-height'] },
+    { key: 'background-position', label: 'BG Position', type: 'select', options: ['top', 'center', 'bottom', 'left', 'right'] },
+    { key: 'background-size', label: 'BG Size', type: 'select', options: ['cover', 'contain', 'auto'] },
+    { key: 'overlay-color', label: 'Overlay', type: 'color' },
+    { key: 'height', label: 'Height', type: 'text', placeholder: '300px' },
     { key: 'padding', label: 'Padding', type: 'text', placeholder: '40px 0' },
+    { key: 'border-radius', label: 'Radius', type: 'text', placeholder: '8px' },
+    { key: 'align', label: 'Align', type: 'select', options: ['left', 'center', 'right'] },
     { key: 'vertical-align', label: 'V-Align', type: 'select', options: ['top', 'middle', 'bottom'] },
+    { key: 'full-width', label: 'Full Width', type: 'select', options: ['false', 'true'] },
   ],
 }
 

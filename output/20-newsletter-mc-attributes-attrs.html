@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>The Weekly Field Report — Issue #42</title><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+  <style>body,table,td,p,a,li,blockquote{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}img{-ms-interpolation-mode:bicubic;border:0;height:auto;line-height:100%;outline:none;text-decoration:none;}body{margin:0;padding:0;width:100%!important;height:100%!important;}@media only screen and (max-width:500px){.mc-responsive{width:100%!important;max-width:100%!important;}}</style>
+</head>
+<body xml:lang="en" style="margin:0;padding:0;background-color:#fef3c7">
+  <div role="article" aria-roledescription="email" lang="en" dir="ltr" aria-label="The Weekly Field Report — Issue #42" style="font-size:medium;font-size:max(16px,1rem);">
+    <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">This week: rate limiting at scale, a Postgres footgun, and the calmest debugger you'll ever see.&#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; </div>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fef3c7;">
+      <tr>
+        <td align="center" valign="top"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" align="center"><tr><td><![endif]-->
+          <div style="max-width:600px;margin:0 auto;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#fffbeb" style="background-color:#fffbeb">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding:32px 40px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:520px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:520px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#92400e;font-size:11px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:24px;letter-spacing:3px">
+                            THE WEEKLY FIELD REPORT
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#451a03;font-size:32px;font-family:Georgia, 'Times New Roman', serif;font-weight:900;line-height:38px;padding-top:6px">
+                            Issue #42 — April 27, 2026
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#6b7280;font-size:13px;font-family:Georgia, 'Times New Roman', serif;line-height:20px;padding-top:6px">
+                            Three things worth reading and one thing worth trying.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding:36px 40px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:520px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:520px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#dc2626;font-size:11px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:24px;letter-spacing:2px">
+                            01 · DEEP DIVE
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#0c0a09;font-size:22px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:28px;padding-top:8px;padding-bottom:10px">
+                            How Cloudflare actually rate-limits 50M requests per second
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#1f2937;font-size:15px;font-family:Georgia, 'Times New Roman', serif;line-height:24px;padding-bottom:14px">
+                            The naive approach is a counter per IP. That falls over at about ten
+                            thousand requests per second per host. The version that scales uses
+                            a probabilistic data structure called a Count-Min Sketch — and the
+                            tradeoffs are not what you'd expect.
+                          </p>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://example.com/article/rate-limiting" style="height:42px;v-text-anchor:middle;" arcsize="0%" strokecolor="#1f2937" fillcolor="#1f2937"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:bold;">Read the breakdown →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://example.com/article/rate-limiting" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1f2937;border-radius:0;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:bold;line-height:14px;text-align:center;text-decoration:none;padding:14px 28px;-webkit-text-size-adjust:none;">Read the breakdown →</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding:0 40px 36px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:520px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:520px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#dc2626;font-size:11px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:24px;letter-spacing:2px">
+                            02 · POSTGRES FOOTGUN
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#0c0a09;font-size:22px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:28px;padding-top:8px;padding-bottom:10px">
+                            Your CTE is not the cache you think it is
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#1f2937;font-size:15px;font-family:Georgia, 'Times New Roman', serif;line-height:24px;padding-bottom:14px">
+                            A WITH clause in Postgres looks like memoisation. It is not. Postgres
+                            re-executes the CTE every time it is referenced unless you mark it
+                            MATERIALIZED — and even then there are caveats around the query planner.
+                          </p>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://example.com/article/cte-materialization" style="height:42px;v-text-anchor:middle;" arcsize="0%" strokecolor="#1f2937" fillcolor="#1f2937"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:bold;">The four-paragraph version →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://example.com/article/cte-materialization" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1f2937;border-radius:0;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:bold;line-height:14px;text-align:center;text-decoration:none;padding:14px 28px;-webkit-text-size-adjust:none;">The four-paragraph version →</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#fef3c7" style="background-color:#fef3c7">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding:36px 40px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:520px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:520px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#92400e;font-size:11px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:24px;letter-spacing:2px">
+                            03 · ONE THING WORTH TRYING
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#451a03;font-size:22px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:28px;padding-top:8px">
+                            delve — the calmest Go debugger you'll ever use
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#6b7280;font-size:13px;font-family:Georgia, 'Times New Roman', serif;line-height:20px;padding-top:6px;padding-bottom:14px">
+                            By Sundar V. · 3 min read
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#1f2937;font-size:15px;font-family:Georgia, 'Times New Roman', serif;line-height:24px;padding-bottom:14px">
+                            Three commands. No GUI. Steps through goroutines without lying about
+                            where you are. The kind of tool that disappears into the work and
+                            lets you think. We've started using it in CI for postmortem analysis.
+                          </p>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://example.com/tools/delve" style="height:42px;v-text-anchor:middle;" arcsize="0%" strokecolor="#451a03" fillcolor="#451a03"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:bold;">Try delve →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://example.com/tools/delve" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#451a03;border-radius:0;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:bold;line-height:14px;text-align:center;text-decoration:none;padding:14px 28px;-webkit-text-size-adjust:none;">Try delve →</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#0c0a09" style="background-color:#0c0a09">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding:32px 40px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:520px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:520px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#fef3c7;font-size:12px;font-family:Georgia, 'Times New Roman', serif;font-weight:bold;line-height:24px;letter-spacing:2px">
+                            THE WEEKLY FIELD REPORT
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#a8a29e;font-size:11px;font-family:Georgia, 'Times New Roman', serif;line-height:16px;padding-top:6px">
+                            Sent every Sunday to 28,000 engineers who write production code.
+                            Forwarded to you? <a href="#" style="color:#fbbf24;">Subscribe here</a>.
+                          </p>
+                          <p style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;color:#57534e;font-size:11px;font-family:Georgia, 'Times New Roman', serif;line-height:16px;padding-top:10px">
+                            The Field Report Ltd · 14 Soho Square, London W1D 3QP ·
+                            <a href="#" style="color:#57534e;">Unsubscribe</a>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+          </div><!--[if mso | IE]></td></tr></table><![endif]-->
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

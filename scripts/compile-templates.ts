@@ -32,9 +32,6 @@ function loadData(templateFile: string): Record<string, unknown> {
 }
 
 /** Compile a single template file and write HTML to output/. */
-/** Templates that explicitly demonstrate the attribute styling mode. */
-const ATTRIBUTE_MODE_TEMPLATES = new Set(['18-attribute-styled-promo', 'invoice-attributes']);
-
 function compileTemplate(templateFile: string): boolean {
   const start = performance.now();
   const base = path.basename(templateFile, '.mc');
@@ -43,17 +40,27 @@ function compileTemplate(templateFile: string): boolean {
   const source = fs.readFileSync(templateFile, 'utf8');
   const data = loadData(templateFile);
 
-  const isAttributeMode = ATTRIBUTE_MODE_TEMPLATES.has(base);
-
-  const result = compile(source, {
-    filename: templateFile,
-    data,
-    templateStyle: isAttributeMode ? 'attribute' : 'class',
-    config: mergeConfig({
-      accessibility: { enabled: true, warnMissingAlt: true, enforceAltText: false, checkContrast: true },
-      output: { minify: false, comments: false },
-    }),
+  const config = mergeConfig({
+    accessibility: { enabled: true, warnMissingAlt: true, enforceAltText: false, checkContrast: true },
+    output: { minify: false, comments: false },
   });
+
+  // Auto-detect styling mode. Compile in class mode first; if the template
+  // uses CSS-property attributes the compiler emits CSS_ATTR_IN_CLASS_MODE —
+  // a precise signal (not a heuristic) that it's an attribute-style template,
+  // so transparently recompile in attribute mode. This replaces a hardcoded
+  // template-name allowlist that silently broke whenever a new attribute
+  // template was added without updating the list.
+  let templateStyle: 'class' | 'attribute' = 'class';
+  let result = compile(source, { filename: templateFile, data, templateStyle, config });
+
+  const usesAttributeStyling = [...result.errors, ...result.warnings].some(
+    (m) => m.code === 'CSS_ATTR_IN_CLASS_MODE',
+  );
+  if (usesAttributeStyling) {
+    templateStyle = 'attribute';
+    result = compile(source, { filename: templateFile, data, templateStyle, config });
+  }
 
   if (result.html === null) {
     console.log(`  ${RED}✘${RESET} ${base}.html ${DIM}(compile failed)${RESET}`);
@@ -85,7 +92,7 @@ function compileTemplate(templateFile: string): boolean {
   fs.writeFileSync(outputFile, html, 'utf8');
 
   const sizeKb = (Buffer.byteLength(html, 'utf8') / 1024).toFixed(1);
-  console.log(`  ${GREEN}✔${RESET} ${base}.html ${DIM}${sizeKb}kb · ${elapsed}ms${RESET}`);
+  console.log(`  ${GREEN}✔${RESET} ${base}.html ${DIM}${sizeKb}kb · ${elapsed}ms · ${templateStyle} mode${RESET}`);
 
   const warnings = result.warnings.filter((e) => e.severity === 'warning');
   for (const w of warnings) {
