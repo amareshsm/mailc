@@ -274,7 +274,7 @@ const nodes: Node<PhaseData>[] = [
 
   { id: 's3b', type: 'phase', position: { x: MX, y: ROW * 4 },
     data: { label: 'Stage 3b · Templates', badge: 'If data', accent: 'blue',
-            sub: '{{ vars }}, mc-if / mc-else, mc-for-each loops',
+            sub: '{{ vars }}, mc-if / mc-else, mc-each loops',
             module: 'template/index.ts' } },
 
   { id: 's4', type: 'phase', position: { x: MX, y: ROW * 5 },

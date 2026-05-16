@@ -52,7 +52,7 @@ Checks structural rules — required parents, required children, unknown compone
 
 **Module**: `src/template/index.ts`
 
-Walks the AST resolving `{{ variable }}` / `{{ variable | formatter }}`, evaluating `mc-if` / `mc-else` chains, and expanding `mc-for-each` loops. Skipped entirely when `options.data` is absent.
+Walks the AST resolving `{{ variable }}` / `{{ variable | formatter }}`, evaluating `mc-if` / `mc-else` chains, and expanding `mc-each` loops. Skipped entirely when `options.data` is absent.
 
 With `config.templateEngine.strictVariables = true`, any unresolved path emits an `UNDEFINED_VARIABLE` error instead of rendering blank.
 

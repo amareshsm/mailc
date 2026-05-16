@@ -87,10 +87,10 @@ Operator precedence follows JavaScript: `!` first, then comparison operators, th
 
 ## Inside loops
 
-Conditionals work inside `<mc-for-each>` — common pattern is highlighting the first or last iteration:
+Conditionals work inside `<mc-each>` — common pattern is highlighting the first or last iteration:
 
 ```html
-<mc-for-each collection="cart.items" as="item">
+<mc-each items="cart.items" as="item">
   <mc-section>
     <mc-column>
       <mc-text>{{item.name}}</mc-text>
@@ -99,7 +99,7 @@ Conditionals work inside `<mc-for-each>` — common pattern is highlighting the 
       </mc-if>
     </mc-column>
   </mc-section>
-</mc-for-each>
+</mc-each>
 ```
 
 See [Loops](/docs/templating/loops) for the `_last`, `_first`, `_index`, `_total` metadata.

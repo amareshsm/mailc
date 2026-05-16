@@ -38,7 +38,7 @@ export const compileEmailInput = {
     .record(z.string(), z.unknown())
     .optional()
     .describe(
-      'Template data for {{variable}} interpolation, mc-if conditions, and mc-for-each loops. Optional.',
+      'Template data for {{variable}} interpolation, mc-if conditions, and mc-each loops. Optional.',
     ),
 }
 

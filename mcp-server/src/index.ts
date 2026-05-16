@@ -167,7 +167,7 @@ async function main(): Promise<void> {
     {
       title: 'Extract template data contract',
       description:
-        'Static analysis of a template. Returns: required fields (always accessed), optional fields (gated by mc-if), and per-loop iteration shapes (mc-for-each variable + source + per-item paths). Use this to know what data shape your template needs.',
+        'Static analysis of a template. Returns: required fields (always accessed), optional fields (gated by mc-if), and per-loop iteration shapes (mc-each variable + source + per-item paths). Use this to know what data shape your template needs.',
       inputSchema: extractDataContractInput,
     },
     async (args) => {

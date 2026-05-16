@@ -56,9 +56,9 @@ const EXAMPLES: Example[] = [
     <mc-section>
       <mc-column>
         <mc-text>Hi {{user.name}}, here is your receipt:</mc-text>
-        <mc-for-each collection="order.items" as="item">
+        <mc-each items="order.items" as="item">
           <mc-text>• {{item.name}} — \${{item.price}} × {{item.quantity}}</mc-text>
-        </mc-for-each>
+        </mc-each>
         <mc-text>Total: \${{order.total}}</mc-text>
       </mc-column>
     </mc-section>
@@ -244,7 +244,7 @@ export function DataContractAnalyzer() {
         <p className="text-sm text-muted-foreground">
           Static analysis of <code className="text-[11px] font-mono">{`{{vars}}`}</code>,{' '}
           <code className="text-[11px] font-mono">mc-if</code>, and{' '}
-          <code className="text-[11px] font-mono">mc-for-each</code>. Emits a
+          <code className="text-[11px] font-mono">mc-each</code>. Emits a
           TypeScript interface for the data shape your template needs.
         </p>
       </div>
@@ -319,7 +319,7 @@ export function DataContractAnalyzer() {
                     Loops
                   </h2>
                   <p className="text-[11px] text-muted-foreground mb-3">
-                    Each mc-each / mc-for-each block. The source path must be
+                    Each mc-each block. The source path must be
                     an iterable.
                   </p>
                   {contract.loops.length === 0 ? (

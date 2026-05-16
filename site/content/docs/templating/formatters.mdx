@@ -137,9 +137,9 @@ Reach for a formatter only when **all** of these are true:
 Examples that fit:
 
 ```html
-<mc-for-each collection="items" as="item">
+<mc-each items="items" as="item">
   <mc-text>{{_index | plus1}}. {{item.name}}</mc-text>
-</mc-for-each>
+</mc-each>
 ```
 
 ```ts

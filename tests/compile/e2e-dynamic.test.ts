@@ -1,7 +1,7 @@
 /**
  * End-to-end tests for dynamic template features through the full compile pipeline.
  *
- * Tests mc-if/else-if/else chains, mc-for-each loops, nested conditionals
+ * Tests mc-if/else-if/else chains, mc-each loops, nested conditionals
  * inside loops, chained formatters, and edge cases — through BOTH the
  * markup (compile()) and JSON (compileFromJSON()) flows.
  *
@@ -85,17 +85,17 @@ describe('E2E: mc-if/else chains (markup)', () => {
 });
 
 // ===========================================================================
-// mc-for-each — MARKUP FLOW
+// mc-each — MARKUP FLOW
 // ===========================================================================
 
-describe('E2E: mc-for-each (markup)', () => {
+describe('E2E: mc-each (markup)', () => {
   it('expands loop with resolved expressions', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="names" as="name">
+  <mc-each items="names" as="name">
     <mc-section><mc-column><mc-text>{{name}}</mc-text></mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
 
@@ -109,11 +109,11 @@ describe('E2E: mc-for-each (markup)', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="products" as="product">
+  <mc-each items="products" as="product">
     <mc-section><mc-column>
       <mc-text>{{product.name}} - {{product.sku}}</mc-text>
     </mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
 
@@ -128,13 +128,13 @@ describe('E2E: mc-for-each (markup)', () => {
     expect(result.html).toContain('Mouse - SKU-002');
   });
 
-  it('handles empty collection (no output)', () => {
+  it('handles empty items (no output)', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="items" as="item">
+  <mc-each items="items" as="item">
     <mc-section><mc-column><mc-text>{{item.name}}</mc-text></mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
   <mc-section><mc-column><mc-text>Footer</mc-text></mc-column></mc-section>
 </mc-body>
 </mc>`;
@@ -149,11 +149,11 @@ describe('E2E: mc-for-each (markup)', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="items" as="item">
+  <mc-each items="items" as="item">
     <mc-section><mc-column>
       <mc-text>{{_index}}: {{item}}</mc-text>
     </mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
 
@@ -173,7 +173,7 @@ describe('E2E: nested conditionals + loops (markup)', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="orders" as="order">
+  <mc-each items="orders" as="order">
     <mc-section><mc-column>
       <mc-text>Order #{{order.id}}</mc-text>
       <mc-if condition="order.shipped">
@@ -183,7 +183,7 @@ describe('E2E: nested conditionals + loops (markup)', () => {
         <mc-text>Status: Processing</mc-text>
       </mc-else>
     </mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
 
@@ -206,9 +206,9 @@ describe('E2E: nested conditionals + loops (markup)', () => {
 <mc>
   <mc-body>
   <mc-if condition="showItems">
-    <mc-for-each collection="items" as="item">
+    <mc-each items="items" as="item">
       <mc-section><mc-column><mc-text>{{item}}</mc-text></mc-column></mc-section>
-    </mc-for-each>
+    </mc-each>
   </mc-if>
   <mc-else>
     <mc-section><mc-column><mc-text>No items to show</mc-text></mc-column></mc-section>
@@ -289,13 +289,13 @@ describe('E2E: formatters through compile pipeline', () => {
     expect(result.html).toContain('https://example.com/user/sarahconnor');
   });
 
-  it('applies formatter in mc-for-each loop items', () => {
+  it('applies formatter in mc-each loop items', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="prices" as="price">
+  <mc-each items="prices" as="price">
     <mc-section><mc-column><mc-text>{{price | currency}}</mc-text></mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
 
@@ -333,7 +333,7 @@ describe('E2E: formatters through compile pipeline', () => {
 });
 
 // ===========================================================================
-// JSON flow — mc-if/else, mc-for-each, formatters
+// JSON flow — mc-if/else, mc-each, formatters
 // ===========================================================================
 
 describe('E2E: dynamic features (JSON flow)', () => {
@@ -400,7 +400,7 @@ describe('E2E: dynamic features (JSON flow)', () => {
     expect(free.html).not.toContain('Premium user');
   });
 
-  it('expands mc-for-each in JSON', () => {
+  it('expands mc-each in JSON', () => {
     const template: MCNode = {
       type: 'mc',
       attributes: {},
@@ -410,8 +410,8 @@ describe('E2E: dynamic features (JSON flow)', () => {
         attributes: {},
         children: [
           {
-            type: 'mc-for-each',
-            attributes: { collection: 'items', as: 'item' },
+            type: 'mc-each',
+            attributes: { items: 'items', as: 'item' },
             children: [
               {
                 type: 'mc-section',
@@ -446,7 +446,7 @@ describe('E2E: dynamic features (JSON flow)', () => {
     expect(result.html).toContain('Gadget: $50.00');
   });
 
-  it('nested mc-if inside mc-for-each in JSON', () => {
+  it('nested mc-if inside mc-each in JSON', () => {
     const template: MCNode = {
       type: 'mc',
       attributes: {},
@@ -456,8 +456,8 @@ describe('E2E: dynamic features (JSON flow)', () => {
         attributes: {},
         children: [
           {
-            type: 'mc-for-each',
-            attributes: { collection: 'users', as: 'user' },
+            type: 'mc-each',
+            attributes: { items: 'users', as: 'user' },
             children: [
               {
                 type: 'mc-section',
@@ -729,13 +729,13 @@ describe('E2E: edge cases', () => {
     expect(result.html).toContain('Static content only');
   });
 
-  it('handles mc-for-each with single item', () => {
+  it('handles mc-each with single item', () => {
     const source = `
 <mc>
   <mc-body>
-  <mc-for-each collection="items" as="item">
+  <mc-each items="items" as="item">
     <mc-section><mc-column><mc-text>{{item}}</mc-text></mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
 

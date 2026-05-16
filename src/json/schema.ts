@@ -35,7 +35,7 @@ export type MCComponentType =
   | 'mc-list-item';
 
 /** Logic/template node types. */
-export type MCLogicType = 'mc-if' | 'mc-else-if' | 'mc-else' | 'mc-each' | 'mc-for-each';
+export type MCLogicType = 'mc-if' | 'mc-else-if' | 'mc-else' | 'mc-each';
 
 /** Head-internal attribute target types (children of mc-attributes). */
 export type MCAttributeTargetType =

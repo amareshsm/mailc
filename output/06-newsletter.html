@@ -1,59 +1,308 @@
-<!DOCTYPE html><html lang="en" xml:lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="x-apple-disable-message-reformatting"><meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no"><title>mailc Weekly #42 — The Email Compiler Renaissance</title><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]--><style>body,table,td,p,a,li,blockquote{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}img{-ms-interpolation-mode:bicubic;border:0;height:auto;line-height:100%;outline:none;text-decoration:none;}body{margin:0;padding:0;width:100%!important;height:100%!important;}@media only screen and (max-width:500px){.mc-responsive{width:100%!important;max-width:100%!important;}}</style><style>.mc-el-1 { border-radius: 4px; } .mc-el-2 { border-radius: 4px; } .mc-el-3 { border-radius: 4px; } .mc-el-4 { border-radius: 4px; } .mc-el-5 { border-radius: 4px; } .mc-el-6 { border-radius: 4px; } .mc-el-7 { border-radius: 4px; } .mc-el-8 { border-radius: 4px; } .mc-el-9 { border-radius: 4px; } .mc-el-10 { border-radius: 4px; }</style></head><body xml:lang="en" style="margin:0;padding:0;background-color:#fafaf9"><div role="article" aria-roledescription="email" lang="en" dir="ltr" aria-label="mailc Weekly #42 — The Email Compiler Renaissance" style="font-size:medium;font-size:max(16px,1rem);"><div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">How modern tooling is transforming email development in 2026&#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; </div><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fafaf9;"><tr><td align="center" valign="top"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" align="center"><tr><td><![endif]--><div style="max-width:600px;margin:0 auto;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#1a1a1a" style="background-color:#1a1a1a"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:331px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:331px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          mailc Weekly
-        </p><p style="font-size:15px;color:#1a1a1a;padding-top:2px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          Issue #42 · 17 April 2026
-        </p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:221px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:221px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;color:#1a1a1a;text-align:right;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          Hi Amaresh 👋
-        </p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:32px;padding-right:24px;padding-bottom:24px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          THIS WEEK
-        </p><p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:8px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-          The Email Compiler Renaissance
-        </p><p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;"><span style="display:block;width:100%;border-top:1px solid #e7e5e4;font-size:1px;line-height:1px;">&nbsp;</span></p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              FREE · Deep Dive
-            </p><p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-              Why Tailwind in Email is Finally Possible
-            </p><p style="font-size:15px;color:#1a1a1a;padding-top:8px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-              A deep look at how compile-time CSS expansion solves the inlining problem that blocked Tailwind from email for years.
-            </p><p style="font-size:15px;color:#1a1a1a;padding-top:8px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              6 min read
-            </p><div class="mc-el-1" style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/blog/tailwind-in-email" style="height:33px;v-text-anchor:middle;" arcsize="0%" strokecolor="#1a1a1a" fillcolor="#1a1a1a"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Read article →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://mailcraft.dev/blog/tailwind-in-email" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1a1a1a;border-radius:0;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Read article →</a><!--<![endif]--></div><p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;"><span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span></p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              🔒 PRO ONLY · Benchmark
-            </p><p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-              Benchmarking Five Email Compilers in 2026
-            </p><p style="font-size:15px;color:#1a1a1a;padding-top:8px;font-style:italic;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              This article is available to Pro subscribers. Upgrade to read the full piece.
-            </p><div class="mc-el-2" style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/upgrade" style="height:33px;v-text-anchor:middle;" arcsize="0%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Upgrade to Pro →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://mailcraft.dev/upgrade" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:0;color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Upgrade to Pro →</a><!--<![endif]--></div><p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;"><span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span></p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              FREE · Accessibility
-            </p><p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-              The State of Dark Mode in Email
-            </p><p style="font-size:15px;color:#1a1a1a;padding-top:8px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-              Coverage has crossed 60% in Gmail iOS. Here&#39;s what that means for how you should write dark mode CSS in 2026.
-            </p><p style="font-size:15px;color:#1a1a1a;padding-top:8px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              5 min read
-            </p><div class="mc-el-3" style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/blog/dark-mode-2026" style="height:33px;v-text-anchor:middle;" arcsize="0%" strokecolor="#1a1a1a" fillcolor="#1a1a1a"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Read article →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://mailcraft.dev/blog/dark-mode-2026" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1a1a1a;border-radius:0;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Read article →</a><!--<![endif]--></div><p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;"><span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span></p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              🔒 PRO ONLY · Layout
-            </p><p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-              Fluid Hybrid vs Fixed Width: Which Should You Use?
-            </p><p style="font-size:15px;color:#1a1a1a;padding-top:8px;font-style:italic;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-              This article is available to Pro subscribers. Upgrade to read the full piece.
-            </p><div class="mc-el-4" style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/upgrade" style="height:33px;v-text-anchor:middle;" arcsize="0%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Upgrade to Pro →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://mailcraft.dev/upgrade" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:0;color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Upgrade to Pro →</a><!--<![endif]--></div><p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;"><span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span></p></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#fef9c3" style="background-color:#fef9c3"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          SPONSOR
-        </p><p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          Postmark — Reliable transactional email
-        </p><p style="font-size:15px;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-          Postmark delivers transactional emails at blazing speed with a 99.99% uptime SLA. Used by 90,000+ developers. Start free, no credit card needed.
-        </p><div class="mc-el-5" style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://postmarkapp.com/?ref=mailcraft-weekly" style="height:33px;v-text-anchor:middle;" arcsize="0%" strokecolor="#d97706" fillcolor="#d97706"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Try Postmark free →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://postmarkapp.com/?ref=mailcraft-weekly" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#d97706;border-radius:0;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Try Postmark free →</a><!--<![endif]--></div></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:24px;padding-right:24px;padding-bottom:24px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="font-size:15px;font-weight:700;color:#1a1a1a;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-          ⚡ Quick Links
-        </p><div style="height:8px;line-height:8px;font-size:1px">&nbsp;</div><p style="font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-            → Can I Email adds 47 new CSS properties — caniemail.com
-          </p><div class="mc-el-6" style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://caniemail.com/changelog" style="height:24px;v-text-anchor:middle;" arcsize="0%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;">Read →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://caniemail.com/changelog" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:0;color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;line-height:12px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Read →</a><!--<![endif]--></div><p style="font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-            → Gmail now supports CSS Grid (limited) — Google Dev Docs
-          </p><div class="mc-el-7" style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://developers.google.com/gmail/design/email-clients" style="height:24px;v-text-anchor:middle;" arcsize="0%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;">Read →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://developers.google.com/gmail/design/email-clients" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:0;color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;line-height:12px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Read →</a><!--<![endif]--></div><p style="font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-            → How Stripe&#39;s transactional emails are built — Stripe Engineering
-          </p><div class="mc-el-8" style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://stripe.com/blog/email-infrastructure" style="height:24px;v-text-anchor:middle;" arcsize="0%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;">Read →</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://stripe.com/blog/email-infrastructure" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:0;color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;line-height:12px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Read →</a><!--<![endif]--></div></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#7c3aed" style="background-color:#7c3aed"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:28px;padding-right:24px;padding-bottom:28px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="text-align:center;font-size:15px;font-weight:700;color:#1a1a1a;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-            You're missing 2 Pro articles in this issue
-          </p><p style="text-align:center;font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
-            Upgrade for $9/mo and get full access to every article, forever.
-          </p><div style="height:16px;line-height:16px;font-size:1px">&nbsp;</div><div class="mc-el-9" style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/upgrade" style="height:38px;v-text-anchor:middle;" arcsize="0%" strokecolor="#ffffff" fillcolor="#ffffff"><w:anchorlock/><center style="color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:700;">Upgrade to Pro — $9/mo</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://mailcraft.dev/upgrade" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#ffffff;border-radius:0;color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:700;line-height:14px;text-align:center;text-decoration:none;padding:12px 24px 12px 24px;-webkit-text-size-adjust:none;">Upgrade to Pro — $9/mo</a><!--<![endif]--></div></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:24px;padding-right:24px;padding-bottom:24px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]--><div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td style="padding:0;word-break:break-word;"><p style="text-align:center;font-size:15px;color:#1a1a1a;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
-          mailc Weekly · Sent to amaresh@example.com
-        </p><div style="height:8px;line-height:8px;font-size:1px">&nbsp;</div><div class="mc-el-10" style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/unsubscribe" style="height:23px;v-text-anchor:middle;" arcsize="0%" strokecolor="transparent" fillcolor="transparent"><w:anchorlock/><center style="color:#a8a29e;font-family:Georgia, 'Times New Roman', serif;font-size:11px;font-weight:bold;">Unsubscribe</center></v:roundrect><![endif]--><!--[if !mso]><!--><a href="https://mailcraft.dev/unsubscribe" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:transparent;border-radius:0;color:#a8a29e;font-family:Georgia, 'Times New Roman', serif;font-size:11px;font-weight:bold;line-height:11px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Unsubscribe</a><!--<![endif]--></div></td></tr></table></div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]--></td></tr></table></div><!--[if mso | IE]></td></tr></table><![endif]--></td></tr></table></div></body></html>
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>mailc Weekly #42 — The Email Compiler Renaissance</title><!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+  <style>body,table,td,p,a,li,blockquote{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}table,td{mso-table-lspace:0pt;mso-table-rspace:0pt;}img{-ms-interpolation-mode:bicubic;border:0;height:auto;line-height:100%;outline:none;text-decoration:none;}body{margin:0;padding:0;width:100%!important;height:100%!important;}@media only screen and (max-width:500px){.mc-responsive{width:100%!important;max-width:100%!important;}}</style>
+</head>
+<body xml:lang="en" style="margin:0;padding:0;background-color:#fafaf9">
+  <div role="article" aria-roledescription="email" lang="en" dir="ltr" aria-label="mailc Weekly #42 — The Email Compiler Renaissance" style="font-size:medium;font-size:max(16px,1rem);">
+    <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">How modern tooling is transforming email development in 2026&#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; &#847; </div>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fafaf9;">
+      <tr>
+        <td align="center" valign="top"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" align="center"><tr><td><![endif]-->
+          <div style="max-width:600px;margin:0 auto;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#1a1a1a" style="background-color:#1a1a1a">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:331px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:331px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            mailc Weekly
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:2px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            Issue #42 · 17 April 2026
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:221px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:221px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;color:#1a1a1a;text-align:right;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            Hi Amaresh 👋
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:32px;padding-right:24px;padding-bottom:24px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            THIS WEEK
+                          </p>
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:8px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            The Email Compiler Renaissance
+                          </p>
+                          <p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;">
+                            <span style="display:block;width:100%;border-top:1px solid #e7e5e4;font-size:1px;line-height:1px;">&nbsp;</span>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            FREE · Deep Dive
+                          </p>
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            Why Tailwind in Email is Finally Possible
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:8px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            A deep look at how compile-time CSS expansion solves the inlining problem that blocked Tailwind from email for years.
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:8px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            6 min read
+                          </p>
+                          <div style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/blog/tailwind-in-email" style="height:33px;v-text-anchor:middle;" arcsize="12%" strokecolor="#1a1a1a" fillcolor="#1a1a1a"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Read article →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://mailcraft.dev/blog/tailwind-in-email" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1a1a1a;border-radius:4px;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Read article →</a><!--<![endif]-->
+                          </div>
+                          <p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;">
+                            <span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            🔒 PRO ONLY · Benchmark
+                          </p>
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            How Email Compilers Handle Outlook in 2026
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:8px;font-style:italic;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            This article is available to Pro subscribers. Upgrade to read the full piece.
+                          </p>
+                          <div style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/upgrade" style="height:33px;v-text-anchor:middle;" arcsize="12%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Upgrade to Pro →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://mailcraft.dev/upgrade" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:4px;color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Upgrade to Pro →</a><!--<![endif]-->
+                          </div>
+                          <p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;">
+                            <span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            FREE · Accessibility
+                          </p>
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            The State of Dark Mode in Email
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:8px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            Coverage has crossed 60% in Gmail iOS. Here&#39;s what that means for how you should write dark mode CSS in 2026.
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:8px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            5 min read
+                          </p>
+                          <div style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/blog/dark-mode-2026" style="height:33px;v-text-anchor:middle;" arcsize="12%" strokecolor="#1a1a1a" fillcolor="#1a1a1a"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Read article →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://mailcraft.dev/blog/dark-mode-2026" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#1a1a1a;border-radius:4px;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Read article →</a><!--<![endif]-->
+                          </div>
+                          <p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;">
+                            <span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            🔒 PRO ONLY · Layout
+                          </p>
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            Fluid Hybrid vs Fixed Width: Which Should You Use?
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:8px;font-style:italic;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            This article is available to Pro subscribers. Upgrade to read the full piece.
+                          </p>
+                          <div style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/upgrade" style="height:33px;v-text-anchor:middle;" arcsize="12%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Upgrade to Pro →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://mailcraft.dev/upgrade" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:4px;color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Upgrade to Pro →</a><!--<![endif]-->
+                          </div>
+                          <p style="margin:0;padding:16px 0;font-size:1px;line-height:1px;">
+                            <span style="display:block;width:100%;border-top:1px solid #f5f5f4;font-size:1px;line-height:1px;">&nbsp;</span>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#fef9c3" style="background-color:#fef9c3">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:20px;padding-right:24px;padding-bottom:20px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;letter-spacing:1px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            SPONSOR
+                          </p>
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            Postmark — Reliable transactional email
+                          </p>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:6px;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            Postmark delivers transactional emails at blazing speed with a 99.99% uptime SLA. Used by 90,000+ developers. Start free, no credit card needed.
+                          </p>
+                          <div style="text-align:center;margin-top:12px"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://postmarkapp.com/?ref=mailcraft-weekly" style="height:33px;v-text-anchor:middle;" arcsize="12%" strokecolor="#d97706" fillcolor="#d97706"><w:anchorlock/><center style="color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;">Try Postmark free →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://postmarkapp.com/?ref=mailcraft-weekly" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#d97706;border-radius:4px;color:#ffffff;font-family:Georgia, 'Times New Roman', serif;font-size:13px;font-weight:700;line-height:13px;text-align:center;text-decoration:none;padding:10px 20px 10px 20px;-webkit-text-size-adjust:none;">Try Postmark free →</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff" style="background-color:#ffffff">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:24px;padding-right:24px;padding-bottom:24px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="font-size:15px;font-weight:700;color:#1a1a1a;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            ⚡ Quick Links
+                          </p>
+                          <div style="height:8px;line-height:8px;font-size:1px">&nbsp;</div>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            → Can I Email adds 47 new CSS properties — caniemail.com
+                          </p>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://caniemail.com/changelog" style="height:24px;v-text-anchor:middle;" arcsize="17%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;">Read →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://caniemail.com/changelog" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:4px;color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;line-height:12px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Read →</a><!--<![endif]-->
+                          </div>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            → Gmail now supports CSS Grid (limited) — Google Dev Docs
+                          </p>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://developers.google.com/gmail/design/email-clients" style="height:24px;v-text-anchor:middle;" arcsize="17%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;">Read →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://developers.google.com/gmail/design/email-clients" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:4px;color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;line-height:12px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Read →</a><!--<![endif]-->
+                          </div>
+                          <p style="font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            → How Stripe&#39;s transactional emails are built — Stripe Engineering
+                          </p>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://stripe.com/blog/email-infrastructure" style="height:24px;v-text-anchor:middle;" arcsize="17%" strokecolor="#f5f5f4" fillcolor="#f5f5f4"><w:anchorlock/><center style="color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;">Read →</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://stripe.com/blog/email-infrastructure" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#f5f5f4;border-radius:4px;color:#1a1a1a;font-family:Georgia, 'Times New Roman', serif;font-size:12px;font-weight:bold;line-height:12px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Read →</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#7c3aed" style="background-color:#7c3aed">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:28px;padding-right:24px;padding-bottom:28px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="text-align:center;font-size:15px;font-weight:700;color:#1a1a1a;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            You're missing 2 Pro articles in this issue
+                          </p>
+                          <p style="text-align:center;font-size:15px;color:#1a1a1a;padding-top:6px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif;line-height:24px">
+                            Upgrade for $9/mo and get full access to every article, forever.
+                          </p>
+                          <div style="height:16px;line-height:16px;font-size:1px">&nbsp;</div>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/upgrade" style="height:38px;v-text-anchor:middle;" arcsize="11%" strokecolor="#ffffff" fillcolor="#ffffff"><w:anchorlock/><center style="color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:700;">Upgrade to Pro — $9/mo</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://mailcraft.dev/upgrade" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:#ffffff;border-radius:4px;color:#7c3aed;font-family:Georgia, 'Times New Roman', serif;font-size:14px;font-weight:700;line-height:14px;text-align:center;text-decoration:none;padding:12px 24px 12px 24px;-webkit-text-size-adjust:none;">Upgrade to Pro — $9/mo</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td align="center" style="font-size:0;mso-line-height-rule:exactly;word-break:break-word;padding-top:24px;padding-right:24px;padding-bottom:24px;padding-left:24px"><!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><![endif]--><!--[if mso | IE]><td style="vertical-align:top;width:552px;"><![endif]-->
+                  <div class="mc-responsive" style="font-size:0px;direction:ltr;display:inline-block;vertical-align:top;width:100%;max-width:552px;">
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:0;word-break:break-word;">
+                          <p style="text-align:center;font-size:15px;color:#1a1a1a;line-height:24px;margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;font-family:Georgia, 'Times New Roman', serif">
+                            mailc Weekly · Sent to amaresh@example.com
+                          </p>
+                          <div style="height:8px;line-height:8px;font-size:1px">&nbsp;</div>
+                          <div style="text-align:center;"><!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://mailcraft.dev/unsubscribe" style="height:23px;v-text-anchor:middle;" arcsize="17%" strokecolor="transparent" fillcolor="transparent"><w:anchorlock/><center style="color:#a8a29e;font-family:Georgia, 'Times New Roman', serif;font-size:11px;font-weight:bold;">Unsubscribe</center></v:roundrect><![endif]--><!--[if !mso]><!-->
+                            <a href="https://mailcraft.dev/unsubscribe" target="_blank" rel="noopener noreferrer" style="display:inline-block;background-color:transparent;border-radius:4px;color:#a8a29e;font-family:Georgia, 'Times New Roman', serif;font-size:11px;font-weight:bold;line-height:11px;text-align:center;text-decoration:none;padding:6px 14px 6px 14px;-webkit-text-size-adjust:none;">Unsubscribe</a><!--<![endif]-->
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div><!--[if mso | IE]></td><![endif]--><!--[if mso | IE]></tr></table><![endif]-->
+                </td>
+              </tr>
+            </table>
+          </div><!--[if mso | IE]></td></tr></table><![endif]-->
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

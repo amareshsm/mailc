@@ -181,18 +181,18 @@ describe('jsonToMarkup', () => {
     expect(jsonToMarkup(node)).toBe(expected);
   });
 
-  it('renders mc-for-each with children', () => {
+  it('renders mc-each with children', () => {
     const node: MCNode = {
-      type: 'mc-for-each',
-      attributes: { collection: 'items', as: 'item' },
+      type: 'mc-each',
+      attributes: { items: 'items', as: 'item' },
       children: [
         { type: 'mc-text', attributes: {}, content: '{{item.name}}' },
       ],
     };
     const expected = [
-      '<mc-for-each collection="items" as="item">',
+      '<mc-each items="items" as="item">',
       '  <mc-text>{{item.name}}</mc-text>',
-      '</mc-for-each>',
+      '</mc-each>',
     ].join('\n');
     expect(jsonToMarkup(node)).toBe(expected);
   });

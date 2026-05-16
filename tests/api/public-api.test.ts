@@ -95,7 +95,7 @@ import {
   resolveContent,
   resolveAttributes,
   evaluateCondition,
-  expandForEach,
+  expandEach,
   applyFormatters,
 } from '../../src/index.js';
 
@@ -353,7 +353,7 @@ describe('Phase 15: Public API exports', () => {
     });
 
     it('exports loop expander', () => {
-      expect(typeof expandForEach).toBe('function');
+      expect(typeof expandEach).toBe('function');
     });
 
     it('exports formatter', () => {

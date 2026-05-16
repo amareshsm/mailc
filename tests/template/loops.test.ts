@@ -1,11 +1,11 @@
 /**
- * Tests for loop expansion (mc-for-each).
+ * Tests for loop expansion (mc-each).
  *
  * Covers BUILD_ORDER item 10.5.21.
  */
 
 import { describe, it, expect } from 'vitest';
-import { expandForEach } from '../../src/template/index.js';
+import { expandEach } from '../../src/template/index.js';
 import type { ASTNode, SourceLocation } from '../../src/types.js';
 
 // ---------------------------------------------------------------------------
@@ -17,10 +17,10 @@ const LOC: SourceLocation = {
   end: { line: 1, col: 10, offset: 9 },
 };
 
-function makeForEach(collection: string, as: string, children: ASTNode[]): ASTNode {
+function makeEach(items: string, as: string, children: ASTNode[]): ASTNode {
   return {
-    type: 'mc-for-each',
-    attributes: { collection, as },
+    type: 'mc-each',
+    attributes: { items, as },
     children,
     content: [],
     loc: LOC,
@@ -45,32 +45,32 @@ function identityResolve(node: ASTNode): ASTNode {
   return node;
 }
 
-describe('expandForEach', () => {
+describe('expandEach', () => {
   it('returns empty array for 0 items', () => {
-    const node = makeForEach('items', 'item', [makeTextNode('item.name')]);
+    const node = makeEach('items', 'item', [makeTextNode('item.name')]);
     const data = { items: [] };
-    const result = expandForEach(node, data, identityResolve);
+    const result = expandEach(node, data, identityResolve);
     expect(result).toEqual([]);
   });
 
   it('expands 3 items into 3 copies', () => {
     const child = makeTextNode('item.name');
-    const node = makeForEach('items', 'item', [child]);
+    const node = makeEach('items', 'item', [child]);
     const data = { items: [{ name: 'A' }, { name: 'B' }, { name: 'C' }] };
-    const result = expandForEach(node, data, identityResolve);
+    const result = expandEach(node, data, identityResolve);
     expect(result).toHaveLength(3);
   });
 
-  it('returns empty for non-array collection', () => {
-    const node = makeForEach('name', 'item', [makeTextNode('item')]);
+  it('returns empty for non-array items', () => {
+    const node = makeEach('name', 'item', [makeTextNode('item')]);
     const data = { name: 'not an array' };
-    const result = expandForEach(node, data, identityResolve);
+    const result = expandEach(node, data, identityResolve);
     expect(result).toEqual([]);
   });
 
-  it('returns empty for missing collection', () => {
-    const node = makeForEach('missing', 'item', [makeTextNode('item')]);
-    const result = expandForEach(node, {}, identityResolve);
+  it('returns empty for missing items', () => {
+    const node = makeEach('missing', 'item', [makeTextNode('item')]);
+    const result = expandEach(node, {}, identityResolve);
     expect(result).toEqual([]);
   });
 
@@ -82,10 +82,10 @@ describe('expandForEach', () => {
     };
 
     const child = makeTextNode('item.name');
-    const node = makeForEach('items', 'item', [child]);
+    const node = makeEach('items', 'item', [child]);
     const data = { items: ['a', 'b', 'c'] };
 
-    expandForEach(node, data, capturingResolve);
+    expandEach(node, data, capturingResolve);
 
     expect(captured).toHaveLength(3);
     expect(captured[0]).toBeDefined();
@@ -118,10 +118,10 @@ describe('expandForEach', () => {
     };
 
     const child = makeTextNode('product.name');
-    const node = makeForEach('products', 'product', [child]);
+    const node = makeEach('products', 'product', [child]);
     const data = { products: [{ name: 'Widget' }] };
 
-    expandForEach(node, data, capturingResolve);
+    expandEach(node, data, capturingResolve);
 
     expect(captured).toHaveLength(1);
     expect(captured[0]).toBeDefined();
@@ -138,10 +138,10 @@ describe('expandForEach', () => {
     };
 
     const child = makeTextNode('item');
-    const node = makeForEach('items', 'item', [child]);
+    const node = makeEach('items', 'item', [child]);
     const parentData = { items: ['a'], other: 'preserved' };
 
-    expandForEach(node, parentData, capturingResolve);
+    expandEach(node, parentData, capturingResolve);
 
     expect(captured).toHaveLength(1);
     expect(captured[0]).toBeDefined();
@@ -151,7 +151,7 @@ describe('expandForEach', () => {
     }
   });
 
-  it('handles single-item collection', () => {
+  it('handles single-item items', () => {
     const captured: Record<string, unknown>[] = [];
     const capturingResolve = (n: ASTNode, d: Record<string, unknown>): ASTNode => {
       captured.push({ ...d });
@@ -159,10 +159,10 @@ describe('expandForEach', () => {
     };
 
     const child = makeTextNode('item');
-    const node = makeForEach('items', 'item', [child]);
+    const node = makeEach('items', 'item', [child]);
     const data = { items: ['only'] };
 
-    expandForEach(node, data, capturingResolve);
+    expandEach(node, data, capturingResolve);
 
     expect(captured).toHaveLength(1);
     expect(captured[0]).toBeDefined();
@@ -181,15 +181,15 @@ describe('expandForEach', () => {
     };
 
     const forNode: ASTNode = {
-      type: 'mc-for-each',
-      attributes: { collection: 'items' },
+      type: 'mc-each',
+      attributes: { items: 'items' },
       children: [makeTextNode('item')],
       content: [],
       loc: LOC,
     };
     const data = { items: ['x'] };
 
-    expandForEach(forNode, data, capturingResolve);
+    expandEach(forNode, data, capturingResolve);
 
     expect(captured).toHaveLength(1);
     expect(captured[0]).toBeDefined();
@@ -201,9 +201,9 @@ describe('expandForEach', () => {
   // ── Bug fix: prototype pollution via `as` attribute ───────────────────────
 
   it('returns empty for as="__proto__" (blocks prototype pollution)', () => {
-    const node = makeForEach('items', '__proto__', [makeTextNode('item.name')]);
+    const node = makeEach('items', '__proto__', [makeTextNode('item.name')]);
     const data = { items: [{ name: 'x' }] };
-    const result = expandForEach(node, data, identityResolve);
+    const result = expandEach(node, data, identityResolve);
     // Must not iterate — and must not pollute Object.prototype
     expect(result).toEqual([]);
     // Verify Object.prototype was not polluted
@@ -211,16 +211,16 @@ describe('expandForEach', () => {
   });
 
   it('returns empty for as="constructor" (blocks prototype pollution)', () => {
-    const node = makeForEach('items', 'constructor', [makeTextNode('item')]);
+    const node = makeEach('items', 'constructor', [makeTextNode('item')]);
     const data = { items: ['a'] };
-    const result = expandForEach(node, data, identityResolve);
+    const result = expandEach(node, data, identityResolve);
     expect(result).toEqual([]);
   });
 
   it('returns empty for as="prototype" (blocks prototype pollution)', () => {
-    const node = makeForEach('items', 'prototype', [makeTextNode('item')]);
+    const node = makeEach('items', 'prototype', [makeTextNode('item')]);
     const data = { items: ['a'] };
-    const result = expandForEach(node, data, identityResolve);
+    const result = expandEach(node, data, identityResolve);
     expect(result).toEqual([]);
   });
 });
@@ -230,17 +230,17 @@ describe('expandForEach', () => {
 // ===========================================================================
 
 describe('_total loop metadata', () => {
-  it('injects _total as collection length', () => {
+  it('injects _total as items length', () => {
     const captured: Record<string, unknown>[] = [];
     const capturingResolve = (n: ASTNode, d: Record<string, unknown>): ASTNode => {
       captured.push({ ...d });
       return n;
     };
 
-    const node = makeForEach('items', 'item', [makeTextNode('item')]);
+    const node = makeEach('items', 'item', [makeTextNode('item')]);
     const data = { items: ['a', 'b', 'c'] };
 
-    expandForEach(node, data, capturingResolve);
+    expandEach(node, data, capturingResolve);
 
     expect(captured).toHaveLength(3);
     captured.forEach((scope) => {
@@ -248,15 +248,15 @@ describe('_total loop metadata', () => {
     });
   });
 
-  it('_total is 1 for single-item collection', () => {
+  it('_total is 1 for single-item items', () => {
     const captured: Record<string, unknown>[] = [];
     const capturingResolve = (n: ASTNode, d: Record<string, unknown>): ASTNode => {
       captured.push({ ...d });
       return n;
     };
 
-    const node = makeForEach('items', 'item', [makeTextNode('item')]);
-    expandForEach(node, { items: ['only'] }, capturingResolve);
+    const node = makeEach('items', 'item', [makeTextNode('item')]);
+    expandEach(node, { items: ['only'] }, capturingResolve);
 
     expect(captured[0]?._total).toBe(1);
   });
@@ -276,14 +276,14 @@ describe('index alias attribute', () => {
     };
 
     const node: ASTNode = {
-      type: 'mc-for-each',
-      attributes: { collection: 'items', as: 'item', index: 'i' },
+      type: 'mc-each',
+      attributes: { items: 'items', as: 'item', index: 'i' },
       children: [makeTextNode('item')],
       content: [],
       loc: LOC,
     };
 
-    expandForEach(node, { items: ['a', 'b', 'c'] }, capturingResolve);
+    expandEach(node, { items: ['a', 'b', 'c'] }, capturingResolve);
 
     expect(captured).toHaveLength(3);
     expect(captured[0]?.i).toBe(0);
@@ -301,14 +301,14 @@ describe('index alias attribute', () => {
     };
 
     const node: ASTNode = {
-      type: 'mc-for-each',
-      attributes: { collection: 'items', as: 'item', index: 'rowNum' },
+      type: 'mc-each',
+      attributes: { items: 'items', as: 'item', index: 'rowNum' },
       children: [makeTextNode('item')],
       content: [],
       loc: LOC,
     };
 
-    expandForEach(node, { items: ['x', 'y'] }, capturingResolve);
+    expandEach(node, { items: ['x', 'y'] }, capturingResolve);
 
     captured.forEach((scope, i) => {
       expect(scope.rowNum).toBe(scope._index);
@@ -323,8 +323,8 @@ describe('index alias attribute', () => {
       return n;
     };
 
-    const node = makeForEach('items', 'item', [makeTextNode('item')]);
-    expandForEach(node, { items: ['a'] }, capturingResolve);
+    const node = makeEach('items', 'item', [makeTextNode('item')]);
+    expandEach(node, { items: ['a'] }, capturingResolve);
 
     // Only _index, not any extra alias
     expect(captured[0]?.i).toBeUndefined();
@@ -332,15 +332,15 @@ describe('index alias attribute', () => {
 
   it('blocks prototype-polluting index alias names', () => {
     const node: ASTNode = {
-      type: 'mc-for-each',
-      attributes: { collection: 'items', as: 'item', index: '__proto__' },
+      type: 'mc-each',
+      attributes: { items: 'items', as: 'item', index: '__proto__' },
       children: [makeTextNode('item')],
       content: [],
       loc: LOC,
     };
 
     // Should not throw and should not inject __proto__
-    const result = expandForEach(node, { items: ['a'] }, identityResolve);
+    const result = expandEach(node, { items: ['a'] }, identityResolve);
     expect(result).toHaveLength(1);
     expect(({} as Record<string, unknown>)['polluted']).toBeUndefined();
   });
@@ -356,10 +356,10 @@ describe('nested loop — outer index alias accessible inside inner loop', () =>
 
     // Simulate: outer loop sets index="orderIdx", inner loop overwrites _index
     // The outer orderIdx should still be readable inside the inner loop scope
-    const innerNode = makeForEach('order.items', 'item', [makeTextNode('item')]);
+    const innerNode = makeEach('order.items', 'item', [makeTextNode('item')]);
     const outerNode: ASTNode = {
-      type: 'mc-for-each',
-      attributes: { collection: 'orders', as: 'order', index: 'orderIdx' },
+      type: 'mc-each',
+      attributes: { items: 'orders', as: 'order', index: 'orderIdx' },
       children: [innerNode],
       content: [],
       loc: LOC,
@@ -369,8 +369,8 @@ describe('nested loop — outer index alias accessible inside inner loop', () =>
     // Use a real resolve that passes data through to inner loops
     function realResolve(n: ASTNode, d: Record<string, unknown>): ASTNode {
       captured.push({ ...d });
-      if (n.type === 'mc-for-each') {
-        return { ...n, children: expandForEach(n, d, realResolve) };
+      if (n.type === 'mc-each') {
+        return { ...n, children: expandEach(n, d, realResolve) };
       }
       return n;
     }
@@ -382,7 +382,7 @@ describe('nested loop — outer index alias accessible inside inner loop', () =>
       ],
     };
 
-    expandForEach(outerNode, data, realResolve);
+    expandEach(outerNode, data, realResolve);
 
     // inner loop iterations should still have orderIdx from outer scope
     const innerScopes = captured.filter((s) => 'item' in s);

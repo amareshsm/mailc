@@ -481,7 +481,7 @@ describe('getComponentSpec — cssPropertyAttributes', () => {
   });
 
   it('logic components have empty cssPropertyAttributes', () => {
-    for (const type of ['mc-if', 'mc-each', 'mc-else', 'mc-else-if', 'mc-for-each']) {
+    for (const type of ['mc-if', 'mc-each', 'mc-else', 'mc-else-if']) {
       const spec = getComponentSpec(type)!;
       expect(spec.cssPropertyAttributes, `${type} should have empty cssPropertyAttributes`).toHaveLength(0);
     }

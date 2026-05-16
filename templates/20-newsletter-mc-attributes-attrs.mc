@@ -60,7 +60,7 @@
         </mc-text>
         <mc-text
           font-size="32px"
-          font-weight="black"
+          font-weight="900"
           color="#451a03"
           line-height="38px"
           padding-top="6px">

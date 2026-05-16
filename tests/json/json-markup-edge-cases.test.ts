@@ -3,7 +3,7 @@
  *
  * Covers missing scenarios from the initial test files:
  * - mc-else / mc-else-if serialization
- * - mc-for-each in markup-to-json conversion
+ * - mc-each in markup-to-json conversion
  * - Deeply nested structures (4+ levels)
  * - mc-head with children in round-trip
  * - Empty children arrays
@@ -271,18 +271,18 @@ describe('markupToJSON — edge cases', () => {
     expect(mcIf?.children?.[0]?.type).toBe('mc-section');
   });
 
-  it('converts mc-for-each with collection and as', () => {
+  it('converts mc-each with items and as', () => {
     const source = `<mc>
   <mc-body>
-  <mc-for-each collection="items" as="item">
+  <mc-each items="items" as="item">
     <mc-section><mc-column><mc-text>{{item.name}}</mc-text></mc-column></mc-section>
-  </mc-for-each>
+  </mc-each>
 </mc-body>
 </mc>`;
     const result = markupToJSON(source);
     const forEach = result.children![0]!.children![0]!;
-    expect(forEach.type).toBe('mc-for-each');
-    expect(forEach.attributes.collection).toBe('items');
+    expect(forEach.type).toBe('mc-each');
+    expect(forEach.attributes.items).toBe('items');
     expect(forEach.attributes.as).toBe('item');
     expect(forEach.children).toHaveLength(1);
   });
@@ -487,14 +487,14 @@ describe('Round-trip edge cases', () => {
     expect(rt1.children![1]!.type).toBe('mc-else');
   });
 
-  it('round-trips mc-for-each (JSON → Markup → JSON)', () => {
+  it('round-trips mc-each (JSON → Markup → JSON)', () => {
     const original: MCNode = {
       type: 'mc-body',
       attributes: {},
       children: [
         {
-          type: 'mc-for-each',
-          attributes: { collection: 'items', as: 'item' },
+          type: 'mc-each',
+          attributes: { items: 'items', as: 'item' },
           children: [
             {
               type: 'mc-section',
@@ -515,8 +515,8 @@ describe('Round-trip edge cases', () => {
     const rt2 = roundTripped.children![0]!; // mc-body
     expect(rt2.children).toHaveLength(1);
     const forEach = rt2.children![0]!;
-    expect(forEach.type).toBe('mc-for-each');
-    expect(forEach.attributes.collection).toBe('items');
+    expect(forEach.type).toBe('mc-each');
+    expect(forEach.attributes.items).toBe('items');
     expect(forEach.attributes.as).toBe('item');
   });
 

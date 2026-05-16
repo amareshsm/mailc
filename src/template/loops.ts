@@ -1,7 +1,7 @@
 /**
- * Loop expansion for `mc-for-each` nodes.
+ * Loop expansion for `mc-each` nodes.
  *
- * Iterates over a collection from template data, deep-cloning
+ * Iterates over an array from template data, deep-cloning
  * children per item and injecting scoped data with loop metadata
  * (`_index`, `_first`, `_last`).
  *
@@ -28,10 +28,10 @@ export const BLOCKED_AS_NAMES = new Set(['__proto__', 'constructor', 'prototype'
 // ---------------------------------------------------------------------------
 
 /**
- * Expands an `mc-for-each` node into resolved child nodes.
+ * Expands an `mc-each` node into resolved child nodes.
  *
- * Reads `collection`, `as`, and `index` attributes from the node:
- * - `collection`: dot-path to an array in data
+ * Reads `items`, `as`, and `index` attributes from the node:
+ * - `items`: dot-path to an array in data
  * - `as`: variable name to inject each item under
  * - `index` (optional): alias name for the zero-based index (e.g. `index="i"` → `{{i}}`)
  *
@@ -46,24 +46,24 @@ export const BLOCKED_AS_NAMES = new Set(['__proto__', 'constructor', 'prototype'
  * **Nested loop note:** `_index`, `_first`, `_last`, and `_total` from an outer
  * loop are overwritten by the inner loop's values inside the inner block. To
  * preserve the outer loop's index, use the `index` attribute on the outer loop
- * (e.g. `<mc-for-each collection="orders" as="order" index="orderIndex">`) and
+ * (e.g. `<mc-each items="orders" as="order" index="orderIndex">`) and
  * reference `{{orderIndex}}` inside the inner loop — it will not be shadowed.
  *
- * The `mc-for-each` wrapper is removed — only its resolved children are returned.
+ * The `mc-each` wrapper is removed — only its resolved children are returned.
  *
- * @param node        - The `mc-for-each` ASTNode.
+ * @param node        - The `mc-each` ASTNode.
  * @param data        - Template data object.
  * @param resolveNode - Callback to recursively resolve each cloned child.
  * @param formatters  - Optional formatter callback map.
  * @returns Flat array of resolved child nodes.
  */
-export function expandForEach(
+export function expandEach(
   node: ASTNode,
   data: TemplateData,
   resolveNode: (n: ASTNode, d: TemplateData, f?: FormatterMap) => ASTNode,
   formatters?: FormatterMap,
 ): ASTNode[] {
-  const collectionPath = node.attributes['collection'] ?? '';
+  const itemsPath = node.attributes['items'] ?? '';
   const asName = node.attributes['as'] ?? 'item';
   // Optional user-defined alias for the index (e.g. index="i" → {{i}})
   const indexAlias = node.attributes['index'];
@@ -75,20 +75,20 @@ export function expandForEach(
     return [];
   }
 
-  const collection = resolvePath(data, collectionPath);
+  const items = resolvePath(data, itemsPath);
 
   // Not an array or missing → return empty
-  if (!Array.isArray(collection)) {
+  if (!Array.isArray(items)) {
     return [];
   }
 
-  const len = collection.length;
+  const len = items.length;
   const results: ASTNode[] = [];
 
   for (let i = 0; i < len; i++) {
     const scopedData: TemplateData = {
       ...data,
-      [asName]: collection[i] as unknown,
+      [asName]: items[i] as unknown,
       _index: i,
       _first: i === 0,
       _last: i === len - 1,

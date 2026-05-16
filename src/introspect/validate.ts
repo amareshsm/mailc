@@ -287,7 +287,7 @@ export function validateNode(
         errors.push(invalidNestingError(node.type, parentType));
       }
     } else {
-      // Logic component (mc-if, mc-each, mc-else-if, mc-else, mc-for-each).
+      // Logic component (mc-if, mc-each, mc-else-if, mc-else).
       // These are template directives — the template engine processes them
       // before compile(). After expansion, the compiler sees their *children*
       // in the parent's context, not the logic tag itself.

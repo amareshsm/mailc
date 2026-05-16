@@ -40,7 +40,7 @@ Render mailc markup or a JSON IR tree to email-safe HTML. Returns the HTML, stru
 | `jsonNode` | `unknown` | no | mailc JSON IR root node — typically `\{ type: "mc", attributes: \{\}, children: [...] \}`. Provide either `source` or `jsonNode`. |
 | `templateStyle` | `'attribute' \| 'class'` | no | Styling mode. Default 'attribute' accepts CSS-property attributes (color=, padding=). 'class' (limited support) bans them and expects Tailwind-style class= utilities. |
 | `compatibilityMode` | `'liberal' \| 'strict'` | no | Email compatibility mode. 'liberal' (default) inlines ENHANCE properties (rounded corners, shadows, opacity) for graceful degradation. 'strict' strips them and emits ENHANCE_PROPERTY_STRIPPED warnings — pixel-identical rendering across all target clients, suitable for B2B / Outlook-heavy audiences. |
-| `data` | `record` | no | Template data for \{\{variable\}\} interpolation, mc-if conditions, and mc-for-each loops. Optional. |
+| `data` | `record` | no | Template data for \{\{variable\}\} interpolation, mc-if conditions, and mc-each loops. Optional. |
 
 ### `validate_email_node`
 **Validate a JSON IR node**
@@ -73,11 +73,11 @@ Quick parent/child structural check. Returns \{ allowed: boolean \}. Use to vali
 ### `extract_data_contract`
 **Extract template data contract**
 
-Static analysis of a template. Returns: required fields (always accessed), optional fields (gated by mc-if), and per-loop iteration shapes (mc-for-each variable + source + per-item paths). Use this to know what data shape your template needs.
+Static analysis of a template. Returns: required fields (always accessed), optional fields (gated by mc-if), and per-loop iteration shapes (mc-each variable + source + per-item paths). Use this to know what data shape your template needs.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `source` | `string` | yes | mailc markup string. Expressions (\{\{var\}\}), mc-if conditions, and mc-for-each loops are walked statically — no data is evaluated. |
+| `source` | `string` | yes | mailc markup string. Expressions (\{\{var\}\}), mc-if conditions, and mc-each loops are walked statically — no data is evaluated. |
 
 ### `check_email_client_support`
 **Check CSS against caniemail client support data**

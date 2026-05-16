@@ -61,7 +61,6 @@ describe('COMPONENT_METADATA', () => {
       'mc-else-if',
       'mc-else',
       'mc-each',
-      'mc-for-each',
       'mc-all',
       'mc-class',     // compile-time named attribute bundle — no HTML output
       'mc-attributes',

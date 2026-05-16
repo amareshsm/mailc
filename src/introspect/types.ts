@@ -447,7 +447,7 @@ export interface DataContractField {
 }
 
 /**
- * Describes one `mc-each` / `mc-for-each` loop in the template.
+ * Describes one `mc-each` loop in the template.
  */
 export interface DataContractLoop {
   /**
@@ -495,7 +495,7 @@ export interface DataContract {
    */
   optional: DataContractField[];
   /**
-   * All `mc-each` / `mc-for-each` loops, with per-iteration field access.
+   * All `mc-each` loops, with per-iteration field access.
    * The loop's `source` path also appears in `required` or `optional`
    * depending on whether the loop itself is inside an `mc-if` branch.
    */

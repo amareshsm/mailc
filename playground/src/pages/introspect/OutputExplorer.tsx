@@ -187,10 +187,6 @@ const ATTR_OVERRIDES: Record<string, Record<string, string>> = {
     items: 'products',
     as: 'product',
   },
-  'mc-for-each': {
-    collection: 'items',
-    as: 'item',
-  },
   'mc-if': {
     condition: 'isActive',
   },
@@ -272,7 +268,6 @@ function sampleChildren(type: string): string {
     case 'mc-else-if': return '<mc-text>Visible when condition is true</mc-text>'
     case 'mc-else':    return '<mc-text>Otherwise this shows</mc-text>'
     case 'mc-each':    return '<mc-text>{{product.name}}</mc-text>'
-    case 'mc-for-each': return '<mc-text>{{item}}</mc-text>'
     case 'mc-list':    return '<mc-list-item>First item</mc-list-item><mc-list-item>Second item</mc-list-item><mc-list-item>Third item</mc-list-item>'
     case 'mc-table':   return '<tr><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">Name</th><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">Price</th></tr><tr><td style="padding:8px">Studio Lamp</td><td style="padding:8px">$49</td></tr><tr><td style="padding:8px">Walnut Desk</td><td style="padding:8px">$299</td></tr>'
     default:           return ''

@@ -242,7 +242,7 @@ describe('getNestingMatrix()', () => {
 
     it('logic components have empty childToParents arrays', () => {
       const { childToParents } = getNestingMatrix();
-      const logic = ['mc-if', 'mc-else-if', 'mc-else', 'mc-each', 'mc-for-each'];
+      const logic = ['mc-if', 'mc-else-if', 'mc-else', 'mc-each'];
       for (const type of logic) {
         if (type in childToParents) {
           expect(childToParents[type]).toEqual([]);
@@ -316,7 +316,7 @@ describe('getNestingMatrix()', () => {
 
     it('does NOT include paths for logic components (mc-if, mc-each, etc.)', () => {
       const { requiredPaths } = getNestingMatrix();
-      const logic = ['mc-if', 'mc-else-if', 'mc-else', 'mc-each', 'mc-for-each'];
+      const logic = ['mc-if', 'mc-else-if', 'mc-else', 'mc-each'];
       for (const type of logic) {
         const path = requiredPaths.find(p => p.target === type);
         expect(path).toBeUndefined();

@@ -28,7 +28,6 @@
     "mc-each",
     "mc-else",
     "mc-else-if",
-    "mc-for-each",
     "mc-if"
   ]
 }

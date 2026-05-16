@@ -39,7 +39,7 @@ export function seedBuiltins(): void {
     if (compiler) {
       seedBuiltinComponent(type, metadata, compiler);
     } else {
-      // Logic tags (mc-if, mc-for-each, mc-each, mc-else, mc-else-if), the
+      // Logic tags (mc-if, mc-each, mc-else, mc-else-if), the
       // mc-attributes head children (mc-all, mc-class, etc.) — they have
       // metadata but no compiler (resolved by template stage or head extractor).
       seedBuiltinMetadataOnly(type, metadata);

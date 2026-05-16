@@ -137,7 +137,7 @@ export {
   resolveContent,
   resolveAttributes,
   evaluateCondition,
-  expandForEach,
+  expandEach,
   applyFormatters,
 } from './template/index.js';
 export type {

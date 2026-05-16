@@ -6,7 +6,7 @@
  *   - Container-style plugins (children resolved before plugin runs)
  *   - Plugin-emitted warnings via ctx.warnings
  *   - Template-variable interpolation flows into plugin attrs
- *   - Plugins inside mc-for-each loops
+ *   - Plugins inside mc-each loops
  *   - Plugins compiled via compileFromJSON (JSON IR path)
  *   - Validator rejects plugin used under disallowed parent
  *   - mc-attributes type-wide defaults flow into plugin attrs
@@ -239,11 +239,11 @@ describe('container-style plugin (maxChildren > 0)', () => {
     expect(result.html).toContain('Hello from inside');
   });
 
-  it('container plugin sees pre-resolved mc-for-each children (template stage runs first)', () => {
+  it('container plugin sees pre-resolved mc-each children (template stage runs first)', () => {
     const containerCompiler: ComponentCompiler = (node) => {
-      // After template stage, the mc-for-each is gone — children are already
+      // After template stage, the mc-each is gone — children are already
       // expanded. So node.children should be the EXPANDED set, not a single
-      // mc-for-each wrapper.
+      // mc-each wrapper.
       const childTypes = node.children.map((c) => c.type).join(',');
       return `<div data-children="${childTypes}"></div>`;
     };
@@ -257,9 +257,9 @@ describe('container-style plugin (maxChildren > 0)', () => {
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-loop-host>` +
-        `<mc-for-each collection="items" as="item">` +
+        `<mc-each items="items" as="item">` +
         `<mc-text>{{item}}</mc-text>` +
-        `</mc-for-each>` +
+        `</mc-each>` +
         `</acme-loop-host>` +
         `</mc-column></mc-section></mc-body></mc>`,
       { data: { items: ['a', 'b', 'c'] } },
@@ -419,10 +419,10 @@ describe('template variable interpolation in plugin attrs', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4.5 — Plugin inside mc-for-each loop
+// 4.5 — Plugin inside mc-each loop
 // ---------------------------------------------------------------------------
 
-describe('plugin used inside mc-for-each', () => {
+describe('plugin used inside mc-each', () => {
   it('plugin is invoked once per iteration with the iteration data', () => {
     const calls: string[] = [];
     const compiler: ComponentCompiler = (node) => {
@@ -450,9 +450,9 @@ describe('plugin used inside mc-for-each', () => {
 
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
-        `<mc-for-each collection="items" as="item">` +
+        `<mc-each items="items" as="item">` +
         `<acme-iter title="{{item}}" />` +
-        `</mc-for-each>` +
+        `</mc-each>` +
         `</mc-column></mc-section></mc-body></mc>`,
       { data: { items: ['one', 'two', 'three'] } },
     );

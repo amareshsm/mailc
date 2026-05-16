@@ -197,9 +197,9 @@ async function main() {
       source:
         '<mc><mc-body><mc-section><mc-column>' +
         '<mc-text>Hi {{user.name}}</mc-text>' +
-        '<mc-for-each collection="order.items" as="item">' +
+        '<mc-each items="order.items" as="item">' +
         '<mc-text>{{item.name}} - ${{item.price}}</mc-text>' +
-        '</mc-for-each>' +
+        '</mc-each>' +
         '</mc-column></mc-section></mc-body></mc>',
     },
   })

@@ -129,15 +129,15 @@ When `options.data` is provided, the compiler resolves three primitives before g
 
 - `{{var}}` and `{{var.path | formatter}}` — interpolation
 - `<mc-if condition="...">` / `<mc-else-if>` / `<mc-else>` — conditionals
-- `<mc-each items="X" as="Y">` and `<mc-for-each collection="X" as="Y">` — loops
+- `<mc-each items="X" as="Y">` — loops
 
 Inside a loop, the iteration injects `_index`, `_first`, `_last`, `_total` (and the optional named `index` alias).
 
 ```html
-<mc-for-each collection="cart.items" as="item" index="i">
+<mc-each items="cart.items" as="item" index="i">
   <mc-section>
     <mc-text>{{i}}. {{item.name}} — {{item.formattedPrice}}</mc-text>
   </mc-section>
-</mc-for-each>
+</mc-each>
 ```
 

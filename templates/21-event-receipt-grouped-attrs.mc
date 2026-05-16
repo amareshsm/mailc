@@ -11,7 +11,7 @@
       <mc-column>
         <mc-text
           font-size="22px"
-          font-weight="black"
+          font-weight="900"
           color="#fafaf9"
           letter-spacing="6px">
           CONTINENTAL
@@ -249,7 +249,7 @@
       <mc-column>
         <mc-text
           font-size="20px"
-          font-weight="black"
+          font-weight="900"
           color="#1c1917"
           align="right"
           padding-top="10px">

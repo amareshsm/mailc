@@ -147,9 +147,9 @@ describe('resolveTemplate — full tree', () => {
     expect(getTextContent(result3.children[0]!)).toBe('User');
   });
 
-  it('expands mc-for-each', () => {
+  it('expands mc-each', () => {
     const ast = node('mc-body', {}, [
-      node('mc-for-each', { collection: 'items', as: 'item' }, [
+      node('mc-each', { items: 'items', as: 'item' }, [
         node('mc-text', {}, [], [expr('item.name')]),
       ]),
     ]);
@@ -165,9 +165,9 @@ describe('resolveTemplate — full tree', () => {
     expect(getTextContent(result.children[1]!)).toBe('Cable');
   });
 
-  it('expands mc-for-each with loop metadata', () => {
+  it('expands mc-each with loop metadata', () => {
     const ast = node('mc-body', {}, [
-      node('mc-for-each', { collection: 'names', as: 'name' }, [
+      node('mc-each', { items: 'names', as: 'name' }, [
         node('mc-text', {}, [], [expr('name'), text(' '), expr('_index')]),
       ]),
     ]);
@@ -184,7 +184,7 @@ describe('resolveTemplate — full tree', () => {
     const ast = node('mc-body', {}, [
       node('mc-text', {}, [], [text('Hello '), expr('customer.name')]),
       node('mc-if', { condition: 'hasItems' }, [
-        node('mc-for-each', { collection: 'items', as: 'item' }, [
+        node('mc-each', { items: 'items', as: 'item' }, [
           node('mc-text', {}, [], [expr('item.name')]),
         ]),
       ]),
@@ -200,7 +200,7 @@ describe('resolveTemplate — full tree', () => {
 
     // First child: resolved greeting
     expect(getTextContent(result.children[0]!)).toBe('Hello Sarah');
-    // Second/third: expanded loop items (from mc-if > mc-for-each)
+    // Second/third: expanded loop items (from mc-if > mc-each)
     expect(result.children).toHaveLength(3);
     expect(getTextContent(result.children[1]!)).toBe('Widget');
     expect(getTextContent(result.children[2]!)).toBe('Gadget');
@@ -321,11 +321,11 @@ describe('resolveTemplate — security', () => {
 });
 
 // ===========================================================================
-// Bug 5 fix: mc-each alias handled the same as mc-for-each
+// mc-each loop expansion
 // ===========================================================================
 
-describe('resolveTemplate — mc-each alias', () => {
-  it('expands mc-each with items attribute the same as mc-for-each', () => {
+describe('resolveTemplate — mc-each', () => {
+  it('expands mc-each with items attribute', () => {
     const ast = node('mc-body', {}, [
       node('mc-each', { items: 'products', as: 'product' }, [
         node('mc-text', {}, [], [expr('product.name')]),
@@ -424,7 +424,7 @@ describe('resolveTemplate — onMissing callback', () => {
 
   it('reports each missing path within a loop iteration', () => {
     const ast = node('mc-body', {}, [
-      node('mc-for-each', { collection: 'items', as: 'item' }, [
+      node('mc-each', { items: 'items', as: 'item' }, [
         node('mc-text', {}, [], [expr('item.missing')]),
       ]),
     ]);

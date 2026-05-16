@@ -13,7 +13,7 @@ export const extractDataContractInput = {
   source: z
     .string()
     .describe(
-      'mailc markup string. Expressions ({{var}}), mc-if conditions, and mc-for-each loops are walked statically — no data is evaluated.',
+      'mailc markup string. Expressions ({{var}}), mc-if conditions, and mc-each loops are walked statically — no data is evaluated.',
     ),
 }
 

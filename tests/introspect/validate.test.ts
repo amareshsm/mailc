@@ -230,13 +230,6 @@ describe('validateNode — INVALID_NESTING', () => {
     expect(result.errors.some(e => e.code === 'INVALID_NESTING')).toBe(false);
   });
 
-  it('mc-for-each inside any parent does NOT produce INVALID_NESTING', () => {
-    const result = validateNode(
-      { type: 'mc-for-each', attributes: { collection: 'items', as: 'item' } },
-      'mc-body',
-    );
-    expect(result.errors.some(e => e.code === 'INVALID_NESTING')).toBe(false);
-  });
 });
 
 // ---------------------------------------------------------------------------

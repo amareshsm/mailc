@@ -6,7 +6,7 @@
  * - Automatic `bgcolor` fallback extracted from `bg-*` classes (Outlook compatibility).
  * - Automatic `align` / `valign` HTML attr fallbacks from `text-*` / vertical classes.
  * - Auto-injected `role="table"`, `cellpadding="0"`, `cellspacing="0"` when not set.
- * - `mc-each`, `mc-for-each`, `mc-if`, `mc-else-if`, `mc-else` logic nodes delegated
+ * - `mc-each`, `mc-if`, `mc-else-if`, `mc-else` logic nodes delegated
  *   to the main compiler tree so template resolution works inside table rows.
  *
  * @module compiler/components/table

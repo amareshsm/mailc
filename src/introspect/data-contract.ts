@@ -66,7 +66,7 @@ interface WalkState {
 const CONDITIONAL_TYPES = new Set(['mc-if', 'mc-else-if', 'mc-else']);
 
 /** Node types that are loops. */
-const LOOP_TYPES = new Set(['mc-each', 'mc-for-each']);
+const LOOP_TYPES = new Set(['mc-each']);
 
 /** Regex to extract `{{...}}` and `{{{...}}}` from raw attribute strings. */
 const EXPRESSION_RE = /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g;
@@ -226,7 +226,7 @@ function walkAttributes(
 // ---------------------------------------------------------------------------
 
 /**
- * Handles an `mc-each` or `mc-for-each` node:
+ * Handles an `mc-each` node:
  * 1. Records the source array path (e.g. `order.items`)
  * 2. Creates a DataContractLoop entry
  * 3. Recurses into children with the loop variable on the stack
@@ -235,8 +235,8 @@ function walkAttributes(
  * @param state - Shared accumulator.
  */
 function walkLoopNode(node: ASTNode, state: WalkState): void {
-  // mc-each uses `items` attr; mc-for-each uses `collection`
-  const sourcePath = (node.attributes['items'] ?? node.attributes['collection'] ?? '').trim();
+  // mc-each uses the `items` attr for the source array path
+  const sourcePath = (node.attributes['items'] ?? '').trim();
   const loopVar = (node.attributes['as'] ?? 'item').trim();
 
   const loc = toLoc(node.loc.start.line, node.loc.start.col);

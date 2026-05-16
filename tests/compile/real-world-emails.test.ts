@@ -58,13 +58,13 @@ describe('Real-world: Invoice email (markup flow)', () => {
       <mc-text class="font-bold">Items</mc-text>
     </mc-column>
   </mc-section>
-  <mc-for-each collection="items" as="item">
+  <mc-each items="items" as="item">
     <mc-section class="bg-white">
       <mc-column>
         <mc-text>{{item.name}} (x{{item.qty}}) — {{item.price | currency}}</mc-text>
       </mc-column>
     </mc-section>
-  </mc-for-each>
+  </mc-each>
   <mc-section class="bg-white">
     <mc-column>
       <mc-divider />
@@ -141,7 +141,7 @@ describe('Real-world: Invoice email (markup flow)', () => {
     expect(result.html).toContain('Mar 15, 2025');
   });
 
-  it('expands mc-for-each with line items', () => {
+  it('expands mc-each with line items', () => {
     const result = compile(INVOICE_MARKUP, { data: INVOICE_DATA, formatters: FORMATTERS, templateStyle: "class" });
     expect(result.html).toContain('Widget Pro');
     expect(result.html).toContain('(x2)');
@@ -232,8 +232,8 @@ describe('Real-world: Invoice email (JSON flow)', () => {
           ],
         },
         {
-          type: 'mc-for-each',
-          attributes: { collection: 'items', as: 'item' },
+          type: 'mc-each',
+          attributes: { items: 'items', as: 'item' },
           children: [
             {
               type: 'mc-section',
@@ -311,7 +311,7 @@ describe('Real-world: Invoice email (JSON flow)', () => {
     expect(result.html).toContain('Sarah Connor');
   });
 
-  it('expands line items via mc-for-each', () => {
+  it('expands line items via mc-each', () => {
     const result = compileFromJSON(INVOICE_JSON, { data: INVOICE_DATA, formatters: FORMATTERS, templateStyle: "class" });
     expect(result.html).toContain('Widget Pro');
     expect(result.html).toContain('$99.00');
@@ -380,7 +380,7 @@ describe('Real-world: Newsletter email (markup flow)', () => {
       </mc-column>
     </mc-section>
   </mc-if>
-  <mc-for-each collection="articles" as="article">
+  <mc-each items="articles" as="article">
     <mc-section class="bg-white">
       <mc-column class="w-1/3">
         <mc-image src="{{article.thumbnail}}" alt="{{article.title}}" width="200px" />
@@ -391,7 +391,7 @@ describe('Real-world: Newsletter email (markup flow)', () => {
         <mc-button href="{{article.url}}">Read Article</mc-button>
       </mc-column>
     </mc-section>
-  </mc-for-each>
+  </mc-each>
   <mc-section>
     <mc-column>
       <mc-divider />
@@ -457,7 +457,7 @@ describe('Real-world: Newsletter email (markup flow)', () => {
     expect(result.html).not.toContain('The Future of AI in 2025');
   });
 
-  it('expands article list via mc-for-each', () => {
+  it('expands article list via mc-each', () => {
     const result = compile(NEWSLETTER_MARKUP, { data: NEWSLETTER_DATA, templateStyle: "class" });
     expect(result.html).toContain('Zero-Trust Security Guide');
     expect(result.html).toContain('DevOps Pipeline Best Practices');
@@ -506,13 +506,13 @@ describe('Real-world: Report email (markup flow)', () => {
         <mc-text class="font-bold">Alerts</mc-text>
       </mc-column>
     </mc-section>
-    <mc-for-each collection="alerts" as="alert">
+    <mc-each items="alerts" as="alert">
       <mc-section class="bg-white">
         <mc-column>
           <mc-text>{{alert.message}}</mc-text>
         </mc-column>
       </mc-section>
-    </mc-for-each>
+    </mc-each>
   </mc-if>
   <mc-if condition="showTopPages">
     <mc-section class="bg-white">
@@ -520,13 +520,13 @@ describe('Real-world: Report email (markup flow)', () => {
         <mc-text class="font-bold">Top Pages</mc-text>
       </mc-column>
     </mc-section>
-    <mc-for-each collection="topPages" as="page">
+    <mc-each items="topPages" as="page">
       <mc-section class="bg-white">
         <mc-column>
           <mc-text>{{page.path}} — {{page.views | number}} views</mc-text>
         </mc-column>
       </mc-section>
-    </mc-for-each>
+    </mc-each>
   </mc-if>
   <mc-else>
     <mc-section class="bg-white">
@@ -649,8 +649,8 @@ describe('Real-world: Report email (JSON flow)', () => {
           attributes: { condition: 'hasAlerts' },
           children: [
             {
-              type: 'mc-for-each',
-              attributes: { collection: 'alerts', as: 'alert' },
+              type: 'mc-each',
+              attributes: { items: 'alerts', as: 'alert' },
               children: [
                 {
                   type: 'mc-section',
@@ -712,7 +712,7 @@ describe('Real-world: Report email (JSON flow)', () => {
     expect(result.html).toContain('Jan-Mar 2025');
   });
 
-  it('expands nested mc-if + mc-for-each', () => {
+  it('expands nested mc-if + mc-each', () => {
     const result = compileFromJSON(REPORT_JSON, { data: REPORT_DATA, templateStyle: "class" });
     expect(result.html).toContain('CPU spike detected');
     expect(result.html).toContain('Disk usage warning');
@@ -769,14 +769,14 @@ describe('Real-world: Welcome email (markup flow)', () => {
         <mc-text class="font-bold">Getting Started</mc-text>
       </mc-column>
     </mc-section>
-    <mc-for-each collection="steps" as="step">
+    <mc-each items="steps" as="step">
       <mc-section class="bg-white">
         <mc-column>
           <mc-text>{{step.number}}. {{step.title}}</mc-text>
           <mc-text>{{step.description}}</mc-text>
         </mc-column>
       </mc-section>
-    </mc-for-each>
+    </mc-each>
   </mc-if>
   <mc-section>
     <mc-column>

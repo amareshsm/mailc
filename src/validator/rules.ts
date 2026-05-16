@@ -37,7 +37,7 @@ export const GLOBAL_ATTRIBUTES = ['class', 'id', 'mc-class'];
 
 /** Tags that represent logic wrappers (can appear anywhere). */
 export const LOGIC_TAGS = new Set([
-  'mc-if', 'mc-else-if', 'mc-else', 'mc-each', 'mc-for-each',
+  'mc-if', 'mc-else-if', 'mc-else', 'mc-each',
 ]);
 
 /**

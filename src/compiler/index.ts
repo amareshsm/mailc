@@ -45,7 +45,6 @@ const TEMPLATE_DIRECTIVE_TYPES = new Set([
   'mc-else-if',
   'mc-else',
   'mc-each',
-  'mc-for-each',
 ]);
 
 // Per-call depth counter on the context object (initialised lazily).

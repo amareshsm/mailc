@@ -7,7 +7,7 @@
  * - `{{var || "fallback"}}` → fallback when nullish/empty
  * - `{{var | formatter}}` → user callback formatting
  * - `mc-if condition="..."` → conditional branch evaluation
- * - `mc-for-each collection="..." as="..."` → loop expansion
+ * - `mc-each items="..." as="..."` → loop expansion
  * - Attribute expressions → inline resolution
  *
  * Returns a **new** AST — the original is never mutated.
@@ -24,13 +24,13 @@ import type { ASTNode, ExpressionResolution, LoopInfo, ConditionalInfo } from '.
 import type { TemplateData, FormatterMap, OnMissingVariable } from './types.js';
 import { resolveContent, resolveAttributes, resolvePath } from './expressions.js';
 import { evaluateCondition } from './conditions.js';
-import { expandForEach, BLOCKED_AS_NAMES } from './loops.js';
+import { expandEach, BLOCKED_AS_NAMES } from './loops.js';
 
 // Re-export public types and functions
 export type { TemplateData, FormatterMap, Formatter, ParsedExpression, FormatterCall, OnMissingVariable, MissingVariable } from './types.js';
 export { resolvePath, parseExpression, resolveContent, resolveAttributes } from './expressions.js';
 export { evaluateCondition } from './conditions.js';
-export { expandForEach } from './loops.js';
+export { expandEach } from './loops.js';
 export { applyFormatters } from './formatter.js';
 
 // ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ export { applyFormatters } from './formatter.js';
  * 1. Resolves `{{...}}` expressions in content nodes.
  * 2. Resolves `{{...}}` expressions in attribute values.
  * 3. Evaluates `mc-if` / `mc-else-if` / `mc-else` conditional chains.
- * 4. Expands `mc-for-each` loops.
+ * 4. Expands `mc-each` loops.
  * 5. Recurses into child nodes.
  *
  * Returns a new AST tree — the original is never mutated.
@@ -118,7 +118,7 @@ function resolveNode(
  *
  * Handles:
  * - `mc-if` → `mc-else-if` → `mc-else` chains
- * - `mc-for-each` → loop expansion
+ * - `mc-each` → loop expansion
  * - Regular nodes → recursive resolution
  *
  * @param children   - The child nodes to process.
@@ -149,26 +149,8 @@ function resolveChildren(
       continue;
     }
 
-    if (child.type === 'mc-for-each') {
-      const expanded = expandForEachWithDebug(child, data, formatters, debugMode, onMissing);
-      result.push(...expanded);
-      i++;
-      continue;
-    }
-
-    // mc-each is an alias for mc-for-each (uses `items` instead of `collection`).
-    // Map it to the same expandForEach logic by normalising the attribute name.
     if (child.type === 'mc-each') {
-      const normalised = {
-        ...child,
-        type: 'mc-for-each' as const,
-        attributes: {
-          ...child.attributes,
-          collection: child.attributes['items'] ?? '',
-          as: child.attributes['as'] ?? 'item',
-        },
-      };
-      const expanded = expandForEachWithDebug(normalised, data, formatters, debugMode, onMissing);
+      const expanded = expandEachWithDebug(child, data, formatters, debugMode, onMissing);
       result.push(...expanded);
       i++;
       continue;
@@ -191,13 +173,13 @@ function resolveChildren(
  * resolved children in a synthetic `_mc-loop-iteration` node that the
  * compiler uses to emit loop-tracking source map entries.
  *
- * @param node       - The `mc-for-each` AST node.
+ * @param node       - The `mc-each` AST node.
  * @param data       - Template data object.
  * @param formatters - Optional formatters.
  * @param debugMode  - Whether to wrap iterations in debug nodes.
  * @returns Resolved children (flat in production, wrapped in debug mode).
  */
-function expandForEachWithDebug(
+function expandEachWithDebug(
   node: ASTNode,
   data: TemplateData,
   formatters?: FormatterMap,
@@ -206,26 +188,26 @@ function expandForEachWithDebug(
 ): ASTNode[] {
   if (!debugMode) {
     // Production: standard loop expansion
-    return expandForEach(node, data, (n, d, f) => resolveNode(n, d, f, false, onMissing), formatters);
+    return expandEach(node, data, (n, d, f) => resolveNode(n, d, f, false, onMissing), formatters);
   }
 
   // Debug mode: wrap each iteration in a synthetic _mc-loop-iteration node
-  const collectionPath = node.attributes['collection'] ?? '';
+  const itemsPath = node.attributes['items'] ?? '';
   const asName = node.attributes['as'] ?? 'item';
   const indexAlias = node.attributes['index'];
 
-  // Resolve the collection
-  const collection = resolvePath(data, collectionPath);
+  // Resolve the items array
+  const items = resolvePath(data, itemsPath);
 
-  if (!Array.isArray(collection)) {
+  if (!Array.isArray(items)) {
     return [];
   }
 
-  const totalIterations = collection.length;
+  const totalIterations = items.length;
   const result: ASTNode[] = [];
 
   for (let idx = 0; idx < totalIterations; idx++) {
-    const item = collection[idx] as unknown;
+    const item = items[idx] as unknown;
     const scopedData: TemplateData = {
       ...data,
       [asName]: item,
@@ -249,7 +231,7 @@ function expandForEachWithDebug(
 
     // Create a synthetic _mc-loop-iteration wrapper node
     const loopInfo: LoopInfo = {
-      itemsExpression: collectionPath,
+      itemsExpression: itemsPath,
       loopVariable: asName,
       iterationIndex: idx,
       totalIterations,

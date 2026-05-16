@@ -93,7 +93,6 @@ const ATTR_OVERRIDES: Record<string, Record<string, string>> = {
   },
   'mc-button': { href: 'https://example.com' },
   'mc-each': { items: 'products', as: 'product' },
-  'mc-for-each': { collection: 'items', as: 'item' },
   'mc-if': { condition: 'isActive' },
   'mc-else-if': { condition: 'isActive' },
 }
@@ -152,8 +151,6 @@ function sampleChildren(type: string): string {
       return '<mc-text>Otherwise this shows</mc-text>'
     case 'mc-each':
       return '<mc-text>{{product.name}} — {{product.formattedPrice}}</mc-text>'
-    case 'mc-for-each':
-      return '<mc-text>{{item}}</mc-text>'
     case 'mc-list':
       return '<mc-list-item>First item</mc-list-item><mc-list-item>Second item</mc-list-item>'
     case 'mc-table':

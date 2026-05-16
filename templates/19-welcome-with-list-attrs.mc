@@ -24,7 +24,7 @@
       </mc-text>
       <mc-text
         font-size="38px"
-        font-weight="black"
+        font-weight="900"
         color="#ffffff"
         align="center"
         line-height="44px"

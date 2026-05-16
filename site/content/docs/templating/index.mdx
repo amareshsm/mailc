@@ -7,7 +7,7 @@ mailc has built-in templating. Three primitives — interpolation, conditionals,
 
 ## When templating runs
 
-Templating runs as **stage 3b** of the compiler — after parsing and structural validation, before CSS classification and HTML generation. The output of stage 3b is a deterministic AST with no `<mc-if>`, `<mc-for-each>`, or `{{...}}` left in it.
+Templating runs as **stage 3b** of the compiler — after parsing and structural validation, before CSS classification and HTML generation. The output of stage 3b is a deterministic AST with no `<mc-if>`, `<mc-each>`, or `{{...}}` left in it.
 
 If you don't pass `options.data`, stage 3b is skipped entirely. Sources containing template directives in that case will fail with `UNKNOWN_COMPONENT_TYPE` errors.
 
@@ -22,9 +22,9 @@ If you don't pass `options.data`, stage 3b is skipped entirely. Sources containi
 
         <mc-if condition="cart.itemCount > 0">
           <mc-text weight="bold">Your cart:</mc-text>
-          <mc-for-each collection="cart.items" as="item">
+          <mc-each items="cart.items" as="item">
             <mc-text>{{item.name}} — {{item.formattedPrice}}</mc-text>
-          </mc-for-each>
+          </mc-each>
         </mc-if>
         <mc-else>
           <mc-text color="muted">Your cart is empty.</mc-text>
@@ -58,7 +58,7 @@ compile(source, {
 |---|---|
 | [Variables](/docs/templating/variables) | `{{var}}`, dot paths, fallbacks, raw vs escaped output, `strictVariables` |
 | [Conditionals](/docs/templating/conditionals) | `<mc-if>`, `<mc-else-if>`, `<mc-else>`, comparison operators, boolean logic |
-| [Loops](/docs/templating/loops) | `<mc-for-each>`, `<mc-each>`, loop metadata, nested loops, index aliasing |
+| [Loops](/docs/templating/loops) | `<mc-each>`, loop metadata, nested loops, index aliasing |
 | [Formatters](/docs/templating/formatters) | Pipe-syntax escape hatch — used sparingly; default path is pre-formatting in your backend |
 
 ## Design philosophy

@@ -222,7 +222,7 @@ function formatMarkdown(contract: DataContract, fileName: string): string {
   // ── Loops ───────────────────────────────────────────────────────────────
   lines.push('## Loops');
   lines.push('');
-  lines.push('Each `mc-each` / `mc-for-each` loop and the fields it accesses on each item.');
+  lines.push('Each `mc-each` loop and the fields it accesses on each item.');
   lines.push('');
 
   if (contract.loops.length === 0) {

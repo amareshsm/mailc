@@ -2,7 +2,7 @@
  * `_mc-loop-iteration` compiler — synthetic wrapper for loop iteration tracking.
  *
  * This is an internal component created by `resolveTemplate()` when
- * `debugMode: true`. Each iteration of an `mc-each` / `mc-for-each` loop is
+ * `debugMode: true`. Each iteration of an `mc-each` loop is
  * wrapped in one of these nodes so the source map collector can record
  * `LoopInfo` for every iteration.
  *

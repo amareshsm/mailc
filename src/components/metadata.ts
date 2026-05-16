@@ -113,7 +113,7 @@ export interface ComponentMetadata {
 }
 
 // ---------------------------------------------------------------------------
-// COMPONENT_METADATA — the canonical record (20 components)
+// COMPONENT_METADATA — the canonical record (every mc-* component)
 // ---------------------------------------------------------------------------
 
 /**
@@ -209,7 +209,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
     attributes: {
       'font-family':    { type: 'string',    required: false, description: 'Global default font family.', example: 'Arial, sans-serif', hasEmailCompatibilityNotes: true },
       'font-size':      { type: 'css-value', required: false, description: 'Global default font size.', example: '16px', hasEmailCompatibilityNotes: false },
-      'font-weight':    { type: 'enum',      required: false, description: 'Global default font weight.', example: 'normal', values: ['normal', 'bold'], hasEmailCompatibilityNotes: false },
+      'font-weight':    { type: 'enum',      required: false, description: 'Global default font weight.', example: 'normal', values: ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'], hasEmailCompatibilityNotes: false },
       'color':          { type: 'color',     required: false, description: 'Global default text color.', example: '#333333', hasEmailCompatibilityNotes: true },
       'line-height':    { type: 'css-value', required: false, description: 'Global default line height.', example: '1.6', hasEmailCompatibilityNotes: false },
       'letter-spacing': { type: 'css-value', required: false, description: 'Global default letter spacing.', example: '0', hasEmailCompatibilityNotes: false },
@@ -237,7 +237,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
       'class':          { type: 'tailwind-classes', required: false, description: 'Tailwind utility classes to apply to components using this bundle.', example: 'text-[16px] font-bold', hasEmailCompatibilityNotes: false },
       'font-family':    { type: 'string',          required: false, description: 'Font family for components using this class.', example: 'Arial, sans-serif', hasEmailCompatibilityNotes: true },
       'font-size':      { type: 'css-value',       required: false, description: 'Font size for components using this class.', example: '16px', hasEmailCompatibilityNotes: false },
-      'font-weight':    { type: 'enum',            required: false, description: 'Font weight for components using this class.', example: 'bold', values: ['normal', 'bold'], hasEmailCompatibilityNotes: false },
+      'font-weight':    { type: 'enum',            required: false, description: 'Font weight for components using this class.', example: 'bold', values: ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'], hasEmailCompatibilityNotes: false },
       'font-style':     { type: 'enum',            required: false, description: 'Font style for components using this class.', example: 'italic', values: ['normal', 'italic'], hasEmailCompatibilityNotes: false },
       'color':          { type: 'color',           required: false, description: 'Text color for components using this class.', example: '#333333', hasEmailCompatibilityNotes: true },
       'line-height':    { type: 'css-value',       required: false, description: 'Line height for components using this class.', example: '1.6', hasEmailCompatibilityNotes: false },
@@ -446,7 +446,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
       'width':            { type: 'css-value',        required: false, description: 'Width of the text block.', example: '100%', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'w-[#value]' },
       'font-family':      { type: 'string',           required: false, description: 'Font family.', example: 'Georgia, serif', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: '(use mc-attributes for global font-family)' },
       'font-size':        { type: 'css-value',        required: false, description: 'Font size.', example: '16px', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'text-[#value]' },
-      'font-weight':      { type: 'enum',             required: false, description: 'Font weight.', example: 'normal', values: ['normal', 'bold'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
+      'font-weight':      { type: 'enum',             required: false, description: 'Font weight.', example: 'normal', values: ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
       'font-style':       { type: 'enum',             required: false, description: 'Font style.', example: 'italic', values: ['normal', 'italic', 'oblique'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'italic' },
       'line-height':      { type: 'css-value',        required: false, description: 'Line height.', example: '1.6', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'leading-[#value]' },
       'letter-spacing':   { type: 'css-value',        required: false, description: 'Letter spacing.', example: '0.02em', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'tracking-[#value]' },
@@ -529,7 +529,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
       'color':            { type: 'color',            required: false, description: 'Button text color.', example: '#ffffff', default: '#ffffff', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: 'text-[#value]' },
       'font-family':      { type: 'string',           required: false, description: 'Font family.', example: 'Arial, sans-serif', default: 'Arial, sans-serif', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: '(use mc-attributes for global font-family)' },
       'font-size':        { type: 'css-value',        required: false, description: 'Font size.', example: '16px', default: '16px', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'text-[#value]' },
-      'font-weight':      { type: 'enum',             required: false, description: 'Font weight.', example: 'bold', values: ['normal', 'bold'], default: 'bold', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
+      'font-weight':      { type: 'enum',             required: false, description: 'Font weight.', example: 'bold', values: ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'], default: 'bold', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
       'border-radius':    { type: 'css-value',        required: false, description: 'Rounded corners (ENHANCE).', example: '4px', default: '0', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: 'rounded-[#value]' },
       'box-shadow':       { type: 'css-value',        required: false, description: 'Drop shadow on the button (ENHANCE — Outlook ignores). Supports single shadow, multi-comma stacked shadows, rgba(), and inset.', example: '0 2px 4px rgba(0,0,0,0.2)', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: 'shadow-[#value]' },
       'opacity':          { type: 'css-value',        required: false, description: 'Button opacity 0–1 (ENHANCE — Outlook ignores).', example: '0.95', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: 'opacity-#value' },
@@ -720,7 +720,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
       'background-color': { type: 'color',            required: false, description: 'Background color of the list.', example: '#f5f5f5', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: 'bg-[#value]' },
       'font-family':      { type: 'string',           required: false, description: 'Font family.', example: 'Georgia, serif', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: '(use mc-attributes for global font-family)' },
       'font-size':        { type: 'css-value',        required: false, description: 'Font size.', example: '16px', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'text-[#value]' },
-      'font-weight':      { type: 'enum',             required: false, description: 'Font weight.', example: 'normal', values: ['normal', 'bold'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
+      'font-weight':      { type: 'enum',             required: false, description: 'Font weight.', example: 'normal', values: ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
       'line-height':      { type: 'css-value',        required: false, description: 'Line height.', example: '1.6', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'leading-[#value]' },
       'letter-spacing':   { type: 'css-value',        required: false, description: 'Letter spacing.', example: '0', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'tracking-[#value]' },
       'padding':          { type: 'css-value',        required: false, description: 'Padding around the list block.', example: '8px 0', default: '0', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'p-[#value]' },
@@ -752,7 +752,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
       'background-color':   { type: 'color',            required: false, description: 'Item background color.', example: '#f5f5f5', hasEmailCompatibilityNotes: true, isCssPropAttr: true, classHint: 'bg-[#value]' },
       'font-size':          { type: 'css-value',        required: false, description: 'Font size for this item. Overrides the inherited size from mc-list.', example: '14px', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'text-[#value]' },
       'line-height':        { type: 'css-value',        required: false, description: 'Line height for this item. Overrides the inherited leading from mc-list.', example: '1.6', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'leading-[#value]' },
-      'font-weight':        { type: 'enum',             required: false, description: 'Font weight.', example: 'bold', values: ['normal', 'bold'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
+      'font-weight':        { type: 'enum',             required: false, description: 'Font weight.', example: 'bold', values: ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'font-#value' },
       'font-style':         { type: 'enum',             required: false, description: 'Font style.', example: 'italic', values: ['normal', 'italic'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'italic' },
       'text-decoration':    { type: 'enum',             required: false, description: 'Text decoration.', example: 'none', values: ['none', 'underline', 'line-through'], hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'underline' },
       'padding':            { type: 'css-value',        required: false, description: 'Padding around the item content.', example: '4px 0', hasEmailCompatibilityNotes: false, isCssPropAttr: true, classHint: 'p-[#value]' },
@@ -832,23 +832,6 @@ export const COMPONENT_METADATA: Record<string, ComponentMetadata> = {
     },
   },
 
-  'mc-for-each': {
-    description: 'Loop over a collection using a "for each" style.',
-    category: 'logic',
-    parent: null,
-    maxChildren: Infinity,
-    allowsTextContent: false,
-    compilerOutputElements: [],
-    compilerOutputReason: 'Compile-time loop — no HTML wrapper emitted.',
-    validClassCategories: [],
-    commonMistakes: [],
-    attributes: {
-      'class':      { type: 'tailwind-classes', required: false, description: 'Utility classes.', example: '', hasEmailCompatibilityNotes: false },
-      'id':         { type: 'string',           required: false, description: 'Unique identifier.', example: '', hasEmailCompatibilityNotes: false },
-      'collection': { type: 'string',           required: true,  description: 'Collection variable name from template data.', example: 'items', hasEmailCompatibilityNotes: false },
-      'as':         { type: 'string',           required: true,  description: 'Variable name for each item.', example: 'item', hasEmailCompatibilityNotes: false },
-    },
-  },
 };
 
 // ---------------------------------------------------------------------------

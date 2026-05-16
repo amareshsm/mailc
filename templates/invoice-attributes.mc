@@ -9,7 +9,7 @@
     <!-- ─── TOP BRAND BAR ─── -->
     <mc-section background-color="#1c1917" padding="20px 32px">
       <mc-column>
-        <mc-text font-size="22px" font-weight="black" color="#ffffff" letter-spacing="2px">LUXORA</mc-text>
+        <mc-text font-size="22px" font-weight="900" color="#ffffff" letter-spacing="2px">LUXORA</mc-text>
         <mc-text font-size="11px" color="#a8a29e" padding-top="4px">Premium Lifestyle Products</mc-text>
       </mc-column>
       <mc-column>
@@ -52,7 +52,7 @@
           India
         </mc-text>
         <mc-text font-size="12px" color="#78716c" padding-top="10px">Tracking ID: LXR-88KA-04912</mc-text>
-        <mc-text font-size="13px" font-weight="semibold" color="#166534" padding-top="2px">Est. delivery: Apr 26, 2026</mc-text>
+        <mc-text font-size="13px" font-weight="600" color="#166534" padding-top="2px">Est. delivery: Apr 26, 2026</mc-text>
       </mc-column>
     </mc-section>
 
@@ -150,10 +150,10 @@
         <mc-text font-size="13px" color="#78716c" padding-bottom="8px">Loyalty Discount</mc-text>
       </mc-column>
       <mc-column width="20%" padding="4px 0">
-        <mc-text font-size="13px" color="#1c1917" font-weight="semibold" align="right" padding-bottom="8px">₹18,450</mc-text>
-        <mc-text font-size="13px" color="#1c1917" font-weight="semibold" align="right" padding-bottom="8px">₹199</mc-text>
-        <mc-text font-size="13px" color="#1c1917" font-weight="semibold" align="right" padding-bottom="8px">₹3,321</mc-text>
-        <mc-text font-size="13px" color="#166534" font-weight="semibold" align="right" padding-bottom="8px">−₹500</mc-text>
+        <mc-text font-size="13px" color="#1c1917" font-weight="600" align="right" padding-bottom="8px">₹18,450</mc-text>
+        <mc-text font-size="13px" color="#1c1917" font-weight="600" align="right" padding-bottom="8px">₹199</mc-text>
+        <mc-text font-size="13px" color="#1c1917" font-weight="600" align="right" padding-bottom="8px">₹3,321</mc-text>
+        <mc-text font-size="13px" color="#166534" font-weight="600" align="right" padding-bottom="8px">−₹500</mc-text>
       </mc-column>
     </mc-section>
 
@@ -164,7 +164,7 @@
         <mc-text font-size="12px" color="#a8a29e" padding-top="4px">Paid via HDFC Credit Card •••• 8812</mc-text>
       </mc-column>
       <mc-column>
-        <mc-text font-size="28px" font-weight="black" color="#ffffff" align="right">₹21,470</mc-text>
+        <mc-text font-size="28px" font-weight="900" color="#ffffff" align="right">₹21,470</mc-text>
       </mc-column>
     </mc-section>
 
@@ -202,7 +202,7 @@
     <!-- ─── FOOTER ─── -->
     <mc-section background-color="#1c1917" padding="32px 32px 24px">
       <mc-column>
-        <mc-text font-size="18px" font-weight="black" color="#ffffff" letter-spacing="2px">LUXORA</mc-text>
+        <mc-text font-size="18px" font-weight="900" color="#ffffff" letter-spacing="2px">LUXORA</mc-text>
         <mc-text font-size="12px" color="#78716c" padding-top="12px" line-height="1.625">
           Luxora Retail Pvt. Ltd. · 77 Vittal Mallya Road, Bengaluru 560001<br />
           GSTIN: 29AABCL5678B1Z3 · CIN: U52100KA2019PTC98765

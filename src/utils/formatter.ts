@@ -1,16 +1,23 @@
 /**
  * HTML formatter for prettified compiler output.
  *
- * Uses a static top-level import of `js-beautify` so that bundlers (esbuild,
- * Vite, Rollup) emit a real ESM `import` statement instead of a CJS `require()`
- * shim. js-beautify is bundled inline for Node and IIFE builds; kept external
- * for browser ESM so Vite/webpack resolve it from the consumer's node_modules.
+ * Uses a static top-level *default* import of `js-beautify` so that bundlers
+ * (esbuild, Vite, Rollup) emit a real ESM `import` statement instead of a CJS
+ * `require()` shim. js-beautify is a CommonJS package (`export =`); a default
+ * import resolves to its `module.exports` across esbuild, consumer bundlers,
+ * and native Node ESM alike. A *named* import (`import { html }`) instead
+ * throws under strict Node ESM / tsx because the CJS module exposes no real
+ * named bindings. js-beautify is bundled inline for Node and IIFE builds; kept
+ * external for browser ESM so Vite/webpack resolve it from the consumer's
+ * node_modules.
  *
  * @module utils/formatter
  */
 
-import { html as _beautifyHtml } from 'js-beautify';
+import jsBeautify from 'js-beautify';
 import type { HTMLBeautifyOptions } from 'js-beautify';
+
+const _beautifyHtml = jsBeautify.html;
 
 // ---------------------------------------------------------------------------
 // Configuration
