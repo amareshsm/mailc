@@ -63,7 +63,8 @@ export type { Token } from './tokenizer/index.js';
 export { parse } from './parser/index.js';
 
 // Validator (Phase 3)
-export { validate } from './validator/index.js';
+export { validate } from './validate.js';
+export type { ValidateInput } from './validate.js';
 
 // CSS Checking — top-level convenience API (Phase 15)
 export { checkCss } from './css/index.js';
@@ -112,7 +113,7 @@ export type {
 } from './types.js';
 
 // JSON → Email (Phase 10)
-export { compileFromJSON, validateJSON, validateDocument, jsonToAST, parseContent, jsonToMarkup, markupToJSON, astToMCNode, normalizeJSON } from './json/index.js';
+export { compileFromJSON, validateDocument, jsonToAST, parseContent, jsonToMarkup, markupToJSON, astToMCNode, normalizeJSON } from './json/index.js';
 export type {
   MCNode,
   MCDocument,

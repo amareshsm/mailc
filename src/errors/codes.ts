@@ -109,4 +109,6 @@ export enum ErrorCode {
   // ── Compiler safety ────────────────────────────────────────────────────
   MAX_RECURSION_DEPTH = 'MAX_RECURSION_DEPTH',
   JSON_PARSE_ERROR = 'JSON_PARSE_ERROR',
+  // ── Public API contract ────────────────────────────────────────────────
+  INVALID_INPUT = 'INVALID_INPUT',
 }

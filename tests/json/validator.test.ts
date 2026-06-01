@@ -1,9 +1,14 @@
 /**
- * Tests for src/json/validator.ts — MCNode tree validation.
+ * Tests for MCNode (JSON IR) tree validation via the public `validate()` API.
+ *
+ * Before the API consolidation these tests called `validateJSON()` directly;
+ * the public surface now routes JSON IR through the universal `validate()`,
+ * which internally dispatches to the same JSON walker. Same validator,
+ * accessed through the single public entry point.
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateJSON, validateDocument } from '../../src/json/index.js';
+import { validate, validateDocument } from '../../src/index.js';
 import type { MCNode, MCDocument } from '../../src/json/index.js';
 
 // ---------------------------------------------------------------------------
@@ -52,19 +57,19 @@ function makeDocument(template: MCNode): MCDocument {
 }
 
 // ---------------------------------------------------------------------------
-// validateJSON tests
+// validate() — JSON IR input dispatch
 // ---------------------------------------------------------------------------
 
-describe('validateJSON', () => {
+describe('validate (JSON IR)', () => {
   describe('valid trees', () => {
     it('accepts a bare mc-body', () => {
-      const result = validateJSON(makeBody());
+      const result = validate(makeBody());
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
     it('accepts mc-body > mc-section > mc-column > mc-text', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -77,7 +82,7 @@ describe('validateJSON', () => {
     });
 
     it('accepts mc with mc-head and mc-body as siblings', () => {
-      const result = validateJSON({
+      const result = validate({
         type: 'mc',
         attributes: {},
         children: [
@@ -89,7 +94,7 @@ describe('validateJSON', () => {
     });
 
     it('accepts logic nodes wrapping components', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -110,7 +115,7 @@ describe('validateJSON', () => {
 
   describe('nesting errors', () => {
     it('rejects mc-section inside mc-column', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -125,7 +130,7 @@ describe('validateJSON', () => {
     });
 
     it('rejects mc-text directly inside mc-body', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           { type: 'mc-text', attributes: {}, content: 'Bad' },
         ]),
@@ -135,7 +140,7 @@ describe('validateJSON', () => {
     });
 
     it('rejects mc-button directly inside mc-section', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             { type: 'mc-button', attributes: { href: '#' }, content: 'Click' },
@@ -149,7 +154,7 @@ describe('validateJSON', () => {
 
   describe('required attributes', () => {
     it('rejects mc-image without src and alt', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -168,7 +173,7 @@ describe('validateJSON', () => {
     });
 
     it('rejects mc-button without href', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -182,7 +187,7 @@ describe('validateJSON', () => {
     });
 
     it('accepts mc-image with src and alt', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -200,7 +205,7 @@ describe('validateJSON', () => {
 
   describe('logic ordering', () => {
     it('rejects mc-else without preceding mc-if', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -214,7 +219,7 @@ describe('validateJSON', () => {
     });
 
     it('rejects mc-else-if after mc-text', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -229,7 +234,7 @@ describe('validateJSON', () => {
     });
 
     it('accepts mc-if → mc-else-if → mc-else chain', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([
             makeColumn([
@@ -261,20 +266,20 @@ describe('validateJSON', () => {
     // a compile error. Matches MJML's behaviour.
     it('accepts mc-section with 5 columns', () => {
       const columns = Array.from({ length: 5 }, () => makeColumn([]));
-      const result = validateJSON(makeBody([makeSection(columns)]));
+      const result = validate(makeBody([makeSection(columns)]));
       expect(result.isValid).toBe(true);
     });
 
     it('accepts mc-section with 8 columns', () => {
       const columns = Array.from({ length: 8 }, () => makeColumn([]));
-      const result = validateJSON(makeBody([makeSection(columns)]));
+      const result = validate(makeBody([makeSection(columns)]));
       expect(result.isValid).toBe(true);
     });
   });
 
   describe('ID uniqueness', () => {
     it('rejects duplicate IDs', () => {
-      const result = validateJSON({
+      const result = validate({
         id: 'root',
         type: 'mc-body',
         attributes: {},
@@ -298,7 +303,7 @@ describe('validateJSON', () => {
     });
 
     it('accepts unique IDs', () => {
-      const result = validateJSON({
+      const result = validate({
         id: 'root',
         type: 'mc-body',
         attributes: {},
@@ -323,7 +328,7 @@ describe('validateJSON', () => {
 
   describe('unknown components', () => {
     it('errors on unknown component type', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           { type: 'mc-carousel', attributes: {} },
         ]),
@@ -337,7 +342,7 @@ describe('validateJSON', () => {
 
   describe('mc-head placement', () => {
     it('rejects mc-head as second child of mc-body', () => {
-      const result = validateJSON(
+      const result = validate(
         makeBody([
           makeSection([makeColumn([])]),
           { type: 'mc-head', attributes: {} },
@@ -425,14 +430,14 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
   }
 
   it('mc-class with valid name is accepted (no errors)', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-class', attributes: { name: 'cta', 'background-color': '#e85d3a' } },
     ]));
     expect(result.errors).toHaveLength(0);
   });
 
   it('mc-class with extends is accepted (no errors)', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-class', attributes: { name: 'base', 'font-size': '14px' } },
       { type: 'mc-class', attributes: { name: 'primary', extends: 'base', color: '#fff' } },
     ]));
@@ -440,7 +445,7 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
   });
 
   it('mc-class without name produces EXACTLY ONE MISSING_ATTRIBUTE error (no duplicates)', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-class', attributes: { 'background-color': '#e85d3a' } }, // no name
     ]));
     const nameErrors = result.errors.filter(
@@ -450,14 +455,14 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
   });
 
   it('mc-class does NOT produce INVALID_NESTING error inside mc-attributes', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-class', attributes: { name: 'hero', 'font-size': '24px' } },
     ]));
     expect(result.errors.filter(e => e.code === 'INVALID_NESTING')).toHaveLength(0);
   });
 
   it('multiple mc-class definitions all accepted', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-class', attributes: { name: 'hero', 'font-size': '24px' } },
       { type: 'mc-class', attributes: { name: 'footer', 'font-size': '12px' } },
       { type: 'mc-class', attributes: { name: 'cta', 'background-color': '#e85d3a' } },
@@ -466,7 +471,7 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
   });
 
   it('mc-class mixed with regular mc-attributes children is accepted', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-all', attributes: { 'font-family': 'Arial' } },
       { type: 'mc-button', attributes: { 'background-color': '#000' } },
       { type: 'mc-class', attributes: { name: 'cta', color: '#fff' } },
@@ -475,7 +480,7 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
   });
 
   it('truly invalid mc-attributes child (mc-body) still produces INVALID_NESTING', () => {
-    const result = validateJSON(makeTreeWithAttrs([
+    const result = validate(makeTreeWithAttrs([
       { type: 'mc-body', attributes: {} }, // mc-body is NOT in VALID_ATTRIBUTES_CHILDREN
     ]));
     expect(result.errors.some(e => e.code === 'INVALID_NESTING')).toBe(true);
@@ -491,13 +496,13 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
         children: [
           { attributes: {}, children: [] } as unknown as never,
         ],
-      } as unknown as Parameters<typeof validateJSON>[0];
+      } as unknown as MCNode;
 
       // Should NOT throw — previously this triggered TypeError in fuzzy-match
       // when suggestComponent received undefined.
-      expect(() => validateJSON(malformed)).not.toThrow();
+      expect(() => validate(malformed)).not.toThrow();
 
-      const result = validateJSON(malformed);
+      const result = validate(malformed);
       expect(result.errors.some((e) => e.message.includes('missing a "type"'))).toBe(true);
     });
 
@@ -505,10 +510,10 @@ describe('Phase 7: mc-class in mc-attributes (JSON)', () => {
       const malformed = {
         type: '',
         attributes: {},
-      } as unknown as Parameters<typeof validateJSON>[0];
+      } as unknown as MCNode;
 
-      expect(() => validateJSON(malformed)).not.toThrow();
-      const result = validateJSON(malformed);
+      expect(() => validate(malformed)).not.toThrow();
+      const result = validate(malformed);
       expect(result.errors.some((e) => e.message.includes('missing a "type"'))).toBe(true);
     });
   });

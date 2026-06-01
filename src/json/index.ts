@@ -40,7 +40,11 @@ import { checkEmailBudget } from '../compiler/email-budget.js';
 import { ErrorCode } from '../errors/codes.js';
 
 // Re-export sub-modules for barrel
-export { validateJSON, validateDocument, validateDataAgainstSchema } from './validator.js';
+// Note: `validateJSON` is intentionally NOT re-exported from the public surface —
+// the universal `validate()` (in src/validate.ts) covers JSON IR input.
+// `validateJSON` remains an internal helper used by `validateDocument` and
+// `compileFromJSON` (see imports above and below).
+export { validateDocument, validateDataAgainstSchema } from './validator.js';
 export { jsonToAST, parseContent } from './json-to-ast.js';
 export { jsonToMarkup } from './json-to-markup.js';
 export { markupToJSON, astToMCNode } from './markup-to-json.js';

@@ -95,6 +95,21 @@ describe('fuzzyMatch', () => {
       expect(result[i]!.distance).toBeGreaterThanOrEqual(result[i - 1]!.distance);
     }
   });
+
+  // Regression: fuzzyMatch is exported publicly and was crashing with
+  // `undefined.toLowerCase()` when callers (e.g. suggestComponent on an AST
+  // node whose `.type` was missing) handed it a non-string. The bug surfaced
+  // as a hard TypeError out of `validate()`. The fix is a guard at the top
+  // of fuzzyMatch — covered here so the contract can't silently regress.
+  it('returns [] for non-string input instead of throwing', () => {
+    const candidates = ['mc-body', 'mc-text'];
+    for (const bad of [undefined, null, 0, true, {}]) {
+      expect(() => fuzzyMatch(bad as never, candidates)).not.toThrow();
+      expect(fuzzyMatch(bad as never, candidates)).toEqual([]);
+    }
+    // Empty string also returns [] — nothing meaningful to match against.
+    expect(fuzzyMatch('', candidates)).toEqual([]);
+  });
 });
 
 describe('suggest', () => {

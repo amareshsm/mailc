@@ -74,8 +74,10 @@ import {
 } from '../../src/index.js';
 
 // ── JSON ─────────────────────────────────────────────────────────────────
+// Note: `validateJSON` was deliberately dropped from the public surface —
+// the universal `validate()` now handles JSON IR input as one of its dispatch
+// branches. See src/validate.ts.
 import {
-  validateJSON,
   validateDocument,
   jsonToAST,
   parseContent,
@@ -305,10 +307,6 @@ describe('Phase 15: Public API exports', () => {
   // ── 15.1 — JSON ──────────────────────────────────────────────────────
 
   describe('JSON pipeline exports', () => {
-    it('exports validateJSON as a function', () => {
-      expect(typeof validateJSON).toBe('function');
-    });
-
     it('exports validateDocument as a function', () => {
       expect(typeof validateDocument).toBe('function');
     });
@@ -456,6 +454,46 @@ describe('Phase 15: Headline API smoke tests', () => {
     const result = validate(ast);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  // ── validate() universal input dispatch ─────────────────────────────
+  // These tests cover the *new* dispatch behaviour added by src/validate.ts.
+  // Existing AST-input behaviour (above) and JSON-IR-input behaviour
+  // (tests/json/validator.test.ts) are intentionally not re-tested here —
+  // these focus only on what the universal dispatcher introduces.
+
+  it('validate() accepts a markup string directly (no manual tokenize+parse)', () => {
+    const source = `<mc><mc-body><mc-section><mc-column><mc-text>Hi</mc-text></mc-column></mc-section></mc-body></mc>`;
+    const result = validate(source);
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('validate() on unparseable markup returns a structured error instead of throwing', () => {
+    // Unclosed tag — would historically throw an MCError out of the parser.
+    const bad = `<mc><mc-body><mc-text>oops`;
+    expect(() => validate(bad)).not.toThrow();
+    const result = validate(bad);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it('validate() returns INVALID_INPUT for non-object inputs (no throw)', () => {
+    for (const bad of [42, null, undefined, true]) {
+      expect(() => validate(bad as never)).not.toThrow();
+      const result = validate(bad as never);
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]!.code).toBe('INVALID_INPUT');
+    }
+  });
+
+  it('validate() on an MCDocument-shaped object points users to validateDocument', () => {
+    // A user with an MCDocument naturally tries validate(doc) — give a useful hint.
+    const docLike = { version: '1.0', metadata: { id: 'x', name: 'y' }, template: { type: 'mc-body', attributes: {} } };
+    expect(() => validate(docLike as never)).not.toThrow();
+    const result = validate(docLike as never);
+    expect(result.errors[0]!.code).toBe('INVALID_INPUT');
+    expect(result.errors[0]!.message).toContain('validateDocument');
   });
 
   it('checkCss() returns a result with success flag', () => {

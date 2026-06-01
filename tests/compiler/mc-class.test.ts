@@ -16,7 +16,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { compile } from '../../src/compile.js';
-import { compileFromJSON, validateJSON } from '../../src/json/index.js';
+import { compileFromJSON } from '../../src/json/index.js';
+import { validate } from '../../src/validate.js';
 import type { MCNode } from '../../src/json/schema.js';
 
 // ---------------------------------------------------------------------------
@@ -806,7 +807,7 @@ describe('mc-class: JSON round-trip via compileFromJSON', () => {
 // ---------------------------------------------------------------------------
 
 describe('mc-class: JSON validator integration', () => {
-  it('validateJSON accepts mc-class with valid name (no errors)', () => {
+  it('validate accepts mc-class with valid name (no errors)', () => {
     const node: MCNode = {
       type: 'mc',
       attributes: {},
@@ -827,11 +828,11 @@ describe('mc-class: JSON validator integration', () => {
         { type: 'mc-body', attributes: {} },
       ],
     };
-    const result = validateJSON(node);
+    const result = validate(node);
     expect(result.errors).toHaveLength(0);
   });
 
-  it('validateJSON rejects mc-class without name (exactly one error)', () => {
+  it('validate rejects mc-class without name (exactly one error)', () => {
     const node: MCNode = {
       type: 'mc',
       attributes: {},
@@ -852,7 +853,7 @@ describe('mc-class: JSON validator integration', () => {
         { type: 'mc-body', attributes: {} },
       ],
     };
-    const result = validateJSON(node);
+    const result = validate(node);
     const nameErrors = result.errors.filter(
       (e) => e.code === 'MISSING_ATTRIBUTE' && e.message.includes('mc-class'),
     );
@@ -860,7 +861,7 @@ describe('mc-class: JSON validator integration', () => {
     expect(nameErrors).toHaveLength(1);
   });
 
-  it('validateJSON accepts mc-class with extends attribute (no errors)', () => {
+  it('validate accepts mc-class with extends attribute (no errors)', () => {
     const node: MCNode = {
       type: 'mc',
       attributes: {},
@@ -882,11 +883,11 @@ describe('mc-class: JSON validator integration', () => {
         { type: 'mc-body', attributes: {} },
       ],
     };
-    const result = validateJSON(node);
+    const result = validate(node);
     expect(result.errors).toHaveLength(0);
   });
 
-  it('validateJSON does not produce INVALID_NESTING for mc-class inside mc-attributes', () => {
+  it('validate does not produce INVALID_NESTING for mc-class inside mc-attributes', () => {
     const node: MCNode = {
       type: 'mc',
       attributes: {},
@@ -907,12 +908,12 @@ describe('mc-class: JSON validator integration', () => {
         { type: 'mc-body', attributes: {} },
       ],
     };
-    const result = validateJSON(node);
+    const result = validate(node);
     const nestingErrors = result.errors.filter((e) => e.code === 'INVALID_NESTING');
     expect(nestingErrors).toHaveLength(0);
   });
 
-  it('validateJSON rejects truly invalid mc-attributes child (mc-body)', () => {
+  it('validate rejects truly invalid mc-attributes child (mc-body)', () => {
     // mc-section is valid inside mc-attributes (means "set defaults for mc-section").
     // mc-body is NOT in VALID_ATTRIBUTES_CHILDREN — it should produce INVALID_NESTING.
     const node: MCNode = {
@@ -935,7 +936,7 @@ describe('mc-class: JSON validator integration', () => {
         { type: 'mc-body', attributes: {} },
       ],
     };
-    const result = validateJSON(node);
+    const result = validate(node);
     expect(result.errors.some((e) => e.code === 'INVALID_NESTING')).toBe(true);
   });
 });

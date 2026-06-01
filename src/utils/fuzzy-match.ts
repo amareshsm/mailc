@@ -66,9 +66,16 @@ export function fuzzyMatch(
   candidates: readonly string[],
   maxDistance: number = DEFAULT_MAX_DISTANCE,
 ): FuzzyMatch[] {
+  // Defensive: a public util must never crash on a non-string input.
+  // Returning [] makes `suggest()` cleanly return undefined for callers
+  // that hand us undefined/null (e.g. an AST node whose `.type` was
+  // unexpectedly missing — historically the source of a TypeError here).
+  if (typeof input !== 'string' || input.length === 0) return [];
+
   const matches: FuzzyMatch[] = [];
 
   for (const candidate of candidates) {
+    if (typeof candidate !== 'string') continue;
     const distance = levenshtein(input.toLowerCase(), candidate.toLowerCase());
     if (distance <= maxDistance) {
       matches.push({ candidate, distance });

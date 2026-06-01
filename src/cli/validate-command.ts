@@ -16,8 +16,7 @@ import path from 'node:path';
 import type { MCIssue, MailcConfig } from '../types.js';
 import { tokenize } from '../tokenizer/index.js';
 import { parse } from '../parser/index.js';
-import { validate } from '../validator/index.js';
-import { validateJSON } from '../json/index.js';
+import { validate } from '../validate.js';
 import type { MCNode } from '../json/schema.js';
 import {
   success,
@@ -224,7 +223,7 @@ function validateJsonFile(source: string, filePath: string): FileValidationResul
     ? (obj['template'] as MCNode)
     : (parsed as MCNode);
 
-  const result = validateJSON(rootNode);
+  const result = validate(rootNode);
 
   return {
     file: filePath,
