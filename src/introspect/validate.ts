@@ -232,13 +232,18 @@ function unknownAttributeError(componentType: string, attrName: string): Introsp
  *
  * Every error/warning carries a structured {@link FixInstruction}.
  *
+ * `parentType` accepts `null` as an explicit "root-level node, skip the
+ * nesting check" — equivalent to omitting it. Callers serialising over
+ * JSON (the MCP server, builder UIs) can't express `undefined`, so `null`
+ * must mean the same thing.
+ *
  * @example
  * validateNode({ type: 'mc-button', attributes: {} }, 'mc-section')
  * // → { valid: false, errors: [INVALID_NESTING, MISSING_ATTRIBUTE(href)] }
  */
 export function validateNode(
   node: ValidateNodeInput,
-  parentType?: string,
+  parentType?: string | null,
   options?: ValidateNodeOptions,
 ): IntrospectValidationResult {
   const errors: IntrospectError[] = [];
@@ -274,7 +279,7 @@ export function validateNode(
   //    Only reject if the parent is itself a logic tag nesting another logic
   //    tag in a way that makes no sense (e.g. mc-if inside mc-each is fine;
   //    we don't restrict that here — the template engine handles it).
-  if (parentType !== undefined) {
+  if (parentType !== undefined && parentType !== null) {
     if (!LOGIC_TAGS.has(node.type)) {
       // Structural component — enforce allowedParents
       const spec = getComponentSpec(node.type);

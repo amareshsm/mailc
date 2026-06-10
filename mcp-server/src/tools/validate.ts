@@ -41,13 +41,16 @@ export async function validateNodeHandler(args: {
   parentType?: string | null
   templateStyle?: 'attribute' | 'class'
 }) {
-  const { node, parentType = null, templateStyle } = args
+  const { node, parentType, templateStyle } = args
 
-  // introspect.validate expects { type, attributes? } at minimum.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = introspect.validate(node as any, parentType as any, {
-    templateStyle: templateStyle ?? 'attribute',
-  })
+  // `parentType: null` (or omitted) means root-level — validateNode treats
+  // both as "skip the nesting check". `attributes` defaults to {} since
+  // agents commonly omit it for attribute-less nodes.
+  const result = introspect.validate(
+    { type: node.type, attributes: node.attributes ?? {}, content: node.content },
+    parentType,
+    { templateStyle: templateStyle ?? 'attribute' },
+  )
 
   return {
     valid: result.valid,

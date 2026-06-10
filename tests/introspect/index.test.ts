@@ -57,6 +57,25 @@ describe('introspect — full agent workflow (zero compiler round-trips)', () =>
     expect(nestingFix?.confidence).toBe('high');
   });
 
+  // Regression: callers that serialise over JSON (the MCP server, builder
+  // UIs) cannot express `undefined` — they send `null` for "root-level
+  // node". validateNode used to treat null as a real parent named "null"
+  // and emit a false INVALID_NESTING ("cannot be placed inside <null>").
+  it('parentType: null means root-level — same as omitting it, no false INVALID_NESTING', () => {
+    const withNull = introspect.validate(
+      { type: 'mc-button', attributes: { href: 'https://example.com' } },
+      null,
+    );
+    expect(withNull.errors.filter(e => e.code === 'INVALID_NESTING')).toHaveLength(0);
+
+    const withUndefined = introspect.validate(
+      { type: 'mc-button', attributes: { href: 'https://example.com' } },
+      undefined,
+    );
+    expect(withNull.valid).toBe(withUndefined.valid);
+    expect(withNull.errors).toEqual(withUndefined.errors);
+  });
+
   it('agent uses compilesTo to understand Outlook VML output', () => {
     const spec = introspect.compilesTo('mc-button');
     expect(spec?.outputElements).toContain('v:roundrect');

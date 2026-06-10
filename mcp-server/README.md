@@ -25,7 +25,7 @@ The AI iterates inside a single user turn instead of round-tripping through chat
 |---|---|
 | `compile_email` | Renders mailc markup or JSON IR to email-safe HTML; returns errors, warnings, and a `partial` flag. |
 | `validate_email_node` | Pre-flight check for one JSON node against its parent. Returns structured `FixInstruction` objects (`action`, `attribute`, `classHint`, `confidence`). |
-| `list_components` | Lists every registered component (mc-* built-ins + plugin types), with category and `isPlugin` flag. |
+| `list_components` | Lists every built-in `mc-*` component with category and description. Plugins are per-call values in the mailc API and are not enumerated. |
 | `get_component_spec` | Full spec for one type: attributes (required/optional/CSS-prop), parents, children, what HTML it compiles to, and common mistakes. |
 | `can_nest` | Quick `(parent, child) → boolean` structural check. Same data your visual builder uses for drop-target validity. |
 | `extract_data_contract` | Static analysis of a template — required fields, optional fields (gated by mc-if), per-loop iteration shapes. The basis for typed SDK generation. |
@@ -84,8 +84,8 @@ Add to `~/.cursor/mcp.json`:
 ### compile_email
 
 ```ts
-input:  { source?: string, jsonNode?: object, templateStyle?: 'attribute'|'class', data?: object }
-output: { html: string|null, errors: [...], warnings: [...], partial: boolean }
+input:  { source?: string, jsonNode?: object, templateStyle?: 'attribute'|'class', compatibilityMode?: 'liberal'|'strict', data?: object }
+output: { html: string|null, errors: [...], warnings: [...], info: [...], partial: boolean, stats: {...} }
 ```
 
 ### validate_email_node
@@ -99,7 +99,7 @@ output: { valid: boolean, errors: [{ code, message, fix: { action, ... } }], war
 
 ```ts
 input:  {}
-output: { count: number, components: [{ type, category, description, isPlugin }] }
+output: { count: number, components: [{ type, category, description }] }
 ```
 
 ### get_component_spec

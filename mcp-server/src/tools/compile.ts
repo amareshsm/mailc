@@ -44,8 +44,10 @@ export const compileEmailInput = {
 
 interface CompileToolResult {
   html: string | null
-  errors: Array<{ code: string; message: string; severity: string }>
-  warnings: Array<{ code: string; message: string; severity: string }>
+  errors: { code: string; message: string; severity: string }[]
+  warnings: { code: string; message: string; severity: string }[]
+  /** Informational notices (e.g. STRICT_MODE_MCSTYLE_BYPASS, a11y notes). */
+  info: { code: string; message: string; severity: string }[]
   partial: boolean
   stats?: CompileResult['stats']
 }
@@ -86,6 +88,11 @@ export async function compileEmailHandler(args: {
       code: w.code,
       message: w.message,
       severity: w.severity,
+    })),
+    info: result.info.map((i) => ({
+      code: i.code,
+      message: i.message,
+      severity: i.severity,
     })),
     partial: result.partial,
     stats: result.stats,

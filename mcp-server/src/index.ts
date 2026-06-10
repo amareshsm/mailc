@@ -43,7 +43,7 @@ import {
 // ---------------------------------------------------------------------------
 
 type ToolResult = {
-  content: Array<{ type: 'text'; text: string }>
+  content: { type: 'text'; text: string }[]
   isError?: boolean
 }
 

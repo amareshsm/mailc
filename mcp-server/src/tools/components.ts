@@ -1,9 +1,10 @@
 /**
  * `get_component_spec` and `list_components` MCP tools.
  *
- * Expose the introspection registry to AI agents — every component,
- * including plugins registered via `defineComponent()`, is discoverable
- * with full attribute metadata, parent/child rules, and HTML output info.
+ * Expose the introspection registry to AI agents — every built-in `mc-*`
+ * component is discoverable with full attribute metadata, parent/child
+ * rules, and HTML output info. Plugins are per-call values in the mailc
+ * API and are not enumerated here.
  */
 
 import { z } from 'zod'
@@ -38,9 +39,7 @@ export async function listComponentsHandler() {
 export const getComponentSpecInput = {
   type: z
     .string()
-    .describe(
-      'Component tag name, e.g. "mc-button" or a registered plugin like "acme-hero".',
-    ),
+    .describe('Built-in component tag name, e.g. "mc-button" or "mc-hero".'),
 }
 
 export async function getComponentSpecHandler(args: { type: string }) {
