@@ -1,13 +1,18 @@
 /**
- * Tests for the defineComponent() plugin API.
+ * Tests for the `defineComponent()` plugin API after the plugin-as-values
+ * migration.
  *
- * Each test uses _resetRegistry() + _reseedBuiltins() in beforeEach to keep
- * the registry's mutable state isolated across tests. Without this, a plugin
- * registered in one test would pollute later tests (the registry is a module
- * singleton).
+ * The pre-migration API mutated a global registry on every call. The new
+ * one is pure: `defineComponent(spec)` returns a `Plugin` value, and
+ * `compile(src, { plugins })` (or `createCompiler({ plugins })`) opts the
+ * plugin into a specific call. These tests pin the new contract.
+ *
+ * Per-call merge behaviour (precedence, last-write-wins, multi-instance,
+ * UNKNOWN_COMPONENT suppression) is covered in
+ * `tests/compile/plugins-per-call.test.ts` — we don't duplicate it here.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   defineComponent,
   getRegisteredComponents,
@@ -16,9 +21,8 @@ import {
   introspect,
   type ComponentMetadata,
   type ComponentCompiler,
+  type Plugin,
 } from '../../src/index.js';
-import { _resetRegistry } from '../../src/registry/component-registry.js';
-import { _reseedBuiltins } from '../../src/registry/init.js';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -36,21 +40,21 @@ const VALID_METADATA: ComponentMetadata = {
   validClassCategories: ['background', 'spacing'],
   commonMistakes: [],
   attributes: {
-    'class': {
+    class: {
       type: 'tailwind-classes',
       required: false,
       description: 'Utility classes.',
       example: 'bg-white',
       hasEmailCompatibilityNotes: false,
     },
-    'title': {
+    title: {
       type: 'string',
       required: true,
       description: 'Product title.',
       example: 'Acme Widget',
       hasEmailCompatibilityNotes: false,
     },
-    'price': {
+    price: {
       type: 'string',
       required: true,
       description: 'Display price.',
@@ -75,74 +79,71 @@ const VALID_COMPILER: ComponentCompiler = (node) => {
   return `<table role="presentation"><tr><td>${title}</td><td>${price}</td></tr></table>`;
 };
 
+const SOURCE_USING_PLUGIN = `
+  <mc>
+    <mc-body>
+      <mc-section>
+        <mc-column>
+          <acme-product-card title="Widget" price="$10.00" />
+        </mc-column>
+      </mc-section>
+    </mc-body>
+  </mc>
+`;
+
 // ---------------------------------------------------------------------------
-// Test isolation — every test starts with a clean registry
+// Return shape — defineComponent is now pure
 // ---------------------------------------------------------------------------
 
-beforeEach(() => {
-  _resetRegistry();
-  _reseedBuiltins();
-});
-
-// ---------------------------------------------------------------------------
-// Successful registration
-// ---------------------------------------------------------------------------
-
-describe('defineComponent — happy path', () => {
-  it('registers a valid plugin component', () => {
-    defineComponent({
+describe('defineComponent — returns a Plugin value', () => {
+  it('returns a Plugin with type/metadata/compile fields', () => {
+    const plugin = defineComponent({
       type: 'acme-product-card',
       metadata: VALID_METADATA,
       compile: VALID_COMPILER,
     });
-
-    expect(isComponentRegistered('acme-product-card')).toBe(true);
-    expect(getRegisteredComponents()).toContain('acme-product-card');
+    expect(plugin.type).toBe('acme-product-card');
+    expect(plugin.metadata).toBe(VALID_METADATA);
+    expect(plugin.compile).toBe(VALID_COMPILER);
   });
 
-  it('plugin component appears alongside built-ins', () => {
-    const builtinCount = getRegisteredComponents().length;
-    defineComponent({
-      type: 'acme-product-card',
+  it('returns a frozen Plugin — mutation throws in strict mode', () => {
+    const plugin: Plugin = defineComponent({
+      type: 'acme-frozen',
       metadata: VALID_METADATA,
       compile: VALID_COMPILER,
     });
-    expect(getRegisteredComponents().length).toBe(builtinCount + 1);
-    expect(isComponentRegistered('mc-section')).toBe(true);
-    expect(isComponentRegistered('acme-product-card')).toBe(true);
+    expect(Object.isFrozen(plugin)).toBe(true);
   });
 
-  it('synthetic types are excluded from getRegisteredComponents()', () => {
-    const types = getRegisteredComponents();
-    expect(types.every((t) => !t.startsWith('_'))).toBe(true);
+  it('does NOT mutate any global registry (pure)', () => {
+    // After Phase 3, defineComponent is side-effect-free. The
+    // built-in-only `isComponentRegistered` must not see the plugin type
+    // even after the call returns.
+    const beforeBuiltins = getRegisteredComponents().length;
+    defineComponent({
+      type: 'acme-no-mutation',
+      metadata: VALID_METADATA,
+      compile: VALID_COMPILER,
+    });
+    expect(getRegisteredComponents().length).toBe(beforeBuiltins);
+    expect(isComponentRegistered('acme-no-mutation')).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
-// End-to-end: compile a template that uses a plugin component
+// End-to-end: plugin compiles when passed per-call
 // ---------------------------------------------------------------------------
 
 describe('defineComponent — end-to-end compilation', () => {
-  it('compiles a template that uses the plugin component', () => {
-    defineComponent({
+  it('compiles a template that uses the plugin component (per-call)', () => {
+    const plugin = defineComponent({
       type: 'acme-product-card',
       metadata: VALID_METADATA,
       compile: VALID_COMPILER,
     });
 
-    const source = `
-      <mc>
-        <mc-body>
-          <mc-section>
-            <mc-column>
-              <acme-product-card title="Widget" price="$10.00" />
-            </mc-column>
-          </mc-section>
-        </mc-body>
-      </mc>
-    `;
-
-    const result = compile(source);
+    const result = compile(SOURCE_USING_PLUGIN, { plugins: [plugin] });
 
     expect(result.errors).toEqual([]);
     expect(result.html).toContain('<table role="presentation">');
@@ -151,13 +152,14 @@ describe('defineComponent — end-to-end compilation', () => {
   });
 
   it('plugin output is spliced into the email body unchanged (trust model)', () => {
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-raw-block',
       metadata: { ...VALID_METADATA, attributes: {} },
       compile: () => `<div data-plugin-marker="trust-test">UNVALIDATED</div>`,
     });
 
-    const result = compile(`
+    const result = compile(
+      `
       <mc>
         <mc-body>
           <mc-section>
@@ -167,7 +169,9 @@ describe('defineComponent — end-to-end compilation', () => {
           </mc-section>
         </mc-body>
       </mc>
-    `);
+    `,
+      { plugins: [plugin] },
+    );
 
     expect(result.html).toContain('data-plugin-marker="trust-test"');
     expect(result.html).toContain('UNVALIDATED');
@@ -175,73 +179,36 @@ describe('defineComponent — end-to-end compilation', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Introspection — the moat
+// Built-in-only introspection (per-call plugins have no global identity)
 // ---------------------------------------------------------------------------
 
-describe('defineComponent — introspection (moat)', () => {
-  it('plugin metadata appears in introspect.component()', () => {
-    defineComponent({
-      type: 'acme-product-card',
-      metadata: VALID_METADATA,
-      compile: VALID_COMPILER,
-    });
-
-    const spec = introspect.component('acme-product-card');
-    expect(spec).toBeDefined();
-    expect(spec?.type).toBe('acme-product-card');
-    expect(spec?.description).toBe(VALID_METADATA.description);
-    expect(spec?.requiredAttributes.map((a) => a.name).sort()).toEqual([
-      'price',
-      'title',
-    ]);
+describe('introspect — built-in scope after migration', () => {
+  it('introspect.component() returns built-in specs only', () => {
+    const section = introspect.component('mc-section');
+    expect(section).toBeDefined();
+    expect(section?.type).toBe('mc-section');
   });
 
-  it('plugin appears in introspect.all()', () => {
-    const beforeCount = introspect.all().length;
+  it('introspect.component() returns undefined for plugin types — plugins are per-call values, not globally registered', () => {
+    // Even after defineComponent, the type doesn't appear in global introspection.
     defineComponent({
-      type: 'acme-product-card',
+      type: 'acme-not-introspectable',
       metadata: VALID_METADATA,
       compile: VALID_COMPILER,
     });
-    const afterSpecs = introspect.all();
-    expect(afterSpecs.length).toBe(beforeCount + 1);
-    expect(afterSpecs.find((s) => s.type === 'acme-product-card')).toBeDefined();
+    expect(introspect.component('acme-not-introspectable')).toBeUndefined();
   });
 
-  it('plugin children appear under their built-in parent (allowedChildren)', () => {
-    defineComponent({
-      type: 'acme-product-card',
+  it('plugin metadata is accessed directly via the Plugin value', () => {
+    // The replacement for `introspect.component(pluginType)` in the
+    // per-call world: just read `plugin.metadata`.
+    const plugin = defineComponent({
+      type: 'acme-thing',
       metadata: VALID_METADATA,
       compile: VALID_COMPILER,
     });
-
-    const columnSpec = introspect.component('mc-column');
-    expect(columnSpec?.allowedChildren).toContain('acme-product-card');
-  });
-
-  it('built-in parent is reported in plugin allowedParents', () => {
-    defineComponent({
-      type: 'acme-product-card',
-      metadata: VALID_METADATA,
-      compile: VALID_COMPILER,
-    });
-
-    const spec = introspect.component('acme-product-card');
-    expect(spec?.allowedParents).toContain('mc-column');
-    expect(spec?.allowedParents).toContain('mc-section');
-  });
-
-  it('cssPropertyAttributes captures plugin attrs marked isCssPropAttr', () => {
-    defineComponent({
-      type: 'acme-product-card',
-      metadata: VALID_METADATA,
-      compile: VALID_COMPILER,
-    });
-
-    const spec = introspect.component('acme-product-card');
-    expect(spec?.cssPropertyAttributes.map((a) => a.name)).toEqual([
-      'background-color',
-    ]);
+    expect(plugin.metadata.description).toBe(VALID_METADATA.description);
+    expect(plugin.metadata.attributes['title']?.required).toBe(true);
   });
 
   it('synthetic compiler types are NOT introspectable', () => {
@@ -251,74 +218,91 @@ describe('defineComponent — introspection (moat)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Validation rejections
+// Validation — enforced at view-build time (compile call), not at defineComponent
 // ---------------------------------------------------------------------------
 
-describe('defineComponent — validation', () => {
+describe('plugin validation (at compile time)', () => {
+  // Validation happens inside `createRegistryView()` when the per-call
+  // plugin set is built. compile() catches and surfaces as INTERNAL_ERROR
+  // so callers never see an uncaught throw.
+
   it('rejects a type without a hyphen', () => {
-    expect(() =>
-      defineComponent({
-        type: 'badtype',
-        metadata: VALID_METADATA,
-        compile: VALID_COMPILER,
-      }),
-    ).toThrow(/hyphenated custom element name/);
-  });
-
-  it('rejects the literal "mc" type', () => {
-    expect(() =>
-      defineComponent({
-        type: 'mc',
-        metadata: VALID_METADATA,
-        compile: VALID_COMPILER,
-      }),
-    ).toThrow(/hyphenated custom element name/);
-  });
-
-  it('rejects a type with the reserved mc- prefix', () => {
-    expect(() =>
-      defineComponent({
-        type: 'mc-something',
-        metadata: VALID_METADATA,
-        compile: VALID_COMPILER,
-      }),
-    ).toThrow(/"mc-" prefix is reserved/);
-  });
-
-  it('rejects collision with a built-in component', () => {
-    // The collision check fires before the prefix check would match for
-    // built-ins like "mc-section". To test the collision message specifically
-    // we register a plugin first and try to register it again.
-    defineComponent({
-      type: 'acme-thing',
+    const bad = defineComponent({
+      type: 'badtype',
       metadata: VALID_METADATA,
       compile: VALID_COMPILER,
     });
-    expect(() =>
-      defineComponent({
-        type: 'acme-thing',
-        metadata: VALID_METADATA,
-        compile: VALID_COMPILER,
-      }),
-    ).toThrow(/already registered/);
+    const result = compile(SOURCE_USING_PLUGIN, { plugins: [bad] });
+    expect(result.html).toBeNull();
+    expect(
+      result.errors.some((e) =>
+        /hyphenated custom element name/.test(e.message),
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects the literal "mc" type', () => {
+    const bad = defineComponent({
+      type: 'mc',
+      metadata: VALID_METADATA,
+      compile: VALID_COMPILER,
+    });
+    const result = compile(SOURCE_USING_PLUGIN, { plugins: [bad] });
+    expect(result.html).toBeNull();
+    expect(
+      result.errors.some((e) =>
+        /hyphenated custom element name/.test(e.message),
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects a type with the reserved mc- prefix', () => {
+    const bad = defineComponent({
+      type: 'mc-something',
+      metadata: VALID_METADATA,
+      compile: VALID_COMPILER,
+    });
+    const result = compile(SOURCE_USING_PLUGIN, { plugins: [bad] });
+    expect(result.html).toBeNull();
+    expect(
+      result.errors.some((e) => /"mc-" prefix is reserved/.test(e.message)),
+    ).toBe(true);
+  });
+
+  it('rejects collision with a built-in component', () => {
+    const colliding = defineComponent({
+      type: 'mc-section', // collides with a built-in
+      metadata: VALID_METADATA,
+      compile: VALID_COMPILER,
+    });
+    const result = compile(SOURCE_USING_PLUGIN, { plugins: [colliding] });
+    expect(result.html).toBeNull();
+    // mc-section trips the reserved-prefix check first; either message
+    // is acceptable proof that the bad spec was rejected.
+    expect(
+      result.errors.some((e) =>
+        /built-in|"mc-" prefix is reserved/.test(e.message),
+      ),
+    ).toBe(true);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Lifecycle — registration after compile() must throw
+// No lifecycle constraint after the migration
 // ---------------------------------------------------------------------------
 
-describe('defineComponent — lifecycle', () => {
-  it('throws if called after compile() has started', () => {
-    // Trigger the compile lifecycle marker by running a minimal compile.
-    compile(`<mc><mc-body><mc-section><mc-column><mc-text>Hi</mc-text></mc-column></mc-section></mc-body></mc>`);
-
-    expect(() =>
-      defineComponent({
-        type: 'acme-too-late',
-        metadata: VALID_METADATA,
-        compile: VALID_COMPILER,
-      }),
-    ).toThrow(/cannot register components after compile\(\) has started/);
+describe('lifecycle — pure defineComponent has no ordering constraint', () => {
+  it('can define a plugin after compile() has run (no global lock)', () => {
+    // Run a compile to "start" the lifecycle (would throw pre-migration).
+    compile(
+      `<mc><mc-body><mc-section><mc-column><mc-text>Hi</mc-text></mc-column></mc-section></mc-body></mc>`,
+    );
+    // Should not throw — there's no global state to protect anymore.
+    const plugin = defineComponent({
+      type: 'acme-after-compile',
+      metadata: VALID_METADATA,
+      compile: VALID_COMPILER,
+    });
+    expect(plugin.type).toBe('acme-after-compile');
   });
 });

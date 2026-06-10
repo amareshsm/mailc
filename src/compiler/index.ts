@@ -10,7 +10,6 @@
 import type { ASTNode, CompileContext } from '../types.js';
 import { MCError } from '../errors/mc-error.js';
 import { ErrorCode } from '../errors/codes.js';
-import { COMPONENT_COMPILERS } from './registry.js';
 import { injectDataId } from './data-id-injector.js';
 
 // ---------------------------------------------------------------------------
@@ -90,7 +89,8 @@ export function compileNode(node: ASTNode, context: CompileContext): string {
   }
   depthCtx._compileDepth = depth;
 
-  const compiler = COMPONENT_COMPILERS[node.type];
+  // `context.registry` knows about built-ins and the per-call plugin set.
+  const compiler = context.registry.getCompiler(node.type);
 
   if (!compiler) {
     depthCtx._compileDepth = depth - 1;

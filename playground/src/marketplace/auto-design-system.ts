@@ -11,6 +11,15 @@ const defineComponent = mailc.defineComponent ?? mailc.default?.defineComponent
 // Plugin-author utilities re-exported from mailc.
 const { escapeHtml, themeColor, warnCss } = mailc
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const AUTO_PLUGINS: any[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function defineLocal(spec: any): any {
+  const plugin = defineComponent(spec)
+  AUTO_PLUGINS.push(plugin)
+  return plugin
+}
+
 const AUTO = {
   brand: '#1e40af',
   brandDark: '#1e3a8a',
@@ -28,7 +37,7 @@ const AUTO = {
 // auto-vehicle-hero — vehicle showcase with image, specs, CTA
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'auto-vehicle-hero',
   metadata: {
     description: 'Vehicle launch showcase: image, model name, tagline, four-spec strip, and CTA.',
@@ -100,7 +109,7 @@ defineComponent({
 // auto-service-reminder — mileage / service due
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'auto-service-reminder',
   metadata: {
     description: 'Service-due reminder card with mileage gauge, due-by date, and book CTA.',
@@ -170,7 +179,7 @@ defineComponent({
 // auto-test-drive-card — booking confirmation
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'auto-test-drive-card',
   metadata: {
     description: 'Test-drive booking confirmation with vehicle, date/time, dealer.',

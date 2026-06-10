@@ -10,6 +10,15 @@ const defineComponent = mailc.defineComponent ?? mailc.default?.defineComponent
 // Plugin-author utilities re-exported from mailc.
 const { escapeHtml, themeColor, warnCss } = mailc
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ECOM_PLUGINS: any[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function defineLocal(spec: any): any {
+  const plugin = defineComponent(spec)
+  ECOM_PLUGINS.push(plugin)
+  return plugin
+}
+
 const ECOM = {
   brand: '#0f766e',
   brandDark: '#115e59',
@@ -27,7 +36,7 @@ const ECOM = {
 // ecom-cart-recovery — abandoned cart with item list
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'ecom-cart-recovery',
   metadata: {
     description: 'Abandoned-cart email with hero, line items, total, and recovery CTA.',
@@ -109,7 +118,7 @@ defineComponent({
 // ecom-order-status — order tracking with status pills
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'ecom-order-status',
   metadata: {
     description: 'Order tracking card: order number, status pill, address, ETA, tracking link.',
@@ -183,7 +192,7 @@ defineComponent({
 // ecom-deal-grid — 2-column grid of discounted products
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'ecom-deal-grid',
   metadata: {
     description: 'Two-column grid of products with strikethrough original price.',

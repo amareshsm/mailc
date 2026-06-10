@@ -57,12 +57,31 @@ export function assertClassModeAttributes(
 ): void {
   if (context.templateStyle !== 'class') return;
 
-  const banned = CSS_PROP_ATTRS_BY_COMPONENT[node.type];
-  if (!banned) return;
+  // Built-in lookup first (fast, static). For per-call plugin types that
+  // never touch the legacy registry, derive the banned set on the fly from
+  // the plugin's metadata sitting on `context.registry`.
+  let banned: ReadonlySet<string> | undefined =
+    CSS_PROP_ATTRS_BY_COMPONENT[node.type];
+  if (!banned) {
+    const pluginMeta = context.registry.get(node.type);
+    if (pluginMeta) {
+      const cssPropNames = Object.entries(pluginMeta.attributes)
+        .filter(([, attr]) => attr.isCssPropAttr === true)
+        .map(([name]) => name);
+      if (cssPropNames.length === 0) return;
+      banned = new Set(cssPropNames);
+    } else {
+      return;
+    }
+  }
 
   for (const attr of Object.keys(node.attributes)) {
     if (banned.has(attr)) {
-      const rawHint = COMPONENT_METADATA[node.type]?.attributes[attr]?.classHint;
+      // classHint lives in metadata — prefer the static built-in table; fall
+      // back to per-call plugin metadata for plugin nodes.
+      const rawHint =
+        COMPONENT_METADATA[node.type]?.attributes[attr]?.classHint ??
+        context.registry.get(node.type)?.attributes[attr]?.classHint;
       const { canonical } = resolveClassHint(rawHint, node.attributes[attr]);
       const hintMsg = canonical ? ` Use class="${canonical}" instead.` : '';
       context.warnings.push({

@@ -1,63 +1,43 @@
 /**
- * Component compiler registry — public-API-compatible Proxy over the runtime
- * registry.
+ * `COMPONENT_COMPILERS` — read-only view of built-in component compilers.
  *
- * Historically `COMPONENT_COMPILERS` was a frozen `Record<string,
- * ComponentCompiler>` literal. The plugin extensibility work (see
- * `docs/plugin-architecture-plan.md`) requires the lookup to be backed by a
- * mutable runtime registry so `defineComponent()` can extend it.
+ * Exported as a Proxy backed by `BUILTIN_COMPILERS` so callers can do
+ * `COMPONENT_COMPILERS['mc-section']` or iterate via `Object.keys()`.
+ * Plugin compilers do not live here — they flow per-call through
+ * `context.registry` (see `src/registry/registry-view.ts`).
  *
- * To preserve the public API contract (`COMPONENT_COMPILERS` is exported from
- * `src/index.ts` and asserted against in `tests/api/public-api.test.ts`), we
- * expose a Proxy that mirrors the runtime registry. Property access
- * (`COMPONENT_COMPILERS['mc-section']`) resolves to the registered compiler;
- * `Object.keys()` and iteration return the current registered set.
- *
- * Mutating the Proxy directly is unsupported — plugins must use
- * `defineComponent()` (Phase 2) which routes through the registry's validation
- * and lifecycle checks.
+ * Mutating the Proxy throws.
  *
  * @module compiler/registry
  */
 
 import type { ComponentCompiler } from '../types.js';
 import {
-  getAllCompilers,
-  getComponentCompiler,
-  hasComponent,
-} from '../registry/component-registry.js';
-// Importing the init module guarantees built-ins are seeded before any
-// COMPONENT_COMPILERS access. Side-effect import is intentional.
-import '../registry/init.js';
+  BUILTIN_COMPILERS,
+  BUILTIN_METADATA,
+} from '../registry/builtin-registry.js';
 
 /**
- * Public-API-compatible view of the registered compilers. Reads always
- * reflect the current registry state (built-ins + any plugins that have
- * called `defineComponent()`).
+ * Public-API-compatible view of the built-in compilers. Reads reflect the
+ * static built-in map only.
  */
 export const COMPONENT_COMPILERS: Record<string, ComponentCompiler> = new Proxy(
   Object.create(null) as Record<string, ComponentCompiler>,
   {
     get(_target, prop) {
-      if (typeof prop !== 'string') {
-        return undefined;
-      }
-      return getComponentCompiler(prop);
+      if (typeof prop !== 'string') return undefined;
+      return BUILTIN_COMPILERS[prop];
     },
     has(_target, prop) {
-      return typeof prop === 'string' && hasComponent(prop);
+      return typeof prop === 'string' && prop in BUILTIN_METADATA;
     },
     ownKeys() {
-      return Object.keys(getAllCompilers());
+      return Object.keys(BUILTIN_COMPILERS);
     },
     getOwnPropertyDescriptor(_target, prop) {
-      if (typeof prop !== 'string') {
-        return undefined;
-      }
-      const compiler = getComponentCompiler(prop);
-      if (compiler === undefined) {
-        return undefined;
-      }
+      if (typeof prop !== 'string') return undefined;
+      const compiler = BUILTIN_COMPILERS[prop];
+      if (compiler === undefined) return undefined;
       return {
         configurable: true,
         enumerable: true,
@@ -67,7 +47,7 @@ export const COMPONENT_COMPILERS: Record<string, ComponentCompiler> = new Proxy(
     },
     set() {
       throw new Error(
-        'COMPONENT_COMPILERS is read-only. Use defineComponent() to register plugin components.',
+        'COMPONENT_COMPILERS is read-only. Pass plugin compilers per call via compile(src, { plugins: [...] }).',
       );
     },
     deleteProperty() {

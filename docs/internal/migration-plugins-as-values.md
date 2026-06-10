@@ -1,9 +1,14 @@
 # Migration plan: Plugins as values
 
-**Status:** Draft — not yet executed.
+**Status:** ✅ Completed (2026-06-01) — all four phases shipped pre-publish.
 **Owner:** Amaresh
-**Estimated cost:** 2–3 focused days (4 phases, green tests at every checkpoint)
-**Window:** Pre-publish — must land before v1.0 ships to npm.
+**Actual cost:** ~1 focused day (4 phases, green tests at every checkpoint).
+**Outcome:** Public API now matches the modern toolchain pattern
+(`compile(src, { plugins })`, `createCompiler({ plugins })`). Built-ins
+are static consts; global mutable registry deleted; zero side-effect
+`import './registry/init.js'` lines remain. All 3,775 tests pass.
+
+See "Final state" at the bottom for the post-migration shape.
 
 ---
 
@@ -457,6 +462,87 @@ Buffer for unknowns: **+1 day** → **plan for 4 days**.
 - PostCSS plugin model: `postcss([plugin1, plugin2]).process(css)`
 - Vite plugin model: `defineConfig({ plugins: [react()] })`
 - ESLint flat config: `export default [pluginA, pluginB]`
-- Side-effect import discussion: `import '../registry/init.js'` in 7
-  files today
-- Current `defineComponent` API: `src/define-component.ts`
+
+---
+
+## 14. Final state (post-migration, 2026-06-01)
+
+What landed:
+
+- [src/registry/builtin-registry.ts](../../src/registry/builtin-registry.ts) — static
+  `BUILTIN_METADATA` + `BUILTIN_COMPILERS` derived once from
+  `components/metadata.ts` and `compiler/builtin-compilers.ts`.
+- [src/registry/registry-view.ts](../../src/registry/registry-view.ts) —
+  `createRegistryView({ plugins })` factory + `RegistryView` interface.
+- [src/create-compiler.ts](../../src/create-compiler.ts) —
+  `createCompiler({ plugins, config })` binding factory.
+- [src/define-component.ts](../../src/define-component.ts) — pure,
+  returns a frozen `Plugin` value, no global mutation.
+- `Plugin` and `RegistryView` exported from [src/index.ts](../../src/index.ts);
+  `CompileOptions.plugins?: readonly Plugin[]` and
+  `CompileContext.registry: RegistryView` added in [src/types.ts](../../src/types.ts).
+- Validators (`src/validator/index.ts`, `src/json/validator.ts`) accept
+  an `extraKnownTypes?: ReadonlySet<string>` so per-call plugin types
+  don't produce spurious `UNKNOWN_COMPONENT` issues.
+- Compiler dispatch (`src/compiler/index.ts:93`) prefers
+  `context.registry.getCompiler(node.type)`, falls back to
+  `COMPONENT_COMPILERS` for built-ins.
+- Class-mode enforcement (`src/compiler/styling-mode.ts`) reads per-call
+  plugin metadata from `context.registry` when the type isn't in the
+  static `CSS_PROP_ATTRS_BY_COMPONENT` table.
+
+What was deleted:
+
+- `src/registry/init.ts` (the auto-seeder).
+- `src/registry/component-registry.ts` (global mutable map + lifecycle
+  flag + `markCompileStarted` + `registerPluginComponent`).
+- All 7 `import './registry/init.js'` side-effect imports.
+- `seedBuiltinComponent` / `seedBuiltinMetadataOnly` / `_notifyChangeForSeed`
+  / `_resetRegistry` / `_reseedBuiltins`.
+- `getRegisteredComponents` and `isComponentRegistered` were reshaped
+  to enumerate built-ins only (since plugins are per-call values now).
+
+Derivers stayed in place but no longer subscribe to `onRegistryChange`
+(it was deleted) — they compute their state once at module-load from
+the static `BUILTIN_METADATA`:
+
+- `src/validator/rules.ts` (`COMPONENT_RULES`, `KNOWN_COMPONENTS`,
+  `VALID_ATTRIBUTES_CHILDREN`).
+- `src/introspect/registry.ts` (introspection cache).
+- `src/components/css-prop-attrs.ts` (uses a lazy-init Proxy to avoid a
+  module-load cycle through the compilers).
+
+Test/example migration:
+
+- `tests/plugin/define-component.test.ts` and
+  `tests/plugin/edge-cases.test.ts` rewritten around per-call plugins.
+- `tests/introspect/can-nest.test.ts` — plugin-nesting describe block
+  removed (introspect is built-in-only now).
+- `tests/compile/plugins-per-call.test.ts` — new file, 9 focused tests.
+- `examples/plugin-product-card/product-card-plugin.ts` — exports a
+  `productCardPlugin` value instead of `registerProductCard()`.
+- 6 playground marketplace files migrated via a per-file
+  `defineLocal()` wrapper that collects plugins into an exported array;
+  `playground/src/marketplace/compile-mc.ts` concatenates them and
+  passes the full set to `compile(src, { plugins: ALL_PLUGINS })`.
+
+Sign-off checklist on the day of merge (2026-06-01):
+
+- [x] All 3,775 tests pass (1 skipped — pre-existing mc-raw drift).
+- [x] `pnpm typecheck` clean.
+- [x] `pnpm build` clean (CJS + ESM + IIFE + DTS).
+- [x] `pnpm lint` clean.
+- [x] Zero `import './registry/init.js'` / `import '../registry/init.js'`
+      matches in `src/` or `tests/`.
+- [x] `seedBuiltins*` / `compileStarted` / `_notifyChangeForSeed` /
+      `registerPluginComponent` not present anywhere.
+- [x] Playground (`pnpm --filter mailc-playground build`) builds.
+- [x] mcp-server (`pnpm --filter mailc-mcp build`) builds.
+- [x] Runtime smoke test: per-call plugin renders; `createCompiler`
+      reuses; multi-tenant isolation works.
+
+Deferred / out-of-scope (not blocking publish):
+
+- Public docs MDX (`site/content/docs/**/*.mdx`) updated to describe
+  the per-call API. Done in the same change as this migration.
+- README plugin section refreshed (same change).

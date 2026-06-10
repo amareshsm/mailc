@@ -41,9 +41,7 @@ import { NullSourceMapCollector } from './compiler/null-source-map-collector.js'
 import { calculateOffsets } from './compiler/source-map-offsets.js';
 import { calculateIdOffsets } from './compiler/source-map-id-offsets.js';
 import { checkEmailBudget } from './compiler/email-budget.js';
-import { markCompileStarted } from './registry/component-registry.js';
-// Side-effect import: built-ins must be seeded before the first compile.
-import './registry/init.js';
+import { createRegistryView } from './registry/registry-view.js';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -82,9 +80,6 @@ export function compile(
   options: CompileOptions = {},
 ): CompileResult {
   const startTime = performance.now();
-  // Lock the plugin registry so any subsequent defineComponent() call throws
-  // a clear error rather than silently changing the registry mid-flight.
-  markCompileStarted();
   // Use string length as a fast approximation of byte size for stats.
   // Exact UTF-8 byte counting via TextEncoder is unnecessary for statistics
   // and allocates a full buffer on every compilation.
@@ -115,6 +110,23 @@ export function compile(
   const classificationMap = targetClients === undefined
     ? buildPassthroughMap()
     : buildClassificationMap(targetClients);
+
+  // ── Stage 0: Build registry view (per-call plugins) ─────────────────
+  // Build early so an invalid plugin set surfaces as a structured error
+  // (INTERNAL_ERROR) rather than an uncaught throw. View construction
+  // validates each plugin's type (hyphen rule, no `mc-` prefix, no
+  // built-in collision).
+  let registryView;
+  try {
+    registryView = createRegistryView({ plugins: options.plugins });
+  } catch (err) {
+    errors.push({
+      code: 'INTERNAL_ERROR',
+      message: err instanceof Error ? err.message : String(err),
+      severity: 'error',
+    });
+    return buildResult(null, errors, warnings, info, inputSize, startTime);
+  }
 
   // ── Stage 1: Tokenize ──────────────────────────────────────────────
   let tokens;
@@ -169,7 +181,11 @@ export function compile(
   }
 
   // ── Stage 3: Validate ──────────────────────────────────────────────
-  const validation = validate(ast);
+  // Per-call plugins are threaded into the validator so plugin types
+  // get the same nesting / required-attribute / unknown-attribute
+  // enforcement built-ins receive — the validator derives a
+  // ComponentRule from each plugin's metadata on entry.
+  const validation = validate(ast, { plugins: options.plugins });
   errors.push(...validation.errors);
   warnings.push(...validation.warnings);
 
@@ -229,6 +245,9 @@ export function compile(
       ? buildPropertySupportMap(targetClients, buildProbeCSS())
       : undefined,
     sourceMap: needsSourceMap ? new SourceMapCollector() : new NullSourceMapCollector(),
+    // Per-call plugins flow through the RegistryView built above.
+    // The compiler dispatch reads compilers from `context.registry`.
+    registry: registryView,
   };
 
   // The parser wraps everything in a synthetic "root" node.

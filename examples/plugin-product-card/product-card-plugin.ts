@@ -1,17 +1,16 @@
 /**
  * `<acme-product-card>` plugin — a worked example of mailc's `defineComponent()` API.
  *
- * Exports `registerProductCard()` rather than self-registering on import. This
- * matches the recommended npm-package pattern (see the FAQ in
- * `docs/14-custom-components-plugins.md`) and makes the plugin testable in
- * isolation: tests can reset the registry between runs and re-call the
- * register function.
+ * Exports a `productCardPlugin` value (the result of `defineComponent`).
+ * Consumers import it and pass it to `compile(src, { plugins: [...] })`
+ * or `createCompiler({ plugins: [...] })`. No global side effects.
  */
 
 import {
   defineComponent,
   type ComponentMetadata,
   type ComponentCompiler,
+  type Plugin,
 } from '../../src/index.js';
 
 // ---------------------------------------------------------------------------
@@ -127,16 +126,10 @@ const productCardMetadata: ComponentMetadata = {
 // ---------------------------------------------------------------------------
 
 /**
- * Register the `<acme-product-card>` component with mailc.
- *
- * MUST be called before any `compile()` invocation. Calling twice will throw
- * "already registered" — guard with isComponentRegistered() if you need
- * idempotent registration.
+ * The `<acme-product-card>` plugin value. Pass to `compile(src, { plugins })`.
  */
-export function registerProductCard(): void {
-  defineComponent({
-    type: 'acme-product-card',
-    metadata: productCardMetadata,
-    compile: compileProductCard,
-  });
-}
+export const productCardPlugin: Plugin = defineComponent({
+  type: 'acme-product-card',
+  metadata: productCardMetadata,
+  compile: compileProductCard,
+});

@@ -8,11 +8,18 @@
  */
 
 import type { MCNode } from './schema.js';
-import { getComponentMetadata } from '../registry/component-registry.js';
-// Side-effect import: built-in metadata must be seeded before any call so
-// the metadata-driven container/self-closing heuristics see the full registry
-// even when this module is imported standalone (e.g. unit tests).
-import '../registry/init.js';
+import { BUILTIN_METADATA } from '../registry/builtin-registry.js';
+
+// Built-in metadata is a static constant — known at build time, no seeding
+// step required. Per-call plugin metadata is not consulted here: this
+// serialiser uses metadata only to decide self-closing / container shape,
+// which is a built-in concept. Unknown plugin types fall through to the
+// generic "open tag with children if present" path.
+function getComponentMetadata(
+  type: string,
+): import('../components/metadata.js').ComponentMetadata | undefined {
+  return BUILTIN_METADATA[type];
+}
 
 // ---------------------------------------------------------------------------
 // Public API

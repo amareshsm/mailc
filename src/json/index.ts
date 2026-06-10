@@ -38,6 +38,7 @@ import { calculateOffsets } from '../compiler/source-map-offsets.js';
 import { calculateIdOffsets } from '../compiler/source-map-id-offsets.js';
 import { checkEmailBudget } from '../compiler/email-budget.js';
 import { ErrorCode } from '../errors/codes.js';
+import { createRegistryView } from '../registry/registry-view.js';
 
 // Re-export sub-modules for barrel
 // Note: `validateJSON` is intentionally NOT re-exported from the public surface —
@@ -94,6 +95,21 @@ export function compileFromJSON(
   const errors: MCIssue[] = [];
   const warnings: MCIssue[] = [];
   const info: MCIssue[] = [];
+
+  // ── Stage -1: Build registry view (per-call plugins) ────────────────
+  // Build first so an invalid plugin set surfaces as a structured
+  // INTERNAL_ERROR rather than an uncaught throw.
+  let registryView;
+  try {
+    registryView = createRegistryView({ plugins: options.plugins });
+  } catch (err) {
+    errors.push({
+      code: 'INTERNAL_ERROR',
+      message: err instanceof Error ? err.message : String(err),
+      severity: 'error',
+    });
+    return buildResult(null, errors, warnings, info, 0, startTime);
+  }
 
   // ── Stage 0: Normalize input ──────────────────────────────────────
   // String input → position-tracking parse. Errors are surfaced and we
@@ -152,7 +168,11 @@ export function compileFromJSON(
   }
 
   // ── Stage 1: Validate JSON tree ────────────────────────────────────
-  const validation = validateJSON(rootNode);
+  // Per-call plugins are threaded into the validator so plugin types
+  // get the same nesting / required-attribute / unknown-attribute
+  // enforcement built-ins receive — the validator derives a
+  // ComponentRule from each plugin's metadata on entry.
+  const validation = validateJSON(rootNode, { plugins: options.plugins });
   errors.push(...validation.errors);
   warnings.push(...validation.warnings);
 
@@ -239,6 +259,9 @@ export function compileFromJSON(
       ? buildPropertySupportMap(targetClients, buildProbeCSS())
       : undefined,
     sourceMap: needsSourceMap ? new SourceMapCollector() : new NullSourceMapCollector(),
+    // Per-call plugins flow through the RegistryView built above.
+    // The compiler dispatch reads compilers from `context.registry`.
+    registry: registryView,
   };
 
   let rawHTML: string;

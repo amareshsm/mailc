@@ -110,7 +110,11 @@ function computeEffectiveAttributes(
   const allDefaults = attributeDefaults.get('mc-all') ?? {};
   const typeDefaults = attributeDefaults.get(node.type) ?? {};
 
-  const mcClassName = node.attributes['mc-class'];
+  // The whole point of normalizeJSON is to accept hand-written / legacy
+  // JSON, where `attributes` may be missing. Defaulting to {} here keeps
+  // this function safe to call on un-normalized input.
+  const nodeAttributes = node.attributes ?? {};
+  const mcClassName = nodeAttributes['mc-class'];
   let classAttrs: Record<string, string> = {};
   if (typeof mcClassName === 'string' && mcClassName.trim() !== '') {
     const names = mcClassName.trim().split(/\s+/).filter(Boolean);
@@ -125,7 +129,7 @@ function computeEffectiveAttributes(
   }
 
   // Strip mc-class — it is a compile-time directive, not an HTML attribute.
-  const { 'mc-class': _stripped, ...explicit } = node.attributes;
+  const { 'mc-class': _stripped, ...explicit } = nodeAttributes;
 
   return { ...allDefaults, ...typeDefaults, ...classAttrs, ...explicit };
 }

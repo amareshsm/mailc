@@ -366,8 +366,8 @@ export function OutputExplorer(): JSX.Element {
   const [attrOverrides, setAttrOverrides] = useState<Record<string, string>>({})
   const [tab, setTab] = useState<'html' | 'styles' | 'outlook'>('html')
 
-  // Load components — built-ins from introspect.all(), plus the same call
-  // also surfaces any plugins registered via defineComponent().
+  // Load built-in component specs. `introspect.all()` is built-in scope only;
+  // plugins are per-call values with no global identity to enumerate here.
   useEffect(() => {
     const all = introspect.all() as ComponentSpec[]
     const sorted = [...all].sort((a, b) => {

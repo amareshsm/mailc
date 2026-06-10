@@ -111,4 +111,11 @@ export enum ErrorCode {
   JSON_PARSE_ERROR = 'JSON_PARSE_ERROR',
   // ── Public API contract ────────────────────────────────────────────────
   INVALID_INPUT = 'INVALID_INPUT',
+  /**
+   * Generic wrapper raised by `compile()` / `compileFromJSON()` for
+   * unexpected exceptions, including per-call plugin construction
+   * failures (collision with a built-in, reserved `mc-` prefix, invalid
+   * plugin shape).
+   */
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
 }

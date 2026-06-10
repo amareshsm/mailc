@@ -1,40 +1,29 @@
 /**
  * Tests for the example product-card plugin.
  *
- * Verifies: registration, end-to-end compilation, escaping, introspection.
- *
- * The plugin file exports `registerProductCard()` (the recommended npm
- * pattern) so tests can reset the registry between runs and re-register
- * cleanly.
+ * After the plugin-as-values migration, the plugin is a value passed into
+ * `compile()` per call — no global registration, no introspection of
+ * per-call plugins. These tests verify end-to-end compilation, escaping,
+ * and that the metadata on the returned Plugin value is what we expect.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  compile,
-  introspect,
-  isComponentRegistered,
-} from '../../src/index.js';
-import { _resetRegistry } from '../../src/registry/component-registry.js';
-import { _reseedBuiltins } from '../../src/registry/init.js';
-import { registerProductCard } from './product-card-plugin.js';
-
-beforeEach(() => {
-  _resetRegistry();
-  _reseedBuiltins();
-  registerProductCard();
-});
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+import { describe, it, expect } from 'vitest';
+import { compile } from '../../src/index.js';
+import { productCardPlugin } from './product-card-plugin.js';
 
 describe('acme-product-card plugin', () => {
-  it('registers without error', () => {
-    expect(isComponentRegistered('acme-product-card')).toBe(true);
+  it('plugin value exposes the expected type and metadata shape', () => {
+    expect(productCardPlugin.type).toBe('acme-product-card');
+    const requiredAttrs = Object.entries(productCardPlugin.metadata.attributes)
+      .filter(([, attr]) => attr.required)
+      .map(([name]) => name)
+      .sort();
+    expect(requiredAttrs).toEqual(['cta-href', 'image-url', 'price', 'title']);
   });
 
   it('compiles a template using the plugin', () => {
-    const result = compile(`
+    const result = compile(
+      `
       <mc>
         <mc-body>
           <mc-section>
@@ -49,7 +38,9 @@ describe('acme-product-card plugin', () => {
           </mc-section>
         </mc-body>
       </mc>
-    `);
+    `,
+      { plugins: [productCardPlugin] },
+    );
 
     expect(result.errors).toEqual([]);
     expect(result.html).toContain('Acme Widget');
@@ -60,10 +51,6 @@ describe('acme-product-card plugin', () => {
   });
 
   it('escapes user-controlled strings (XSS-safe)', () => {
-    // Pass the untrusted string via template variable interpolation — that's
-    // how a real plugin user would receive untrusted data (e.g. from a CMS
-    // or form submission). mailc's templating delivers the raw string to the
-    // attribute, then the plugin's escape() neutralises it before output.
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-product-card ` +
@@ -72,37 +59,16 @@ describe('acme-product-card plugin', () => {
         `price="$1" ` +
         `cta-href="https://example.com/x" />` +
         `</mc-column></mc-section></mc-body></mc>`,
-      { data: { evil: 'safe<script>alert(1)</script>end' } },
+      {
+        plugins: [productCardPlugin],
+        data: { evil: 'safe<script>alert(1)</script>end' },
+      },
     );
 
     expect(result.errors).toEqual([]);
-    // Should NOT contain the raw script tag — the escape() call neutralises it.
     expect(result.html ?? '').not.toContain('<script>alert(1)</script>');
-    // Single-boundary escape: the template engine leaves the raw value in
-    // the AST, the plugin's escape() neutralises `<script>` to
-    // `&lt;script&gt;` once, and the compiler emits that string into the
-    // HTML body verbatim (no second escape pass). The dangerous form
-    // never reaches the inbox.
-    expect(result.html ?? '').toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
-  });
-
-  it('introspects via introspect.component()', () => {
-    const spec = introspect.component('acme-product-card');
-    expect(spec).toBeDefined();
-    expect(spec?.type).toBe('acme-product-card');
-    expect(spec?.requiredAttributes.map((a) => a.name).sort()).toEqual([
-      'cta-href',
-      'image-url',
-      'price',
-      'title',
-    ]);
-    expect(spec?.cssPropertyAttributes.map((a) => a.name)).toEqual([
-      'background-color',
-    ]);
-  });
-
-  it('appears as a valid child of mc-column', () => {
-    const columnSpec = introspect.component('mc-column');
-    expect(columnSpec?.allowedChildren).toContain('acme-product-card');
+    expect(result.html ?? '').toContain(
+      '&lt;script&gt;alert(1)&lt;/script&gt;',
+    );
   });
 });

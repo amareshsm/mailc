@@ -51,7 +51,7 @@ const ast = parse(tokenize(source))
 const COMPONENT_COMPILERS: Record<string, ComponentCompiler>
 ```
 
-The runtime registry of `componentType → compile function`. Built-in `<mc-*>` components and any plugins registered via `defineComponent()` both live here. Read it to discover what's currently available; **do not mutate it directly** (use `defineComponent()` for that — it enforces the lock-after-first-compile invariant).
+The read-only registry of built-in `componentType → compile function`. Read it to discover what's currently available; mutating throws.
 
 ```ts
 import { COMPONENT_COMPILERS } from 'mailc'
@@ -60,7 +60,7 @@ Object.keys(COMPONENT_COMPILERS)
 // ['mc', 'mc-body', 'mc-section', 'mc-text', ...]
 ```
 
-For richer metadata (allowed parents, attribute schemas, examples) use [`introspect`](/docs/api/introspect) instead of reading the registry.
+Built-in scope only. Plugins are per-call values in the public API (`compile(src, { plugins })`) — they never enter this proxy. For richer metadata (allowed parents, attribute schemas, examples) use [`introspect`](/docs/api/introspect) instead of reading the registry.
 
 ## resolveTemplate()
 
@@ -102,7 +102,7 @@ The same module exports lower-level helpers if you need to build your own resolu
 
 | API | Stability |
 |---|---|
-| `compile()`, `compileFromJSON()`, `validate()`, `checkCss()`, `lintEmailHtml()`, `defineComponent()`, `introspect.*` | **Stable** — semver guarantees |
+| `compile()`, `compileFromJSON()`, `validate()`, `checkCss()`, `lintEmailHtml()`, `defineComponent()`, `createCompiler()`, `introspect.*` | **Stable** — semver guarantees |
 | `tokenize()`, `parse()`, `COMPONENT_COMPILERS`, `resolveTemplate()` and friends | **Unstable** — may change between minor versions |
 
 If you find yourself reaching for the unstable APIs to do something that feels like it should be a stable API, please open an issue — that's a gap we'd like to close.

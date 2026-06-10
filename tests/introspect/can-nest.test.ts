@@ -1,14 +1,17 @@
 /**
  * Tests for `introspect.canNest(parentType, childType)`.
  *
- * Covers built-in nesting rules, plugin-registered components, unknown types,
- * and the documented logic-component fallthrough.
+ * Covers built-in nesting rules, unknown types, and the documented
+ * logic-component fallthrough. After the plugin-as-values migration,
+ * `canNest` operates over built-ins only — plugins are per-call values
+ * with no global identity, so structural questions about plugin nesting
+ * are answered against `plugin.metadata` directly (or by passing the
+ * plugin through `compile(src, { plugins })` and reading the validator
+ * output).
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
-import { introspect, defineComponent } from '../../src/index.js';
-import { _resetRegistry } from '../../src/registry/component-registry.js';
-import '../../src/registry/init.js';
+import { describe, expect, it } from 'vitest';
+import { introspect } from '../../src/index.js';
 
 describe('introspect.canNest', () => {
   describe('built-in components', () => {
@@ -77,55 +80,9 @@ describe('introspect.canNest', () => {
     });
   });
 
-  describe('plugin components', () => {
-    afterEach(() => {
-      _resetRegistry();
-    });
-
-    it('honors a plugin defined with parent: mc-column', () => {
-      defineComponent({
-        type: 'acme-card',
-        metadata: {
-          description: 'Test card',
-          category: 'content',
-          parent: 'mc-column',
-          maxChildren: 0,
-          allowsTextContent: false,
-          compilerOutputElements: ['div'],
-          compilerOutputReason: 'test',
-          validClassCategories: [],
-          commonMistakes: [],
-          attributes: {},
-        },
-        compile: () => '<div>card</div>',
-      });
-
-      expect(introspect.canNest('mc-column', 'acme-card')).toBe(true);
-      expect(introspect.canNest('mc-section', 'acme-card')).toBe(false);
-    });
-
-    it('honors alternateParents', () => {
-      defineComponent({
-        type: 'acme-banner',
-        metadata: {
-          description: 'Test banner',
-          category: 'content',
-          parent: 'mc-body',
-          alternateParents: ['mc-column'],
-          maxChildren: 0,
-          allowsTextContent: false,
-          compilerOutputElements: ['div'],
-          compilerOutputReason: 'test',
-          validClassCategories: [],
-          commonMistakes: [],
-          attributes: {},
-        },
-        compile: () => '<div>banner</div>',
-      });
-
-      expect(introspect.canNest('mc-body', 'acme-banner')).toBe(true);
-      expect(introspect.canNest('mc-column', 'acme-banner')).toBe(true);
-      expect(introspect.canNest('mc-section', 'acme-banner')).toBe(false);
-    });
-  });
+  // Plugin nesting: `introspect.canNest` is built-in-only after the
+  // plugin-as-values migration. Plugin nesting is determined by the
+  // plugin's own metadata (`plugin.metadata.parent` /
+  // `plugin.metadata.alternateParents`), accessed directly on the
+  // returned Plugin value rather than via global introspection.
 });

@@ -1,17 +1,28 @@
 /**
  * Thin wrapper around `mailc/browser` for the marketplace route.
  *
- * Importing this module also pulls in each brand's design-system module,
- * which registers their `<brand>-*` plugin components at module load
- * (before any `compile()` runs).
+ * Each design-system module exports a `PLUGINS` array of plugin values
+ * (the result of `defineComponent()` calls). This wrapper concatenates
+ * them and passes the full set to every compile via `{ plugins }`. No
+ * module-load side effects.
  */
 
-import './mailc-essentials-design-system'
-import './acme-design-system'
-import './kicks-design-system'
-import './ecom-design-system'
-import './auto-design-system'
-import './glow-design-system'
+import { MAILC_ESSENTIALS_PLUGINS } from './mailc-essentials-design-system'
+import { ACME_PLUGINS } from './acme-design-system'
+import { KICKS_PLUGINS } from './kicks-design-system'
+import { ECOM_PLUGINS } from './ecom-design-system'
+import { AUTO_PLUGINS } from './auto-design-system'
+import { GLOW_PLUGINS } from './glow-design-system'
+
+// All marketplace plugin values, merged once on module load.
+const ALL_PLUGINS = [
+  ...MAILC_ESSENTIALS_PLUGINS,
+  ...ACME_PLUGINS,
+  ...KICKS_PLUGINS,
+  ...ECOM_PLUGINS,
+  ...AUTO_PLUGINS,
+  ...GLOW_PLUGINS,
+]
 
 interface CompileResult {
   html: string
@@ -39,7 +50,10 @@ async function getMailc(): Promise<{
 export async function compileMC(source: string): Promise<CompileResult> {
   try {
     const { compile } = await getMailc()
-    const result = compile(source, { templateStyle: 'attribute' })
+    const result = compile(source, {
+      templateStyle: 'attribute',
+      plugins: ALL_PLUGINS,
+    })
     return {
       html: result.html ?? '',
       errors: (result.errors ?? []).map(

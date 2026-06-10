@@ -2,8 +2,10 @@
  * Kicks & Co. design system — sneaker / shoe brand component library.
  *
  * Demonstrates a second branded plugin marketplace alongside @acme. Each
- * component registers with mailc via `defineComponent()` and emits
- * email-safe HTML matching the visual designs from the brand guidelines.
+ * component is built with `defineComponent()` and pushed into the exported
+ * `KICKS_PLUGINS` array, which `compile-mc.ts` threads per-call through
+ * `compile(src, { plugins })`. Output is email-safe HTML matching the
+ * visual designs from the brand guidelines.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,6 +13,15 @@ const mailc: any = await import('mailc/browser')
 const defineComponent = mailc.defineComponent ?? mailc.default?.defineComponent
 // Plugin-author utilities re-exported from mailc.
 const { escapeHtml, themeColor, warnCss } = mailc
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const KICKS_PLUGINS: any[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function defineLocal(spec: any): any {
+  const plugin = defineComponent(spec)
+  KICKS_PLUGINS.push(plugin)
+  return plugin
+}
 
 // ---------------------------------------------------------------------------
 // Brand tokens
@@ -39,7 +50,7 @@ const KICKS = {
 // two-tone heading (bold prefix + light suffix), subtitle, body, and CTA.
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'kicks-product-hero',
   metadata: {
     description: 'Product launch hero with background image, eyebrow, two-tone heading, body, and CTA.',
@@ -135,7 +146,7 @@ defineComponent({
 // kicks-product-card — small product tile (image, name, colorway, price, CTA)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'kicks-product-card',
   metadata: {
     description: 'Compact product card with image, name, colorway, price, and CTA — for related-products rows.',
@@ -196,7 +207,7 @@ defineComponent({
 // kicks-size-grid — 4×2 grid of size buttons for size-selector emails
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'kicks-size-grid',
   metadata: {
     description: 'Grid of clickable shoe sizes — for size-availability or restock emails.',

@@ -1,26 +1,30 @@
 /**
- * Plugin API edge-case tests — covers behaviour that's harder to discover but
- * important to lock in:
+ * Plugin API edge-case tests — locks in behaviour around the per-call
+ * `compile(src, { plugins })` API after the plugin-as-values migration:
  *
- *   - Plugin CSS-property attrs in class-strict mode (opt-in enforcement model)
+ *   - Plugin CSS-property attrs in class-strict mode (opt-in enforcement)
  *   - Container-style plugins (children resolved before plugin runs)
  *   - Plugin-emitted warnings via ctx.warnings
  *   - Template-variable interpolation flows into plugin attrs
  *   - Plugins inside mc-each loops
  *   - Plugins compiled via compileFromJSON (JSON IR path)
- *   - Validator rejects plugin used under disallowed parent
- *   - mc-attributes type-wide defaults flow into plugin attrs
+ *   - Recursion depth guard for buggy plugins
+ *   - Non-MCError exceptions from plugins are wrapped cleanly
  *
- * Each test uses _resetRegistry() + _reseedBuiltins() in beforeEach so the
- * module-singleton registry is isolated.
+ * Note: per-call plugins are NOT subject to rule-driven nesting validation
+ * (the validator's COMPONENT_RULES table is built from built-ins only).
+ * The legacy "validator rejects bad nesting for plugin types" cases were
+ * removed with this migration — a per-call plugin's children are walked
+ * without applying built-in nesting rules to the plugin node itself.
+ * Plugins are responsible for validating their own structural constraints
+ * inside `compile()`.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   defineComponent,
   compile,
   compileFromJSON,
-  introspect,
   ErrorCode,
   type ComponentMetadata,
   type ComponentCompiler,
@@ -29,8 +33,6 @@ import {
   type MCIssue,
 } from '../../src/index.js';
 import { compileNode, getTextContent } from '../../src/compiler/index.js';
-import { _resetRegistry } from '../../src/registry/component-registry.js';
-import { _reseedBuiltins } from '../../src/registry/init.js';
 import { assertClassModeAttributes } from '../../src/compiler/styling-mode.js';
 
 // ---------------------------------------------------------------------------
@@ -50,13 +52,6 @@ const BASE_METADATA: ComponentMetadata = {
   commonMistakes: [],
   attributes: {},
 };
-
-const NOOP_COMPILER: ComponentCompiler = () => '<div data-test="noop"></div>';
-
-beforeEach(() => {
-  _resetRegistry();
-  _reseedBuiltins();
-});
 
 // ---------------------------------------------------------------------------
 // 4.1 — Plugin CSS-attr in class-strict mode
@@ -79,8 +74,7 @@ describe('plugin attrs in class-strict mode (opt-in enforcement)', () => {
   };
 
   it('does NOT auto-warn — class-mode enforcement is opt-in for plugin compilers', () => {
-    // Plugin compiler that does NOT call assertClassModeAttributes
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-passive-card',
       metadata: PLUGIN_METADATA,
       compile: () => '<div data-test="passive"></div>',
@@ -90,36 +84,30 @@ describe('plugin attrs in class-strict mode (opt-in enforcement)', () => {
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-passive-card background-color="#ff0000" />` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
     );
 
-    // No CSS_ATTR_IN_CLASS_MODE warning fires because the plugin's compile
-    // didn't call assertClassModeAttributes. This is the documented trust
-    // model: plugins are responsible for their own class-mode enforcement.
-    const cssAttrWarnings = [
-      ...result.errors,
-      ...result.warnings,
-    ].filter((w) => w.code === ErrorCode.CSS_ATTR_IN_CLASS_MODE);
+    const cssAttrWarnings = [...result.errors, ...result.warnings].filter(
+      (w) => w.code === ErrorCode.CSS_ATTR_IN_CLASS_MODE,
+    );
     expect(cssAttrWarnings).toEqual([]);
   });
 
   it('DOES warn when plugin opts in by calling assertClassModeAttributes', () => {
-    // Plugin compiler that opts into class-mode enforcement
-    const pluginCompiler: ComponentCompiler = (node, ctx) => {
-      assertClassModeAttributes(node, ctx);
-      return '<div data-test="strict"></div>';
-    };
-
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-strict-card',
       metadata: PLUGIN_METADATA,
-      compile: pluginCompiler,
+      compile: (node, ctx) => {
+        assertClassModeAttributes(node, ctx);
+        return '<div data-test="strict"></div>';
+      },
     });
 
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-strict-card background-color="#ff0000" />` +
         `</mc-column></mc-section></mc-body></mc>`,
-      { templateStyle: 'class' },
+      { plugins: [plugin], templateStyle: 'class' },
     );
 
     const cssAttrErrors = result.errors.filter(
@@ -130,32 +118,28 @@ describe('plugin attrs in class-strict mode (opt-in enforcement)', () => {
     expect(cssAttrErrors[0].message).toContain('acme-strict-card');
   });
 
-  // Documented limitation — surfaced for awareness. attrToClassHint() reads
-  // the static COMPONENT_METADATA, so plugin classHints don't appear in error
-  // messages today. If we want them, attrToClassHint should switch to the
-  // registry. Not blocking — the error still fires; only the hint is missing.
-  it('plugin classHints are NOT yet surfaced in error messages (known limitation)', () => {
-    const pluginCompiler: ComponentCompiler = (node, ctx) => {
-      assertClassModeAttributes(node, ctx);
-      return '<div></div>';
-    };
-    defineComponent({
+  it('plugin classHints ARE surfaced in error messages (now per-call-aware)', () => {
+    // After the plugin-as-values migration, assertClassModeAttributes
+    // reads plugin metadata from context.registry, so per-call plugin
+    // classHints flow into the error message — same parity as built-ins.
+    const plugin = defineComponent({
       type: 'acme-hint-card',
       metadata: PLUGIN_METADATA,
-      compile: pluginCompiler,
+      compile: (node, ctx) => {
+        assertClassModeAttributes(node, ctx);
+        return '<div></div>';
+      },
     });
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-hint-card background-color="#fff" />` +
         `</mc-column></mc-section></mc-body></mc>`,
-      { templateStyle: 'class' },
+      { plugins: [plugin], templateStyle: 'class' },
     );
     const err = result.errors.find(
       (e) => e.code === ErrorCode.CSS_ATTR_IN_CLASS_MODE,
     );
-    // The metadata-defined classHint "bg-[#hex]" is NOT in the message
-    // because attrToClassHint reads the static COMPONENT_METADATA.
-    expect(err?.message).not.toContain('bg-[#hex]');
+    expect(err?.message).toContain('bg-[#hex]');
   });
 });
 
@@ -164,32 +148,19 @@ describe('plugin attrs in class-strict mode (opt-in enforcement)', () => {
 // ---------------------------------------------------------------------------
 
 describe('container-style plugin (maxChildren > 0)', () => {
-  it('children resolve normally; plugin composes plugin-child output', () => {
-    // FINDING: built-in components have fixed `parent` constraints in their
-    // metadata (e.g. mc-text requires parent: 'mc-column'). The validator
-    // does NOT know that a plugin container can host them, so placing a
-    // built-in directly inside a plugin produces an INVALID_NESTING warning
-    // today. To compose with built-ins inside a container plugin, either
-    //   - place the container plugin where its declared parent allows, AND
-    //     have the plugin emit a wrapper that bridges to the built-ins via
-    //     compileNode() — this works at runtime, but the validator still
-    //     warns about the structural mismatch
-    //   - register a sibling plugin (parent: 'acme-container') as the child
-    // We test the second pattern below since it's the cleaner long-term fix.
-
-    // Child plugin declares the container as its parent.
-    defineComponent({
+  it('children resolve normally; container plugin composes plugin-child output', () => {
+    const child = defineComponent({
       type: 'acme-container-child',
       metadata: { ...BASE_METADATA, parent: 'acme-container' },
-      compile: (node) => `<span data-child="${node.attributes['label'] ?? ''}">leaf</span>`,
+      compile: (node) =>
+        `<span data-child="${node.attributes['label'] ?? ''}">leaf</span>`,
     });
 
-    // Container plugin recursively compiles its children.
-    defineComponent({
+    const container = defineComponent({
       type: 'acme-container',
       metadata: { ...BASE_METADATA, maxChildren: Infinity },
       compile: (node, ctx) => {
-        const inner = node.children.map((child) => compileNode(child, ctx)).join('');
+        const inner = node.children.map((c) => compileNode(c, ctx)).join('');
         return `<table data-test="container"><tr><td>${inner}</td></tr></table>`;
       },
     });
@@ -201,6 +172,7 @@ describe('container-style plugin (maxChildren > 0)', () => {
         `<acme-container-child label="B" />` +
         `</acme-container>` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [child, container] },
     );
 
     expect(result.errors).toEqual([]);
@@ -210,10 +182,7 @@ describe('container-style plugin (maxChildren > 0)', () => {
   });
 
   it('LIMITATION: nesting built-ins inside a container plugin emits INVALID_NESTING (compile still produces output)', () => {
-    // Documents the known limitation. The plugin runs and produces correct
-    // HTML, but the validator's nesting check (driven by the built-in's
-    // own metadata) doesn't know about the plugin parent.
-    defineComponent({
+    const host = defineComponent({
       type: 'acme-builtin-host',
       metadata: { ...BASE_METADATA, maxChildren: Infinity },
       compile: (node, ctx) => {
@@ -228,27 +197,25 @@ describe('container-style plugin (maxChildren > 0)', () => {
         `<mc-text>Hello from inside</mc-text>` +
         `</acme-builtin-host>` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [host] },
     );
 
-    // Validator complains about mc-text being outside mc-column.
-    const nesting = result.errors.find((e) => e.code === ErrorCode.INVALID_NESTING);
+    const nesting = result.errors.find(
+      (e) => e.code === ErrorCode.INVALID_NESTING,
+    );
     expect(nesting).toBeDefined();
     expect(nesting?.message).toContain('mc-text');
-    // But output is still produced — the validator is non-fatal in liberal mode.
     expect(result.html).toContain('data-test="builtin-host"');
     expect(result.html).toContain('Hello from inside');
   });
 
   it('container plugin sees pre-resolved mc-each children (template stage runs first)', () => {
     const containerCompiler: ComponentCompiler = (node) => {
-      // After template stage, the mc-each is gone — children are already
-      // expanded. So node.children should be the EXPANDED set, not a single
-      // mc-each wrapper.
       const childTypes = node.children.map((c) => c.type).join(',');
       return `<div data-children="${childTypes}"></div>`;
     };
 
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-loop-host',
       metadata: { ...BASE_METADATA, maxChildren: Infinity },
       compile: containerCompiler,
@@ -262,30 +229,32 @@ describe('container-style plugin (maxChildren > 0)', () => {
         `</mc-each>` +
         `</acme-loop-host>` +
         `</mc-column></mc-section></mc-body></mc>`,
-      { data: { items: ['a', 'b', 'c'] } },
+      { plugins: [plugin], data: { items: ['a', 'b', 'c'] } },
     );
 
     expect(result.errors).toEqual([]);
-    // Three mc-text nodes after expansion.
     expect(result.html).toContain('data-children="mc-text,mc-text,mc-text"');
   });
 
   it('exposes child text via getTextContent helper (used by built-in compilers too)', () => {
-    const compiler: ComponentCompiler = (node) => {
-      const text = getTextContent(node).trim();
-      return `<div data-text="${text}"></div>`;
-    };
-
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-text-host',
-      metadata: { ...BASE_METADATA, maxChildren: Infinity, allowsTextContent: true },
-      compile: compiler,
+      metadata: {
+        ...BASE_METADATA,
+        maxChildren: Infinity,
+        allowsTextContent: true,
+      },
+      compile: (node) => {
+        const text = getTextContent(node).trim();
+        return `<div data-text="${text}"></div>`;
+      },
     });
 
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-text-host>plain text inside</acme-text-host>` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
     );
 
     expect(result.errors).toEqual([]);
@@ -299,28 +268,27 @@ describe('container-style plugin (maxChildren > 0)', () => {
 
 describe('plugin warnings via ctx.warnings', () => {
   it('warnings pushed by plugin surface in result.warnings', () => {
-    const compiler: ComponentCompiler = (node, ctx: CompileContext) => {
-      ctx.warnings.push({
-        code: ErrorCode.UNSAFE_URL,
-        message: 'Plugin says: this href smells fishy.',
-        severity: 'warning',
-        loc: node.loc
-          ? { line: node.loc.start.line, col: node.loc.start.col }
-          : undefined,
-      });
-      return '<div></div>';
-    };
-
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-noisy',
       metadata: BASE_METADATA,
-      compile: compiler,
+      compile: (node, ctx: CompileContext) => {
+        ctx.warnings.push({
+          code: ErrorCode.UNSAFE_URL,
+          message: 'Plugin says: this href smells fishy.',
+          severity: 'warning',
+          loc: node.loc
+            ? { line: node.loc.start.line, col: node.loc.start.col }
+            : undefined,
+        });
+        return '<div></div>';
+      },
     });
 
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-noisy />` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
     );
 
     expect(result.errors).toEqual([]);
@@ -332,37 +300,26 @@ describe('plugin warnings via ctx.warnings', () => {
   });
 
   it('LIMITATION: ctx has no `errors` array — plugins cannot directly gate compilation via partial=true', () => {
-    // FINDING: CompileContext exposes `warnings: MCIssue[]` only. Plugins
-    // pushing severity:'error' issues into ctx.warnings see them surface in
-    // result.warnings, NOT result.errors. The compile pipeline only routes
-    // CSS_ATTR_IN_CLASS_MODE warnings to errors today (see compile.ts:210-216).
-    //
-    // Workaround: a plugin that wants to gate compilation can `throw new
-    // MCError({ code, message, severity: 'error' })`. mailc catches the
-    // thrown MCError and adds it to result.errors, setting partial=true.
-    const compiler: ComponentCompiler = (_node, ctx) => {
-      ctx.warnings.push({
-        code: ErrorCode.UNSAFE_URL,
-        message: 'Plugin pushed a severity:error to ctx.warnings.',
-        severity: 'error',
-      });
-      return '<div></div>';
-    };
-
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-fatal',
       metadata: BASE_METADATA,
-      compile: compiler,
+      compile: (_node, ctx) => {
+        ctx.warnings.push({
+          code: ErrorCode.UNSAFE_URL,
+          message: 'Plugin pushed a severity:error to ctx.warnings.',
+          severity: 'error',
+        });
+        return '<div></div>';
+      },
     });
 
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-fatal />` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
     );
 
-    // Without a special routing rule, severity:error in ctx.warnings ends up
-    // in result.warnings rather than result.errors — partial stays false.
     expect(result.partial).toBe(false);
     const inWarnings = result.warnings.some(
       (w) => w.message === 'Plugin pushed a severity:error to ctx.warnings.',
@@ -382,12 +339,7 @@ describe('plugin warnings via ctx.warnings', () => {
 describe('template variable interpolation in plugin attrs', () => {
   it('{{vars}} are resolved BEFORE the plugin compile sees them', () => {
     let observedAttr: string | undefined;
-    const compiler: ComponentCompiler = (node) => {
-      observedAttr = node.attributes['title'];
-      return `<div data-title="${observedAttr ?? ''}"></div>`;
-    };
-
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-titled',
       metadata: {
         ...BASE_METADATA,
@@ -401,18 +353,20 @@ describe('template variable interpolation in plugin attrs', () => {
           },
         },
       },
-      compile: compiler,
+      compile: (node) => {
+        observedAttr = node.attributes['title'];
+        return `<div data-title="${observedAttr ?? ''}"></div>`;
+      },
     });
 
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
         `<acme-titled title="Hello {{name}}" />` +
         `</mc-column></mc-section></mc-body></mc>`,
-      { data: { name: 'world' } },
+      { plugins: [plugin], data: { name: 'world' } },
     );
 
     expect(result.errors).toEqual([]);
-    // Plugin received the resolved value, not the raw `{{name}}`.
     expect(observedAttr).toBe('Hello world');
     expect(result.html).toContain('data-title="Hello world"');
   });
@@ -425,13 +379,7 @@ describe('template variable interpolation in plugin attrs', () => {
 describe('plugin used inside mc-each', () => {
   it('plugin is invoked once per iteration with the iteration data', () => {
     const calls: string[] = [];
-    const compiler: ComponentCompiler = (node) => {
-      const t = node.attributes['title'] ?? '';
-      calls.push(t);
-      return `<div data-iter="${t}"></div>`;
-    };
-
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-iter',
       metadata: {
         ...BASE_METADATA,
@@ -445,7 +393,11 @@ describe('plugin used inside mc-each', () => {
           },
         },
       },
-      compile: compiler,
+      compile: (node) => {
+        const t = node.attributes['title'] ?? '';
+        calls.push(t);
+        return `<div data-iter="${t}"></div>`;
+      },
     });
 
     const result = compile(
@@ -454,7 +406,7 @@ describe('plugin used inside mc-each', () => {
         `<acme-iter title="{{item}}" />` +
         `</mc-each>` +
         `</mc-column></mc-section></mc-body></mc>`,
-      { data: { items: ['one', 'two', 'three'] } },
+      { plugins: [plugin], data: { items: ['one', 'two', 'three'] } },
     );
 
     expect(result.errors).toEqual([]);
@@ -471,16 +423,335 @@ describe('plugin used inside mc-each', () => {
 
 describe('plugin via compileFromJSON (JSON IR path)', () => {
   it('JSON IR dispatches to the plugin compiler', () => {
-    defineComponent({
+    const plugin = defineComponent({
       type: 'acme-json-block',
       metadata: BASE_METADATA,
-      compile: (node) => `<div data-json="${node.attributes['flag'] ?? 'none'}"></div>`,
+      compile: (node) =>
+        `<div data-json="${node.attributes['flag'] ?? 'none'}"></div>`,
     });
 
-    const result = compileFromJSON({
-      version: 1,
-      metadata: { id: 't1', name: 'Test', created: '', updated: '' },
-      template: {
+    const result = compileFromJSON(
+      {
+        version: 1,
+        metadata: { id: 't1', name: 'Test', created: '', updated: '' },
+        template: {
+          type: 'mc',
+          attributes: {},
+          children: [
+            {
+              type: 'mc-body',
+              attributes: {},
+              children: [
+                {
+                  type: 'mc-section',
+                  attributes: {},
+                  children: [
+                    {
+                      type: 'mc-column',
+                      attributes: {},
+                      children: [
+                        {
+                          type: 'acme-json-block',
+                          attributes: { flag: 'on' },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      { plugins: [plugin] },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.html).toContain('data-json="on"');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4.7 — Recursion depth guard (safety net for buggy plugins)
+// ---------------------------------------------------------------------------
+
+describe('compileNode recursion depth guard', () => {
+  it('catches infinite recursion from a self-recursing plugin and surfaces a clear error', () => {
+    const plugin = defineComponent({
+      type: 'acme-loop-bug',
+      metadata: { ...BASE_METADATA, maxChildren: Infinity },
+      compile: (node, ctx) => {
+        // Synthesise a child of the same type and recurse — exactly the
+        // mistake the depth guard exists to catch.
+        const fakeChild: ASTNode = {
+          type: node.type,
+          attributes: {},
+          children: [],
+          content: [],
+          loc: node.loc,
+        };
+        return compileNode(fakeChild, ctx);
+      },
+    });
+
+    const result = compile(
+      `<mc><mc-body><mc-section><mc-column>` +
+        `<acme-loop-bug />` +
+        `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
+    );
+
+    expect(result.html).toBeNull();
+    const recursionErr = result.errors.find(
+      (e) => e.code === ErrorCode.MAX_RECURSION_DEPTH,
+    );
+    expect(recursionErr).toBeDefined();
+    expect(recursionErr?.message).toContain('acme-loop-bug');
+    expect(recursionErr?.message).toContain('100');
+  });
+
+  it('plugin that throws a TypeError surfaces as PLUGIN_COMPILE_ERROR; rest of email still compiles', () => {
+    const plugin = defineComponent({
+      type: 'acme-buggy',
+      metadata: { ...BASE_METADATA, maxChildren: 0 },
+      compile: () => {
+        const broken = undefined as unknown as { x: string };
+        return broken.x;
+      },
+    });
+
+    const result = compile(
+      `<mc><mc-body><mc-section><mc-column>` +
+        `<mc-text>Before</mc-text>` +
+        `<acme-buggy />` +
+        `<mc-text>After</mc-text>` +
+        `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
+    );
+
+    expect(result.html).not.toBeNull();
+    expect(result.html).toContain('Before');
+    expect(result.html).toContain('After');
+
+    const pluginErr = result.warnings.find(
+      (w) => w.code === ErrorCode.PLUGIN_COMPILE_ERROR,
+    );
+    expect(pluginErr).toBeDefined();
+    expect(pluginErr?.severity).toBe('error');
+    expect(pluginErr?.message).toContain('acme-buggy');
+    expect(pluginErr?.message).toContain('bug in the plugin, not in mailc');
+  });
+
+  it('plugin throwing a string (non-Error) is still wrapped cleanly', () => {
+    const plugin = defineComponent({
+      type: 'acme-throws-string',
+      metadata: { ...BASE_METADATA, maxChildren: 0 },
+      compile: () => {
+        throw 'something went wrong';
+      },
+    });
+
+    const result = compile(
+      `<mc><mc-body><mc-section><mc-column>` +
+        `<acme-throws-string />` +
+        `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [plugin] },
+    );
+
+    expect(result.html).not.toBeNull();
+    const pluginErr = result.warnings.find(
+      (w) => w.code === ErrorCode.PLUGIN_COMPILE_ERROR,
+    );
+    expect(pluginErr).toBeDefined();
+    expect(pluginErr?.message).toContain('something went wrong');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4.8 — Per-call plugins receive the SAME rule-based validation as built-ins
+//
+// Regression suite covering two bugs found post-migration: per-call plugins
+// were silently skipping nesting + required-attribute validation. The
+// validator now derives a ComponentRule from each plugin's metadata at the
+// top of `validate()` so every rule that applies to built-ins also applies
+// to plugins.
+// ---------------------------------------------------------------------------
+
+describe('per-call plugin: nesting rules from metadata are enforced', () => {
+  it('plugin used under a parent NOT in its metadata is flagged INVALID_NESTING', () => {
+    const card = defineComponent({
+      type: 'acme-strict-card',
+      metadata: {
+        ...BASE_METADATA,
+        parent: 'mc-column',
+        alternateParents: [],
+      },
+      compile: () => '<div data-card/>',
+    });
+
+    // Placed directly under <mc-section>, skipping the required <mc-column>.
+    const result = compile(
+      `<mc><mc-body><mc-section><acme-strict-card/></mc-section></mc-body></mc>`,
+      { plugins: [card] },
+    );
+
+    const nestingErr = result.errors.find(
+      (e) => e.code === ErrorCode.INVALID_NESTING,
+    );
+    expect(nestingErr).toBeDefined();
+    expect(nestingErr?.message).toContain('acme-strict-card');
+    expect(nestingErr?.message).toContain('mc-column');
+  });
+
+  it('plugin used under an alternateParent is accepted (no INVALID_NESTING)', () => {
+    const card = defineComponent({
+      type: 'acme-flexible-card',
+      metadata: {
+        ...BASE_METADATA,
+        parent: 'mc-column',
+        alternateParents: ['mc-section'],
+      },
+      compile: () => '<div data-card/>',
+    });
+
+    const result = compile(
+      `<mc><mc-body><mc-section><acme-flexible-card/></mc-section></mc-body></mc>`,
+      { plugins: [card] },
+    );
+
+    const nestingErr = result.errors.find(
+      (e) => e.code === ErrorCode.INVALID_NESTING,
+    );
+    expect(nestingErr).toBeUndefined();
+    expect(result.html).toContain('data-card');
+  });
+
+  it('parity through compileFromJSON — nesting rules also apply to JSON IR input', () => {
+    const card = defineComponent({
+      type: 'acme-json-strict',
+      metadata: {
+        ...BASE_METADATA,
+        parent: 'mc-column',
+        alternateParents: [],
+      },
+      compile: () => '<div/>',
+    });
+
+    // <acme-json-strict> placed directly under <mc-section> in JSON.
+    const result = compileFromJSON(
+      {
+        type: 'mc',
+        attributes: {},
+        children: [
+          {
+            type: 'mc-body',
+            attributes: {},
+            children: [
+              {
+                type: 'mc-section',
+                attributes: {},
+                children: [{ type: 'acme-json-strict', attributes: {} }],
+              },
+            ],
+          },
+        ],
+      },
+      { plugins: [card] },
+    );
+
+    const nestingErr = result.errors.find(
+      (e) => e.code === ErrorCode.INVALID_NESTING,
+    );
+    expect(nestingErr).toBeDefined();
+    expect(nestingErr?.message).toContain('acme-json-strict');
+  });
+});
+
+describe('per-call plugin: required attributes from metadata are enforced', () => {
+  it('plugin missing a metadata-declared required attribute emits MISSING_ATTRIBUTE', () => {
+    const card = defineComponent({
+      type: 'acme-needs-title',
+      metadata: {
+        ...BASE_METADATA,
+        attributes: {
+          title: {
+            type: 'string',
+            required: true,
+            description: 'Required.',
+            example: 'Welcome',
+            hasEmailCompatibilityNotes: false,
+          },
+        },
+      },
+      compile: (node) =>
+        `<div data-title="${node.attributes['title'] ?? ''}"/>`,
+    });
+
+    // <acme-needs-title /> without the required `title` attr.
+    const result = compile(
+      `<mc><mc-body><mc-section><mc-column>` +
+        `<acme-needs-title/>` +
+        `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [card] },
+    );
+
+    const missing = result.errors.find(
+      (e) => e.code === ErrorCode.MISSING_ATTRIBUTE,
+    );
+    expect(missing).toBeDefined();
+    expect(missing?.message).toContain('acme-needs-title');
+    expect(missing?.message).toContain('title');
+  });
+
+  it('all required attributes present → no MISSING_ATTRIBUTE error', () => {
+    const card = defineComponent({
+      type: 'acme-needs-many',
+      metadata: {
+        ...BASE_METADATA,
+        attributes: {
+          title: { type: 'string', required: true, description: 't', example: 't', hasEmailCompatibilityNotes: false },
+          href: { type: 'url', required: true, description: 't', example: 'https://x.com', hasEmailCompatibilityNotes: false },
+        },
+      },
+      compile: () => '<div/>',
+    });
+
+    const result = compile(
+      `<mc><mc-body><mc-section><mc-column>` +
+        `<acme-needs-many title="ok" href="https://example.com"/>` +
+        `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [card] },
+    );
+
+    expect(
+      result.errors.some((e) => e.code === ErrorCode.MISSING_ATTRIBUTE),
+    ).toBe(false);
+    // Plugin compiled to a self-closing div — exact serialisation may vary
+    // (`<div/>` vs `<div></div>`); the important assertion is "no missing-attr
+    // error" above. Loose check that the plugin output reached the HTML:
+    expect(result.html).toMatch(/<div/);
+  });
+
+  it('parity through compileFromJSON — required attrs also enforced on JSON IR', () => {
+    const card = defineComponent({
+      type: 'acme-json-needs',
+      metadata: {
+        ...BASE_METADATA,
+        attributes: {
+          title: {
+            type: 'string',
+            required: true,
+            description: 'Required.',
+            example: 't',
+            hasEmailCompatibilityNotes: false,
+          },
+        },
+      },
+      compile: () => '<div/>',
+    });
+
+    const result = compileFromJSON(
+      {
         type: 'mc',
         attributes: {},
         children: [
@@ -495,9 +766,7 @@ describe('plugin via compileFromJSON (JSON IR path)', () => {
                   {
                     type: 'mc-column',
                     attributes: {},
-                    children: [
-                      { type: 'acme-json-block', attributes: { flag: 'on' } },
-                    ],
+                    children: [{ type: 'acme-json-needs', attributes: {} }],
                   },
                 ],
               },
@@ -505,297 +774,169 @@ describe('plugin via compileFromJSON (JSON IR path)', () => {
           },
         ],
       },
-    });
+      { plugins: [card] },
+    );
 
-    expect(result.errors).toEqual([]);
-    expect(result.html).toContain('data-json="on"');
+    const missing = result.errors.find(
+      (e) => e.code === ErrorCode.MISSING_ATTRIBUTE,
+    );
+    expect(missing).toBeDefined();
+    expect(missing?.message).toContain('acme-json-needs');
+    expect(missing?.message).toContain('title');
   });
 });
 
-// ---------------------------------------------------------------------------
-// 4.7 — Validator rejects plugin used under disallowed parent
-// ---------------------------------------------------------------------------
+describe('per-call plugin: valid as <mc-attributes> child for type-wide defaults', () => {
+  // After the plugin-as-values migration, per-call plugin types are
+  // accepted inside <mc-attributes> when their metadata category permits
+  // it (content / container / custom — not head, not logic). This mirrors
+  // the eligibility built-ins receive via VALID_ATTRIBUTES_CHILDREN.
 
-describe('validator nesting rules apply to plugins', () => {
-  it('rejects plugin placed under a parent it did not declare', () => {
-    defineComponent({
-      type: 'acme-column-only',
-      metadata: {
-        ...BASE_METADATA,
-        parent: 'mc-column',
-        alternateParents: undefined, // ONLY mc-column allowed
-      },
-      compile: NOOP_COMPILER,
-    });
-
-    // Place it directly under mc-section (illegal — parent is mc-column only).
-    const result = compile(
-      `<mc><mc-body><mc-section>` +
-        `<acme-column-only />` +
-        `</mc-section></mc-body></mc>`,
-    );
-
-    // Validator should produce an error for invalid nesting.
-    const nestingError = result.errors.find(
-      (e) => e.code === ErrorCode.INVALID_NESTING,
-    );
-    expect(nestingError).toBeDefined();
-    expect(nestingError?.message).toContain('acme-column-only');
-  });
-
-  it('accepts plugin placed under any of its declared alternateParents', () => {
-    defineComponent({
-      type: 'acme-flexible',
-      metadata: {
-        ...BASE_METADATA,
-        parent: 'mc-column',
-        alternateParents: ['mc-section'],
-      },
-      compile: NOOP_COMPILER,
-    });
-
-    // Direct child of mc-section is one of the alternateParents.
-    const result = compile(
-      `<mc><mc-body><mc-section>` +
-        `<acme-flexible />` +
-        `</mc-section></mc-body></mc>`,
-    );
-
-    const nestingErr = result.errors.find(
-      (e) => e.code === ErrorCode.INVALID_NESTING,
-    );
-    expect(nestingErr).toBeUndefined();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 4.8 — mc-attributes type-wide defaults flow into plugin attrs
-// ---------------------------------------------------------------------------
-
-describe('mc-attributes defaults and plugin nodes', () => {
-  it('plugin components are valid <mc-attributes> children — type-wide defaults flow to plugin instances', () => {
-    // FIX: VALID_ATTRIBUTES_CHILDREN is now registry-backed (rebuilt on every
-    // onRegistryChange), so plugin types are automatically included. The old
-    // hardcoded set has been replaced.
-    let seenColor: string | undefined;
-    const compiler: ComponentCompiler = (node) => {
-      seenColor = node.attributes['color'];
-      return `<div></div>`;
-    };
-
-    defineComponent({
+  it('content-category plugin is a valid <mc-attributes> child', () => {
+    const themed = defineComponent({
       type: 'acme-themed',
       metadata: {
         ...BASE_METADATA,
+        category: 'content',
         attributes: {
           color: {
             type: 'color',
             required: false,
-            description: 'Text colour.',
+            description: 'Color.',
             example: '#000',
-            default: '#000000',
             hasEmailCompatibilityNotes: false,
           },
         },
       },
-      compile: compiler,
+      compile: (node) =>
+        `<div data-color="${node.attributes['color'] ?? ''}"/>`,
     });
 
     const result = compile(
-      `<mc>` +
-        `<mc-head><mc-attributes>` +
-        `<acme-themed color="#ff8800" />` +
-        `</mc-attributes></mc-head>` +
-        `<mc-body><mc-section><mc-column>` +
-        `<acme-themed />` +
-        `</mc-column></mc-section></mc-body>` +
-        `</mc>`,
+      `<mc>
+        <mc-head><mc-attributes><acme-themed color="#ff0000"/></mc-attributes></mc-head>
+        <mc-body><mc-section><mc-column>
+          <acme-themed/>
+        </mc-column></mc-section></mc-body>
+      </mc>`,
+      { plugins: [themed] },
     );
 
-    // Validator no longer flags the plugin inside mc-attributes.
-    expect(result.errors).toHaveLength(0);
-    // The default IS now picked up by the plugin instance.
-    expect(seenColor).toBe('#ff8800');
+    // No INVALID_ATTRIBUTES_CHILD / INVALID_NESTING for the plugin spec.
+    expect(
+      result.errors.some(
+        (e) =>
+          e.code === ErrorCode.INVALID_ATTRIBUTES_CHILD ||
+          (e.code === ErrorCode.INVALID_NESTING &&
+            e.message.includes('mc-attributes')),
+      ),
+    ).toBe(false);
+    // mc-attributes default flows into the plugin instance below.
+    expect(result.html).toContain('data-color="#ff0000"');
   });
 
-  it('plugin can apply its own metadata `default` value inside compile() as a workaround', () => {
-    // The recommended pattern: the plugin reads its own metadata default
-    // inside compile() — no mc-attributes needed.
-    let observedColor: string | undefined;
-    const compiler: ComponentCompiler = (node) => {
-      observedColor = node.attributes['color'] ?? '#defaultplum';
-      return `<div data-color="${observedColor}"></div>`;
-    };
+  it('logic-category plugin is REJECTED as <mc-attributes> child', () => {
+    const logicPlugin = defineComponent({
+      type: 'acme-logic',
+      metadata: { ...BASE_METADATA, category: 'logic' },
+      compile: () => '<div/>',
+    });
+    const result = compile(
+      `<mc><mc-head><mc-attributes><acme-logic/></mc-attributes></mc-head>` +
+        `<mc-body><mc-section><mc-column><mc-text>x</mc-text></mc-column></mc-section></mc-body></mc>`,
+      { plugins: [logicPlugin] },
+    );
+    expect(
+      result.errors.some(
+        (e) => e.code === ErrorCode.INVALID_ATTRIBUTES_CHILD,
+      ),
+    ).toBe(true);
+  });
 
-    defineComponent({
-      type: 'acme-self-defaulting',
+  it('same eligibility through compileFromJSON', () => {
+    const themed = defineComponent({
+      type: 'acme-themed-json',
+      metadata: { ...BASE_METADATA, category: 'content' },
+      compile: () => '<div/>',
+    });
+    const result = compileFromJSON(
+      {
+        type: 'mc',
+        attributes: {},
+        children: [
+          {
+            type: 'mc-head',
+            attributes: {},
+            children: [
+              {
+                type: 'mc-attributes',
+                attributes: {},
+                children: [{ type: 'acme-themed-json', attributes: {} }],
+              },
+            ],
+          },
+          {
+            type: 'mc-body',
+            attributes: {},
+            children: [
+              {
+                type: 'mc-section',
+                attributes: {},
+                children: [
+                  {
+                    type: 'mc-column',
+                    attributes: {},
+                    children: [{ type: 'mc-text', content: 'x' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      { plugins: [themed] },
+    );
+    expect(
+      result.errors.some(
+        (e) =>
+          e.code === ErrorCode.INVALID_NESTING &&
+          e.message.includes('mc-attributes'),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('per-call plugin: unknown attributes from metadata are flagged', () => {
+  it('attribute not declared in plugin metadata produces UNKNOWN_ATTRIBUTE warning', () => {
+    const card = defineComponent({
+      type: 'acme-typed-card',
       metadata: {
         ...BASE_METADATA,
         attributes: {
           color: {
             type: 'color',
             required: false,
-            description: 'Text colour.',
-            example: '#000',
-            default: '#defaultplum',
+            description: 'Color.',
+            example: '#fff',
             hasEmailCompatibilityNotes: false,
           },
         },
       },
-      compile: compiler,
+      compile: () => '<div/>',
     });
 
+    // `colour` (British spelling) is not in the plugin's metadata — should warn.
     const result = compile(
       `<mc><mc-body><mc-section><mc-column>` +
-        `<acme-self-defaulting />` +
+        `<acme-typed-card colour="#ff0000"/>` +
         `</mc-column></mc-section></mc-body></mc>`,
+      { plugins: [card] },
     );
 
-    expect(result.errors).toEqual([]);
-    expect(observedColor).toBe('#defaultplum');
-    expect(result.html).toContain('data-color="#defaultplum"');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 4.9 — Introspection: plugin appears in every introspection facet
-// ---------------------------------------------------------------------------
-
-describe('plugin coverage across the introspection surface', () => {
-  beforeEach(() => {
-    defineComponent({
-      type: 'acme-introspect-target',
-      metadata: BASE_METADATA,
-      compile: NOOP_COMPILER,
-    });
-  });
-
-  it('introspect.component returns the plugin spec', () => {
-    expect(introspect.component('acme-introspect-target')).toBeDefined();
-  });
-
-  it('introspect.all includes the plugin', () => {
-    expect(introspect.all().some((s) => s.type === 'acme-introspect-target')).toBe(true);
-  });
-
-  it('introspect.compilesTo returns the declared output elements', () => {
-    const compilesTo = introspect.compilesTo('acme-introspect-target');
-    expect(compilesTo?.outputElements).toEqual(['div']);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 4.10 — Recursion depth guard (safety net for buggy plugins)
-// ---------------------------------------------------------------------------
-
-describe('compileNode recursion depth guard', () => {
-  it('catches infinite recursion from a self-recursing plugin and surfaces a clear error', () => {
-    // A buggy plugin whose compile() always recurses on a node of its own
-    // type. Without the depth guard, this would blow the JS call stack.
-    const recursiveCompiler: ComponentCompiler = (node, ctx) => {
-      // Synthesise a child of the same type and recurse — this is the
-      // mistake pattern the depth guard exists to catch.
-      const fakeChild: ASTNode = {
-        type: node.type,
-        attributes: {},
-        children: [],
-        loc: node.loc,
-      } as ASTNode;
-      return compileNode(fakeChild, ctx);
-    };
-
-    defineComponent({
-      type: 'acme-loop-bug',
-      metadata: { ...BASE_METADATA, maxChildren: Infinity },
-      compile: recursiveCompiler,
-    });
-
-    const result = compile(
-      `<mc><mc-body><mc-section><mc-column>` +
-        `<acme-loop-bug />` +
-        `</mc-column></mc-section></mc-body></mc>`,
+    const unknownAttr = result.warnings.find(
+      (w) => w.code === ErrorCode.UNKNOWN_ATTRIBUTE,
     );
-
-    // Compile should NOT crash with stack overflow — should produce a clean
-    // MCError in result.errors with code MAX_RECURSION_DEPTH. Note: when an
-    // MCError propagates all the way to the top of compile(), mailc returns
-    // html=null and partial=false (full failure, not partial output). The
-    // important guarantee is that the error is structured, not a stack
-    // overflow.
-    expect(result.html).toBeNull();
-    const recursionErr = result.errors.find(
-      (e) => e.code === ErrorCode.MAX_RECURSION_DEPTH,
-    );
-    expect(recursionErr).toBeDefined();
-    expect(recursionErr?.message).toContain('acme-loop-bug');
-    expect(recursionErr?.message).toContain('100');
-  });
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Plugin throws a non-MCError exception (TypeError / ReferenceError / …)
-  //
-  // Plugin compile functions are third-party code. If one throws a generic
-  // exception, the entire email compile must NOT crash. The exception is
-  // converted to a structured PLUGIN_COMPILE_ERROR warning and a placeholder
-  // HTML comment is emitted so the rest of the document still compiles.
-  // ─────────────────────────────────────────────────────────────────────────
-
-  it('plugin that throws a TypeError surfaces as PLUGIN_COMPILE_ERROR; rest of email still compiles', () => {
-    defineComponent({
-      type: 'acme-buggy',
-      metadata: { ...BASE_METADATA, maxChildren: 0 },
-      compile: () => {
-        // Realistic plugin bug — reading a property of undefined.
-        const broken = undefined as unknown as { x: string };
-        return broken.x;
-      },
-    });
-
-    const result = compile(
-      `<mc><mc-body><mc-section><mc-column>` +
-        `<mc-text>Before</mc-text>` +
-        `<acme-buggy />` +
-        `<mc-text>After</mc-text>` +
-        `</mc-column></mc-section></mc-body></mc>`,
-    );
-
-    // Compile must still produce HTML — surrounding mc-text nodes survive.
-    expect(result.html).not.toBeNull();
-    expect(result.html).toContain('Before');
-    expect(result.html).toContain('After');
-
-    // The thrown error surfaces as a structured PLUGIN_COMPILE_ERROR with
-    // severity 'error', clearly attributing the bug to the plugin.
-    const pluginErr = result.warnings.find(
-      (w) => w.code === ErrorCode.PLUGIN_COMPILE_ERROR,
-    );
-    expect(pluginErr).toBeDefined();
-    expect(pluginErr?.severity).toBe('error');
-    expect(pluginErr?.message).toContain('acme-buggy');
-    expect(pluginErr?.message).toContain('bug in the plugin, not in mailc');
-  });
-
-  it('plugin throwing a string (non-Error) is still wrapped cleanly', () => {
-    defineComponent({
-      type: 'acme-throws-string',
-      metadata: { ...BASE_METADATA, maxChildren: 0 },
-      compile: () => {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
-        throw 'something went wrong';
-      },
-    });
-
-    const result = compile(
-      `<mc><mc-body><mc-section><mc-column>` +
-        `<acme-throws-string />` +
-        `</mc-column></mc-section></mc-body></mc>`,
-    );
-
-    expect(result.html).not.toBeNull();
-    const pluginErr = result.warnings.find(
-      (w) => w.code === ErrorCode.PLUGIN_COMPILE_ERROR,
-    );
-    expect(pluginErr).toBeDefined();
-    expect(pluginErr?.message).toContain('something went wrong');
+    expect(unknownAttr).toBeDefined();
+    expect(unknownAttr?.message).toContain('colour');
   });
 });

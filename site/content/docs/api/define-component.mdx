@@ -1,33 +1,37 @@
 ---
 title: defineComponent()
-description: Register a custom component (plugin) with the mailc compiler.
+description: Author a custom component (plugin) as a value, then pass it to compile() per call.
 ---
 
 ```ts
-function defineComponent(spec: DefineComponentSpec): void
+function defineComponent(spec: DefineComponentSpec): Plugin
 ```
 
-Registers a custom `<my-component>` into the same registry as built-in `<mc-*>` components. After registration, the component appears in `introspect.all()`, the visual builder, and any tooling that queries the registry.
+Returns a **plugin value** — a frozen `Plugin` object with `type`, `metadata`, and `compile`. The plugin is not registered anywhere globally; you pass it to `compile(src, { plugins })` or `createCompiler({ plugins })` to opt it into a specific call (or set of calls).
+
+This matches the modern toolchain pattern — PostCSS, Vite, ESLint flat-config, Rollup. Plugins are values, not side effects.
 
 ## Signature
 
 ```ts
-import { defineComponent } from 'mailc'
+import { defineComponent, compile } from 'mailc'
 
-defineComponent({
+const card = defineComponent({
   type: 'acme-card',
   metadata: { /* full schema */ },
   compile: (node, ctx) => '<table>...</table>',
 })
+
+compile(source, { plugins: [card] })
 ```
 
 ## DefineComponentSpec
 
 | Field | Type | Description |
 |---|---|---|
-| `type` | `string` | Component tag name. Must contain a hyphen (HTML custom-element rule), must NOT start with `mc-` (reserved), must not collide with an already-registered type |
-| `metadata` | `ComponentMetadata` | Full structural metadata — same shape as built-in components |
-| `compile` | `(node: ASTNode, ctx: CompileContext) => string` | Compile function that emits HTML |
+| `type` | `string` | Component tag name. Must contain a hyphen (HTML custom-element rule), must NOT start with `mc-` (reserved for built-ins). Collisions with built-ins or with another plugin in the same call are rejected when the call's registry view is built. |
+| `metadata` | `ComponentMetadata` | Full structural metadata — same shape as built-in components. |
+| `compile` | `(node: ASTNode, ctx: CompileContext) => string` | Compile function that emits HTML. |
 
 ## metadata shape
 
@@ -37,22 +41,18 @@ defineComponent({
 | `category` | `'container' \| 'content' \| 'head' \| 'logic'` | Determines where it fits structurally |
 | `parent` | `string \| null` | Required parent type, or `null` if root |
 | `alternateParents` | `string[]` | Other types that may parent this component |
-| `allowedChildren` | `string[]` \| `'*'` | Whitelist of child types, or `'*'` for any |
+| `maxChildren` | `number` | Maximum number of element children (`Infinity` for unlimited) |
 | `allowsTextContent` | `boolean` | Whether raw text is allowed as a child |
-| `acceptsClassAttribute` | `boolean` | Whether `class="..."` is supported |
 | `validClassCategories` | `CSSCategory[]` | Which Tailwind utility families are allowed |
-| `requiredAttributes` | `AttributeSpec[]` | Attrs that must be present |
-| `optionalAttributes` | `AttributeSpec[]` | Attrs that may be present |
-| `cssPropertyAttributes` | `AttributeSpec[]` | Subset of optional attrs that map to CSS properties |
-| `compilesTo` | `CompilesToSpec` | HTML elements this component produces and why |
-| `example` | `{ markup: string }` | Minimal valid example |
+| `compilerOutputElements` | `string[]` | HTML elements your `compile()` emits |
+| `compilerOutputReason` | `string` | One-line explanation surfaced by `introspect.compilesTo` for built-ins |
+| `attributes` | `Record<string, AttributeMetadata>` | Attribute definitions (see below) |
 | `commonMistakes` | `string[]` | Known pitfalls — surfaced in error messages |
 
-## AttributeSpec
+## AttributeMetadata
 
 ```ts
-interface AttributeSpec {
-  name: string
+interface AttributeMetadata {
   type: 'string' | 'number' | 'enum' | 'boolean' | 'color' | 'url' | 'css-value' | 'tailwind-classes'
   required: boolean
   description: string
@@ -65,52 +65,48 @@ interface AttributeSpec {
 }
 ```
 
-## Example
+## Example — a per-call plugin
 
 ```ts
-import { defineComponent } from 'mailc'
+import { defineComponent, compile } from 'mailc'
 
-defineComponent({
+const rating = defineComponent({
   type: 'acme-rating',
   metadata: {
     description: 'Star rating display, 1–5 stars.',
     category: 'content',
     parent: 'mc-column',
     alternateParents: [],
-    allowedChildren: [],
+    maxChildren: 0,
     allowsTextContent: false,
-    acceptsClassAttribute: true,
+    compilerOutputElements: ['span'],
+    compilerOutputReason: 'Inline span pair (filled + empty stars).',
     validClassCategories: ['typography', 'spacing'],
-    requiredAttributes: [
-      {
-        name: 'value',
+    commonMistakes: ['Passing value > 5 — clamped to 5 silently.'],
+    attributes: {
+      value: {
         type: 'number',
         required: true,
         description: 'Number of filled stars (1–5).',
         example: '4',
         hasEmailCompatibilityNotes: false,
       },
-    ],
-    optionalAttributes: [],
-    cssPropertyAttributes: [],
-    compilesTo: {
-      outputElements: ['table', 'tr', 'td', 'span'],
-      reason: 'Inline-styled table for cross-client spacing.',
-      annotatedExample: { input: '<acme-rating value="4" />', output: '...' },
     },
-    example: { markup: '<acme-rating value="4" />' },
-    commonMistakes: ['Passing value > 5 — clamped to 5 silently.'],
   },
   compile: (node) => {
     const value = Math.min(5, Number(node.attributes.value ?? 0))
     const filled = '★'.repeat(value)
-    const empty = '☆'.repeat(5 - value)
-    return `<span style="color:#fbbf24;font-size:18px">${filled}</span><span style="color:#d1d5db;font-size:18px">${empty}</span>`
+    const empty  = '☆'.repeat(5 - value)
+    return `<span style="color:#fbbf24;font-size:18px">${filled}</span>` +
+           `<span style="color:#d1d5db;font-size:18px">${empty}</span>`
   },
 })
+
+// Use it per call:
+compile(source, { plugins: [rating] })
 ```
 
-Now usable in templates:
+Template usage is the same as a built-in:
 
 ```html
 <mc-column>
@@ -118,79 +114,128 @@ Now usable in templates:
 </mc-column>
 ```
 
+## Reusing a plugin across many calls — `createCompiler()`
+
+For long-lived processes (servers, AI workers, build tools) that compile many templates against the same plugin set, bind once with `createCompiler()`:
+
+```ts
+import { createCompiler, defineComponent } from 'mailc'
+
+const card    = defineComponent({ type: 'acme-card',  metadata, compile })
+const heading = defineComponent({ type: 'acme-heading', metadata, compile })
+
+const mailc = createCompiler({
+  plugins: [card, heading],
+  config:  { width: 600 },
+})
+
+mailc.compile(welcome)
+mailc.compile(receipt)
+mailc.compileFromJSON(builderState)
+```
+
+The returned object exposes `compile` and `compileFromJSON` — same signatures as the top-level functions, with the bound `plugins` and `config` pre-applied. Per-call options override the bound defaults (per-call `plugins` **replaces** the bound set for that call; per-call `config` is shallow-merged on top of the bound config).
+
+## Multi-instance — two compilers, two plugin sets, same process
+
+Different tenants, isolated tests, or per-route plugin sets all work because compilers hold no shared mutable state.
+
+```ts
+const tenantA = createCompiler({ plugins: [productCard, tenantATheme] })
+const tenantB = createCompiler({ plugins: [tenantBTheme] })
+
+app.post('/render/:tenant', (req) => {
+  const compiler = req.params.tenant === 'A' ? tenantA : tenantB
+  return compiler.compile(req.body.template)
+})
+```
+
+## Validation
+
+The plugin's `type` is validated when the per-call registry view is built — first time the plugin is passed to `compile()` or `createCompiler()`. Invalid types surface as a structured `INTERNAL_ERROR` in `result.errors` rather than an uncaught throw.
+
+| Violation | Message |
+|---|---|
+| Type without `-` | `Plugin "<name>": component type must be a hyphenated custom element name` |
+| Type starts with `mc-` | `Plugin "<name>": the "mc-" prefix is reserved for built-in components` |
+| Type collides with a built-in | `Plugin "<name>": cannot override a built-in component` |
+
+Two plugins in the same call declaring the same `type` is allowed — **last entry wins** (matches the documented `compile(src, { plugins: [...] })` semantic).
+
+## No lifecycle constraint
+
+`defineComponent()` can be called at any time — before, during, after `compile()`. It's pure. There is no global state to protect.
+
 ## CompileContext
 
-The second argument to your `compile` function. It carries the resolved configuration, theme tokens, accumulated warnings, and the source-map collector. Read what you need; mutate `warnings` to surface issues to the caller.
+The second argument to your `compile` function carries the resolved configuration, theme tokens, accumulated warnings, the source-map collector, and the per-call `registry` view. Read what you need; mutate `warnings` to surface issues to the caller.
 
 ```ts
 interface CompileContext {
   // ── Resolved config + theme ─────────────────────────────────────────
-  config: MailcConfig          // full resolved config (output, css, dark mode, ...)
-  theme: ResolvedTheme          // resolved theme tokens (colors, spacing, fontSize, ...)
+  config: MailcConfig
+  theme: ResolvedTheme
 
   // ── Active modes ────────────────────────────────────────────────────
   templateStyle: 'attribute' | 'class'
   compatibilityMode: 'liberal' | 'strict'
-  debug: boolean                // CompileOptions.debug
-  cleanSourceMap: boolean       // CompileOptions.sourceMap
+  debug: boolean
+  cleanSourceMap: boolean
 
-  // ── Layout context (set by the parent compiler) ─────────────────────
-  parentWidth: number           // px width of the parent element
-  columnCount: number           // siblings in the current section (for column auto-divide)
+  // ── Layout context ──────────────────────────────────────────────────
+  parentWidth: number
+  columnCount: number
 
   // ── Diagnostic accumulator ──────────────────────────────────────────
-  warnings: MCIssue[]           // push your own MCIssue here to surface to the caller
+  warnings: MCIssue[]   // push your own MCIssue here to surface to the caller
 
   // ── mc-head defaults / class bundles ────────────────────────────────
   attributeDefaults: Map<string, Record<string, string>>
-  // key: component type ('mc-all', 'mc-text', 'acme-rating', ...)
-  // value: attr → value map. Merged below explicit attrs and class-derived styles.
+  namedClasses:      Map<string, Record<string, string>>
 
-  namedClasses: Map<string, Record<string, string>>
-  // key: name from <mc-class name="X">
-  // value: resolved attribute bundle (with `extends` chains merged)
-
-  // ── Pre-built CSS classification (when targetClients-aware) ─────────
+  // ── Pre-built CSS classification ────────────────────────────────────
   classificationMap?: ClassificationMap
 
   // ── Per-document state ──────────────────────────────────────────────
-  responsiveClasses: string[]   // accumulated `sm:*` classes for media query gen
-  inlineStyleRules: { selector: string; declarations: Record<string, string> }[]
-  title: string                 // pulled from <mc-title>
-  counters: CompileCounters     // shared mutable counters
+  responsiveClasses: string[]
+  inlineStyleRules:  { selector: string; declarations: Record<string, string> }[]
+  title:             string
+  counters:          CompileCounters
 
   // ── Source map collector ────────────────────────────────────────────
   sourceMap: ISourceMapCollector
+
+  // ── Per-call registry view (built-ins + this call's plugins) ────────
+  registry: RegistryView
 }
 ```
 
-### Things you'll typically read
+### What you'll typically read
 
 - `ctx.theme` — for resolving theme tokens like `theme.colors.brand`
 - `ctx.config.targetClients` — to make caniemail-aware decisions
 - `ctx.compatibilityMode` — to decide whether to emit ENHANCE properties
-- `ctx.parentWidth` and `ctx.columnCount` — for layout math (column-width auto-divide, hero VML dimensions)
+- `ctx.parentWidth` and `ctx.columnCount` — for layout math
+- `ctx.registry` — when one plugin needs to discover other plugins active for this call (advanced; usually not needed)
 
-### Things you might write to
+### What you might write to
 
 - `ctx.warnings` — push `MCIssue` objects here to surface issues. They flow into `result.warnings`.
-- `ctx.sourceMap` — call `ctx.sourceMap.addStyle(id, …)` etc. only if you're tracking provenance for visual builders. Most plugins don't need this.
+- `ctx.sourceMap` — call `ctx.sourceMap.addStyle(id, …)` only if you're tracking provenance for visual builders. Most plugins don't need this.
 
-### Things to leave alone
+### What to leave alone
 
-- `ctx.counters`, `ctx.attributeDefaults`, `ctx.namedClasses`, `ctx.classificationMap` — these are managed by the compiler. Reading is fine; mutating breaks invariants in unpredictable ways.
+- `ctx.counters`, `ctx.attributeDefaults`, `ctx.namedClasses`, `ctx.classificationMap`, `ctx.registry` — managed by the compiler. Reading is fine; mutating breaks invariants in unpredictable ways.
 
 ### Minimal plugin example using context
 
 ```ts
-defineComponent({
+const callout = defineComponent({
   type: 'acme-callout',
   metadata: { /* … */ },
   compile: (node, ctx) => {
-    // Read theme color
     const accent = ctx.theme.colors?.accent ?? '#4f46e5'
 
-    // Surface a warning to the caller
     if (ctx.compatibilityMode === 'strict' && node.attributes['shadow']) {
       ctx.warnings.push({
         code: 'PLUGIN_CSS_COMPATIBILITY',
@@ -206,30 +251,39 @@ defineComponent({
 })
 ```
 
-## Registration timing
-
-`defineComponent()` must be called **before** any `compile()` call.
-
-After the first `compile()` runs, the registry locks. Calling `defineComponent()` afterwards throws:
-
-```
-Error: Cannot register 'acme-card' — registry was locked after first compile().
-       Register all plugins at startup.
-```
-
-This prevents subtle bugs where a template renders successfully in one request but fails in the next because a plugin was loaded mid-flight.
-
 ## Helper functions
 
 ```ts
 import { getRegisteredComponents, isComponentRegistered } from 'mailc'
 
-getRegisteredComponents()           // ['mc', 'mc-body', ..., 'acme-rating']
+getRegisteredComponents()           // ['mc', 'mc-body', 'mc-section', ...] — built-ins only
 isComponentRegistered('mc-button')  // true
+isComponentRegistered('acme-card')  // false — plugins are per-call values, not globally registered
 ```
 
-Both exclude synthetic compiler-only types (those prefixed with `_`).
+These enumerate **built-ins only**. To check plugin presence, walk your own `Plugin[]` array — the type lives at `plugin.type`.
 
 ## Trust model
 
-mailc trusts plugin output — the string returned by your `compile` function is spliced into the final HTML as-is. mailc does **not** re-validate plugin CSS against caniemail. Plugin authors are responsible for keeping their output email-safe.
+mailc trusts plugin output — the string returned by your `compile` function is spliced into the final HTML as-is. mailc does **not** re-validate plugin CSS against caniemail. Plugin authors are responsible for:
+
+- Escaping any user-controlled strings (`escapeHtml` is exported as a helper).
+- Class-mode enforcement, if relevant — call `assertClassModeAttributes(node, ctx)` at the top of `compile()` to surface `CSS_ATTR_IN_CLASS_MODE` errors when `ctx.templateStyle === 'class'`. Plugin metadata's `classHint` values flow into the error message automatically.
+- Keeping HTML email-safe (table layouts, inline styles, Outlook fallbacks where needed).
+
+## Plugin-author utilities
+
+Re-exported from mailc for convenience:
+
+```ts
+import { escapeHtml, themeColor, warnCss, assertClassModeAttributes } from 'mailc'
+```
+
+| Helper | Purpose |
+|---|---|
+| `escapeHtml(value)` | Standard HTML escape — always escape user-controlled strings. |
+| `themeColor(ctx, token, fallback)` | Resolve a theme token (e.g. `'brand'`) against the user's theme, falling back to your default. |
+| `warnCss(ctx, property, value, node)` | Add a structured caniemail-style warning to `ctx.warnings` for a specific CSS property your plugin emits. |
+| `assertClassModeAttributes(node, ctx)` | In class mode, emit `CSS_ATTR_IN_CLASS_MODE` errors for any `isCssPropAttr` attribute set directly on the node. |
+
+See [`examples/plugin-product-card`](https://github.com/amareshsm/mailc/tree/main/examples/plugin-product-card) for a complete worked example covering metadata, compile, escaping, and per-call usage.

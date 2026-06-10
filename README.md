@@ -136,7 +136,7 @@ mailc contract welcome.mc                        # show the data contract
 | **caniemail integration** | Per-property compatibility checks against your declared `targetClients` |
 | **Source maps** | Every output element traces back to its source node — bidirectional |
 | **AI-friendly** | Structured `FixInstruction` errors, JSON IR, and an [MCP server](#mcp-server) for AI agents |
-| **Plugin API** | `defineComponent({ type, metadata, compile })` for custom components |
+| **Plugin API** | `defineComponent({ type, metadata, compile })` returns a `Plugin` value — pass to `compile(src, { plugins })` or `createCompiler({ plugins })`. Stateless, multi-instance, no globals. |
 
 ---
 
@@ -169,6 +169,54 @@ compile(source, { templateStyle: 'class' })
 ```
 
 Some attributes (e.g. border shorthands, `inner-background-color`) have no Tailwind equivalent today and remain attribute-only even in class mode.
+
+---
+
+## Custom components (plugins)
+
+`defineComponent()` returns a plain `Plugin` value. Pass it to `compile()` per call, or bind it once with `createCompiler()`. There is no global registration — plugins are values.
+
+```ts
+import { defineComponent, compile, createCompiler } from 'mailc';
+
+const productCard = defineComponent({
+  type: 'acme-product-card', // must contain `-`, must not start with `mc-`
+  metadata: {
+    description: 'Product card with image, title, and CTA.',
+    category: 'content',
+    parent: 'mc-column',
+    maxChildren: 0,
+    allowsTextContent: false,
+    compilerOutputElements: ['table', 'tr', 'td'],
+    compilerOutputReason: 'Centered, email-safe table.',
+    validClassCategories: [],
+    commonMistakes: [],
+    attributes: {
+      title:  { type: 'string', required: true,  description: 'Product title.',  example: 'Acme Widget', hasEmailCompatibilityNotes: false },
+      price:  { type: 'string', required: true,  description: 'Display price.',  example: '$19.99',      hasEmailCompatibilityNotes: false },
+    },
+  },
+  compile: (node) => {
+    const title = node.attributes['title'] ?? '';
+    const price = node.attributes['price'] ?? '';
+    return `<table><tr><td>${title}</td><td>${price}</td></tr></table>`;
+  },
+});
+
+// Per-call:
+compile(source, { plugins: [productCard] });
+
+// Bind once for many calls:
+const mailc = createCompiler({ plugins: [productCard] });
+mailc.compile(welcome);
+mailc.compile(receipt);
+
+// Multi-instance (different tenants, isolated plugins, same process):
+const tenantA = createCompiler({ plugins: [productCard, tenantAExtras] });
+const tenantB = createCompiler({ plugins: [tenantBExtras] });
+```
+
+The compile function emits HTML as-is — plugins are responsible for escaping user-controlled strings (`escapeHtml` is exported as a helper) and for any class-mode enforcement (`assertClassModeAttributes` is exported too). See [`examples/plugin-product-card`](examples/plugin-product-card) for a worked example.
 
 ---
 

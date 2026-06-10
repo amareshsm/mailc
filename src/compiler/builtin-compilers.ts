@@ -2,11 +2,9 @@
  * Built-in component compiler map.
  *
  * Static literal mapping of every built-in `mc-*` component type to its
- * compiler function. Consumed once at startup by `src/registry/init.ts` to
- * seed the runtime component registry. Not exported from the public package
- * — downstream code reads compilers via `getComponentCompiler()` from the
- * registry, or via the registry-backed `COMPONENT_COMPILERS` Proxy in
- * `src/compiler/registry.ts`.
+ * compiler function. Re-exported as `BUILTIN_COMPILERS` from
+ * `src/registry/builtin-registry.ts` for both the public `COMPONENT_COMPILERS`
+ * proxy and per-call `RegistryView` lookups.
  *
  * @module compiler/builtin-compilers
  */

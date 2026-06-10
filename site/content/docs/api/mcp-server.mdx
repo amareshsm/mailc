@@ -54,9 +54,9 @@ Pre-flight check for a single mailc JSON node against its parent context. Return
 | `templateStyle` | `'attribute' \| 'class'` | no | Match the templateStyle that compile() will use. Default 'attribute' suppresses CSS_ATTR_IN_CLASS_MODE warnings. |
 
 ### `list_components`
-**List all registered mailc components**
+**List all built-in mailc components**
 
-Returns every component in the registry — built-in mc-* tags plus any plugin components registered via defineComponent(). Each entry includes type, category, description, and an isPlugin flag.
+Returns every built-in `mc-*` component the compiler ships with. Each entry includes `type`, `category`, and `description`. Plugins are per-call values in the mailc API (`compile(src, { plugins })`) and are not enumerated here — fetch their metadata from the plugin author's package.
 
 _No parameters._
 

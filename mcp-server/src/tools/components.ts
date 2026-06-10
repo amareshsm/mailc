@@ -16,6 +16,10 @@ import { introspect } from 'mailc'
 export const listComponentsInput = {}
 
 export async function listComponentsHandler() {
+  // Built-in `mc-*` components only. Plugins are per-call values in the
+  // mailc API (`compile(src, { plugins })`) and have no global identity
+  // the MCP server can enumerate. Agents should obtain plugin metadata
+  // from the plugin author's package directly.
   const all = introspect.all()
   return {
     count: all.length,
@@ -23,7 +27,6 @@ export async function listComponentsHandler() {
       type: c.type,
       category: c.category,
       description: c.description,
-      isPlugin: !c.type.startsWith('mc-'),
     })),
   }
 }

@@ -12,20 +12,16 @@
  * Dependency rule: imports from metadata + registry + types only.
  * NEVER imports from compiler/* or calls compile().
  *
- * Phase 2 of the Introspection API build plan.
- * Plugin support added per docs/plugin-architecture-plan.md (Phase 2).
- *
  * @module introspect/registry
  */
 
 import type { AttributeMetadata, ComponentMetadata } from '../components/metadata.js';
-import {
-  getAllMetadata,
-  getComponentMetadata,
-  onRegistryChange,
-} from '../registry/component-registry.js';
-// Side-effect: ensure built-ins are seeded before any introspection call.
-import '../registry/init.js';
+import { BUILTIN_METADATA } from '../registry/builtin-registry.js';
+
+const getComponentMetadata = (type: string): ComponentMetadata | undefined =>
+  BUILTIN_METADATA[type];
+const getAllMetadata = (): Record<string, ComponentMetadata> =>
+  BUILTIN_METADATA as Record<string, ComponentMetadata>;
 import type {
   AttributeSpec,
   ComponentSpec,
@@ -196,15 +192,12 @@ function buildCompilesToSpec(type: string): CompilesToSpec {
  */
 let _cache: Map<string, ComponentSpec> | null = null;
 
-// Subscribe once at module load: any plugin registration invalidates the cache
-// so the next introspection call rebuilds against the current registry.
-onRegistryChange(() => {
-  _cache = null;
-});
-
 /**
- * Builds and caches the full registry map.
- * Called once on first access; rebuilt when `onRegistryChange` fires.
+ * Builds and caches the full registry map on first access.
+ *
+ * Built-ins are static, so the cache never needs invalidation in
+ * production. `_resetRegistryCache()` remains for tests that want a
+ * fresh build.
  *
  * Synthetic compiler-only types (prefixed with `_`) are filtered out.
  */

@@ -102,26 +102,64 @@ const result = compile(source, {
 // result.warnings now includes one entry per stripped ENHANCE property
 ```
 
+### With custom components (per-call plugins)
+
+```ts
+import { compile, defineComponent } from 'mailc'
+
+const productCard = defineComponent({
+  type: 'acme-product-card',
+  metadata: { /* … */ },
+  compile: (node) => `<table>…</table>`,
+})
+
+const result = compile(source, { plugins: [productCard] })
+```
+
+`plugins` is a per-call array — pass exactly the plugins you want available for this compile. Two plugins with the same `type` in one array: last wins. A plugin whose `type` collides with a built-in or starts with `mc-` is rejected at view-build time and surfaces as a structured `INTERNAL_ERROR`. See [`defineComponent`](/docs/api/define-component) for the full plugin reference.
+
+For a long-lived process with a fixed plugin set, prefer [`createCompiler({ plugins })`](/docs/api/define-component#reusing-a-plugin-across-many-calls--createcompiler) — it binds the set once instead of repeating it on every call.
+
 ## compileFromJSON
 
 ```ts
-function compileFromJSON(node: ASTNode, options?: CompileOptions): CompileResult
+function compileFromJSON(
+  input: MCNode | MCDocument | string,
+  options?: CompileOptions,
+): CompileResult
 ```
 
-Same as `compile()` but takes a parsed JSON AST instead of markup. Useful when you've stored templates as JSON or built them programmatically (drag-and-drop builders).
+Same as `compile()` but takes a JSON tree instead of markup. Useful when you've stored templates as JSON or built them programmatically (drag-and-drop builders).
+
+Three input forms supported:
+- **`MCNode`** — the canonical builder shape. Zero-overhead path.
+- **`MCDocument`** — the full document wrapper (`version`, `metadata`, `template`, optional `dataSchema` / `sampleData`).
+- **`string`** — JSON parsed internally with a position-tracking parser, so source-map entries get real line/column numbers for click-to-source in builders.
 
 ```ts
 import { compileFromJSON } from 'mailc'
 
-const ast = JSON.parse(jsonString)
-const result = compileFromJSON(ast, { data: {...} })
+// Object input (fast path)
+const result1 = compileFromJSON(mcNode, { data: { user: { name: 'A' } } })
+
+// Document input
+const result2 = compileFromJSON(mcDocument)
+
+// String input (position-tracking, useful for IDE / playground UIs)
+const result3 = compileFromJSON(jsonStringFromDisk)
 ```
 
-`compileFromJSON()` respects an extra option:
+All `CompileOptions` are accepted, plus one extra:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `templating` | `boolean` | `true` | When `false`, content strings pass through verbatim and template resolution is skipped — useful for builders that do their own data binding |
+
+Per-call `plugins` work the same way as for `compile()`:
+
+```ts
+compileFromJSON(jsonTree, { plugins: [productCard] })
+```
 
 ## Templating
 

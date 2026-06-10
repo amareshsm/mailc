@@ -2,9 +2,10 @@
  * AcmeCorp design system — a sample component library demonstrating the
  * mailc plugin marketplace concept.
  *
- * Each component is registered with mailc via `defineComponent()` at module
- * load. The exported `ACME_COMPONENTS` array describes them for the
- * marketplace UI.
+ * Each component is built with `defineComponent()` and pushed into the
+ * exported `ACME_PLUGINS` array; `compile-mc.ts` concatenates every brand's
+ * array and passes the full set per-call via `compile(src, { plugins })`.
+ * The exported `ACME_COMPONENTS` array describes them for the marketplace UI.
  *
  * Components are designed to sit directly under `<mc-body>` and emit
  * email-safe table-based HTML with inline styles.
@@ -15,6 +16,18 @@ const mailc: any = await import('mailc/browser')
 const defineComponent = mailc.defineComponent ?? mailc.default?.defineComponent
 // Plugin-author utilities re-exported from mailc.
 const { escapeHtml, themeColor, warnCss } = mailc
+
+// Plugin collector — each defineLocal() call captures the returned Plugin
+// value so the design system can export the full set for per-call use:
+//   compile(src, { plugins: ACME_PLUGINS })
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const ACME_PLUGINS: any[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function defineLocal(spec: any): any {
+  const plugin = defineComponent(spec)
+  ACME_PLUGINS.push(plugin)
+  return plugin
+}
 
 // ---------------------------------------------------------------------------
 // Brand tokens
@@ -48,7 +61,7 @@ function centeredTable(innerHtml: string, bgColor = ACME.white): string {
 // acme-hero
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'acme-hero',
   metadata: {
     description: 'Branded hero banner with title, subtitle, and optional call-to-action.',
@@ -99,7 +112,7 @@ defineComponent({
 // acme-feature
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'acme-feature',
   metadata: {
     description: 'A single feature row with an emoji icon, title, and description.',
@@ -143,7 +156,7 @@ defineComponent({
 // acme-price-card
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'acme-price-card',
   metadata: {
     description: 'Pricing card with plan name, price, feature list, and a CTA button.',
@@ -220,7 +233,7 @@ defineComponent({
 // acme-footer
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'acme-footer',
   metadata: {
     description: 'Brand footer with company name, address, and an unsubscribe link.',

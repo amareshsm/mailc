@@ -4,19 +4,21 @@ description: Programmatic API exported by the mailc package.
 ---
 
 ```ts
-import { compile, compileFromJSON, introspect, defineComponent } from 'mailc'
+import { compile, compileFromJSON, validate, introspect, defineComponent, createCompiler } from 'mailc'
 ```
 
 | Export | Purpose |
 |---|---|
 | [`compile()`](/docs/api/compile) | Compile a `.mc` source string to email-safe HTML |
 | [`compileFromJSON()`](/docs/api/compile#compilefromjson) | Same, but takes a JSON AST instead of markup |
+| [`validate()`](/docs/api/validate) | Universal validator — accepts a markup string, JSON IR (`MCNode`), or AST |
 | [`jsonToMarkup()` / `markupToJSON()`](/docs/api/json) | Convert between `.mc` markup and the JSON AST |
-| [`validateJSON()` / `validateDocument()` / `normalizeJSON()`](/docs/api/json) | Validate and normalize JSON templates |
+| [`validateDocument()` / `normalizeJSON()`](/docs/api/json) | Validate full MCDocument (with metadata) and normalize JSON templates |
 | [`checkCss()`](/docs/api/css-checking) | Check CSS declarations against email-client compatibility |
 | [`lintEmailHtml()`](/docs/api/lint) | Lint compiled email HTML for best practices |
 | [`introspect.*`](/docs/api/introspect) | Static-analysis API — component schemas, validation, data contracts |
-| [`defineComponent()`](/docs/api/define-component) | Register a custom component (plugin) |
+| [`defineComponent()`](/docs/api/define-component) | Author a custom component — returns a `Plugin` value to pass per call |
+| [`createCompiler()`](/docs/api/define-component#reusing-a-plugin-across-many-calls--createcompiler) | Bind a plugin set + config once, then call `compile` / `compileFromJSON` against it |
 | [Low-level primitives](/docs/api/low-level) | `tokenize`, `parse`, `COMPONENT_COMPILERS`, `resolveTemplate` — escape hatches |
 
 ## Reference tables

@@ -20,6 +20,7 @@ description: Every option you can pass to compile(source, options).
 | `templating` | `boolean` | `true` | Enable templating (only respected by `compileFromJSON()` today) |
 | `debug` | `boolean` | `false` | Inject `<!-- mc:source -->` comments and attach `result.sourceMap` |
 | `sourceMap` | `boolean` | `false` | Inject `data-mc-id` attributes and attach `result.sourceMap` (HTML stays clean) |
+| `plugins` | `readonly Plugin[]` | — | Per-call plugin set — `defineComponent()` return values. See [defineComponent](/docs/api/define-component). For binding plugins across many calls, use [`createCompiler()`](/docs/api/define-component#reusing-a-plugin-across-many-calls--createcompiler). |
 
 To control output shape (pretty vs minified), use `config.output.minify` — see [OutputConfig](/docs/configuration#outputconfig).
 
@@ -85,6 +86,22 @@ const result = compile(source, {
 ```
 
 The `config` field is partial — only specified subobjects are merged.
+
+### Per-call plugins
+
+```ts
+import { defineComponent, compile } from 'mailc'
+
+const card = defineComponent({
+  type: 'acme-card',
+  metadata: { /* … */ },
+  compile: (node) => `<div data-card>${node.attributes['title']}</div>`,
+})
+
+compile(source, { plugins: [card] })
+```
+
+Two plugins declaring the same `type` in one array: last entry wins. A plugin whose `type` collides with a built-in is rejected at view-build time. For a long-lived process with a fixed plugin set, prefer [`createCompiler({ plugins })`](/docs/api/define-component#reusing-a-plugin-across-many-calls--createcompiler) — it binds the plugin set once instead of repeating it on every call.
 
 ## debug vs sourceMap
 

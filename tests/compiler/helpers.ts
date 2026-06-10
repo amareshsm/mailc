@@ -9,6 +9,7 @@ import { DEFAULT_CONFIG } from '../../src/config.js';
 import { resolveTheme } from '../../src/css/theme-resolver.js';
 import { NullSourceMapCollector } from '../../src/compiler/null-source-map-collector.js';
 import { SourceMapCollector } from '../../src/compiler/source-map-collector.js';
+import { createRegistryView } from '../../src/registry/registry-view.js';
 
 /** A dummy source location for test nodes. */
 const DUMMY_LOC = {
@@ -72,6 +73,7 @@ export function makeContext(overrides: Partial<CompileContext> = {}): CompileCon
     cleanSourceMap: false,
     templateStyle: 'attribute' as const,
     sourceMap: new NullSourceMapCollector(),
+    registry: createRegistryView(),
     ...overrides,
   };
 }

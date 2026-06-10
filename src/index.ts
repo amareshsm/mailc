@@ -29,7 +29,6 @@ export type {
   CompileResult,
   CompileStats,
   CompileOptions,
-  ValidateOptions,
   ValidationResult,
   MailcConfig,
   ResponsiveConfig,
@@ -47,6 +46,8 @@ export type {
   StylingConfig,
   CompatibilityMode,
   GmailClipRisk,
+  Plugin,
+  RegistryView,
 } from './types.js';
 
 // Error system
@@ -64,7 +65,7 @@ export { parse } from './parser/index.js';
 
 // Validator (Phase 3)
 export { validate } from './validate.js';
-export type { ValidateInput } from './validate.js';
+export type { ValidateInput, ValidateOptions } from './validate.js';
 
 // CSS Checking — top-level convenience API (Phase 15)
 export { checkCss } from './css/index.js';
@@ -97,6 +98,10 @@ export type { CollectedInlineResult } from './compiler/style-collector.js';
 
 // Compile Orchestrator (Phase 8)
 export { compile } from './compile.js';
+
+// Bound-compiler factory — multi-instance, stateless plugin usage.
+export { createCompiler } from './create-compiler.js';
+export type { CreateCompilerOptions, MailcCompiler } from './create-compiler.js';
 
 // Source Map utilities (SM-E)
 export { calculateOffsets } from './compiler/source-map-offsets.js';
@@ -169,8 +174,7 @@ export type {
   DataContractLocation,
 } from './introspect/index.js';
 
-// Plugin API — register custom components.
-// See docs/plugin-architecture-plan.md for the full design.
+// Plugin API — author custom components as values, pass per call.
 export {
   defineComponent,
   getRegisteredComponents,
@@ -189,3 +193,9 @@ export type { MCAnyComponentType } from './json/schema.js';
 // HTML escape + theme/CSS-classification helpers for plugin compile functions.
 export { escapeHtml, unescapeHtml } from './utils/html-escape.js';
 export { themeColor, warnCss } from './plugin-utils.js';
+// Class-mode enforcement — opt-in for plugin compilers that want the same
+// CSS-attribute checks built-ins perform when `templateStyle: 'class'`.
+export {
+  assertClassModeAttributes,
+  assertAttributeModeClass,
+} from './compiler/styling-mode.js';

@@ -45,7 +45,9 @@ const spec = introspect.component('mc-button')
 introspect.all(): ComponentSpec[]
 ```
 
-Every registered component (built-ins + plugins) in registration order. The playground's component browser is built on this.
+Every built-in component, in declaration order. The playground's component browser is built on this.
+
+Built-in scope only — plugins are per-call values in the public API (`compile(src, { plugins })`) with no global identity. To enumerate the plugins active for a specific call, walk your own `Plugin[]` array; their metadata lives at `plugin.metadata`.
 
 ## introspect.canNest
 

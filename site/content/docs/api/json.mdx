@@ -9,13 +9,13 @@ mailc has a JSON representation of every email template — the same shape that 
 import {
   jsonToMarkup,
   markupToJSON,
-  validateJSON,
+  validate,
   validateDocument,
   normalizeJSON,
 } from 'mailc'
 ```
 
-For the compile-from-JSON entry point itself see [`compileFromJSON()`](/docs/api/compile#compilefromjson).
+For the compile-from-JSON entry point itself see [`compileFromJSON()`](/docs/api/compile#compilefromjson). For the universal validator that accepts markup, JSON IR, or AST, see [`validate()`](/docs/api/validate).
 
 ## markupToJSON()
 
@@ -59,22 +59,18 @@ const markup = jsonToMarkup(node)
 
 `indent` is the starting indentation level (defaults to `0`); pass a non-zero value when embedding the result inside another document.
 
-## validateJSON()
+## validate(node)
 
 ```ts
-function validateJSON(node: MCNode): {
-  isValid: boolean
-  errors: MCIssue[]
-  warnings: MCIssue[]
-}
+function validate(input: string | ASTNode | MCNode): ValidationResult
 ```
 
-Validates a single `MCNode` tree against the structural rules — required parents, allowed children, attribute types, duplicate IDs, and so on. Returns the same `MCIssue` shape used by `compile()`.
+Validating a JSON IR tree is one of three forms accepted by the universal [`validate()`](/docs/api/validate). Pass an `MCNode` and the function dispatches to the JSON walker (structural rules — required parents, allowed children, attribute types, duplicate IDs, and so on). Returns the same `MCIssue` shape used by `compile()`.
 
 ```ts
-import { validateJSON } from 'mailc'
+import { validate } from 'mailc'
 
-const result = validateJSON(node)
+const result = validate(node)
 if (!result.isValid) {
   for (const err of result.errors) console.error(err.code, err.message)
 }
@@ -90,7 +86,7 @@ function validateDocument(doc: MCDocument): {
 }
 ```
 
-Same contract as `validateJSON()`, but accepts a full `MCDocument` (the wrapper that adds `version` + `metadata` around the template tree). Use this when the JSON came from a saved file rather than an in-memory builder.
+Accepts a full `MCDocument` (the wrapper that adds `version` + `metadata` around the template tree) and runs document-level checks (required metadata fields, `dataSchema` vs `sampleData` cross-validation) in addition to the inner tree validation. Use this when the JSON came from a saved file rather than an in-memory builder.
 
 ## normalizeJSON()
 
@@ -99,7 +95,7 @@ function normalizeJSON(input: MCNode): MCNode
 function normalizeJSON(input: MCDocument): MCDocument
 ```
 
-Returns a new tree (or document) with legacy / hand-written JSON normalized into the canonical shape — fills in default `attributes`/`children` arrays, coerces missing fields, and is safe to call before `validateJSON()` / `compileFromJSON()`. The original input is not mutated.
+Returns a new tree (or document) with legacy / hand-written JSON normalized into the canonical shape — fills in default `attributes`/`children` arrays, coerces missing fields, and is safe to call before `validate()` / `compileFromJSON()`. The original input is not mutated.
 
 ```ts
 import { normalizeJSON, compileFromJSON } from 'mailc'
@@ -114,6 +110,6 @@ const result = compileFromJSON(JSON.stringify(safe))
 |---|---|
 | Take a `.mc` file and store it as JSON | `markupToJSON()` |
 | Render JSON back to readable markup | `jsonToMarkup()` |
-| Check a tree before compiling | `validateJSON()` (node) or `validateDocument()` (full doc) |
-| Accept third-party / older JSON safely | `normalizeJSON()` then `validateJSON()` |
+| Check a tree before compiling | [`validate(node)`](/docs/api/validate) or `validateDocument()` (full doc) |
+| Accept third-party / older JSON safely | `normalizeJSON()` then [`validate()`](/docs/api/validate) |
 | Compile a JSON template to HTML | [`compileFromJSON()`](/docs/api/compile#compilefromjson) |

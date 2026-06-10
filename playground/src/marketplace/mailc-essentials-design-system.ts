@@ -12,6 +12,15 @@ const defineComponent = mailc.defineComponent ?? mailc.default?.defineComponent
 // Plugin-author utilities re-exported from mailc.
 const { escapeHtml, themeColor, warnCss } = mailc
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const MAILC_ESSENTIALS_PLUGINS: any[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function defineLocal(spec: any): any {
+  const plugin = defineComponent(spec)
+  MAILC_ESSENTIALS_PLUGINS.push(plugin)
+  return plugin
+}
+
 // ---------------------------------------------------------------------------
 // Tokens
 // ---------------------------------------------------------------------------
@@ -32,7 +41,7 @@ const MC = {
 // (Antarctica / travel newsletter style)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'essentials-overlay-hero',
   metadata: {
     description: 'Full-image hero with dark text panel overlaying the top portion — newsletter / travel style.',
@@ -99,7 +108,7 @@ defineComponent({
 // essentials-stat-card-grid — bento layout of stat cards (API Calls 25k style)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'essentials-stat-card-grid',
   metadata: {
     description: 'Bento-style grid of metric cards. Pass cards as a JSON-like attribute string.',
@@ -199,7 +208,7 @@ defineComponent({
 // essentials-category-grid — 2x2 image card grid with title (Monochrome Mood style)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'essentials-category-grid',
   metadata: {
     description: '2×2 grid of image cards with title above the image. For seasonal collections or article rollups.',
@@ -263,7 +272,7 @@ defineComponent({
 // essentials-payment-timeline — horizontal step timeline (paid / due dates)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'essentials-payment-timeline',
   metadata: {
     description: 'Horizontal payment / installment timeline with checkmark on completed steps.',
@@ -344,7 +353,7 @@ defineComponent({
 // ("Brands we support" pattern: editorial wordmark showcase)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'essentials-brand-grid',
   metadata: {
     description: 'Featured brand on the left, 2×2 supporting brand grid on the right — editorial "brands we support" block.',

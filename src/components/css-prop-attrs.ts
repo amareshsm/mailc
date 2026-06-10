@@ -1,10 +1,11 @@
 /**
- * CSS-property attribute lookup table — derived from COMPONENT_METADATA.
+ * CSS-property attribute lookup table — derived lazily from `BUILTIN_METADATA`.
  *
- * This is the single shared source for "which attributes are CSS-property
- * attributes on each mc-component". Both the compiler enforcement path
- * (`src/compiler/styling-mode.ts`) and the introspect pre-flight path
- * (`src/introspect/validate.ts`) import from here, so they can never diverge.
+ * Lazy initialisation is intentional: at module-load time, the import chain
+ * (builtin-registry → compiler/builtin-compilers → compiler/components/* →
+ * back to this file) is cyclic, so `BUILTIN_METADATA` is not yet populated
+ * when this module evaluates. Reading it on first access (after all module
+ * initialisers have run) sidesteps the TDZ.
  *
  * To restrict a new attribute in class mode:
  *   1. Add `isCssPropAttr: true` (and `classHint`) to its entry in `metadata.ts`.
@@ -13,49 +14,59 @@
  * @module components/css-prop-attrs
  */
 
-import {
-  getAllMetadata,
-  onRegistryChange,
-} from '../registry/component-registry.js';
-// Side-effect: ensure built-ins are seeded before initial computation.
-import '../registry/init.js';
+import { BUILTIN_METADATA } from '../registry/builtin-registry.js';
 
-// ---------------------------------------------------------------------------
-// Lookup table
-// ---------------------------------------------------------------------------
+let _table: Record<string, ReadonlySet<string>> | null = null;
 
-/**
- * Maps every mc-component type that has at least one CSS-property attribute
- * to a `ReadonlySet` of those attribute names.
- *
- * Components with zero `isCssPropAttr: true` attributes are absent from this
- * map — a missing entry is equivalent to an empty set.
- *
- * Mutated in place when plugins register components so callers holding a
- * reference to this object see the latest mapping.
- */
-export const CSS_PROP_ATTRS_BY_COMPONENT: Record<string, ReadonlySet<string>> = {};
-
-function rebuildCssPropAttrs(): void {
-  for (const key of Object.keys(CSS_PROP_ATTRS_BY_COMPONENT)) {
-    delete CSS_PROP_ATTRS_BY_COMPONENT[key];
-  }
-  for (const [type, meta] of Object.entries(getAllMetadata())) {
-    // Skip synthetic compiler-only types (prefixed with `_`).
-    if (type.startsWith('_')) {
-      continue;
-    }
+function compute(): Record<string, ReadonlySet<string>> {
+  const out: Record<string, ReadonlySet<string>> = {};
+  for (const [type, meta] of Object.entries(BUILTIN_METADATA)) {
+    if (type.startsWith('_')) continue;
     const cssPropNames = Object.entries(meta.attributes)
       .filter(([, attr]) => attr.isCssPropAttr === true)
       .map(([name]) => name);
     if (cssPropNames.length > 0) {
-      CSS_PROP_ATTRS_BY_COMPONENT[type] = new Set(cssPropNames);
+      out[type] = new Set(cssPropNames);
     }
   }
+  return out;
 }
 
-// Initial population.
-rebuildCssPropAttrs();
-
-// Stay in sync with future plugin registrations.
-onRegistryChange(rebuildCssPropAttrs);
+/**
+ * Maps every built-in mc-component type that has at least one CSS-property
+ * attribute to a `ReadonlySet` of those attribute names.
+ *
+ * Components with zero `isCssPropAttr: true` attributes are absent from this
+ * map — a missing entry is equivalent to an empty set.
+ *
+ * Exposed as a Proxy so consumers see a `Record`-shaped value (preserving
+ * the public API contract) while reads are forwarded to a lazily-built
+ * underlying table — necessary to dodge the module-load cycle described
+ * in the module docstring.
+ */
+export const CSS_PROP_ATTRS_BY_COMPONENT: Record<
+  string,
+  ReadonlySet<string>
+> = new Proxy({} as Record<string, ReadonlySet<string>>, {
+  get(_target, prop) {
+    if (typeof prop !== 'string') return undefined;
+    if (_table === null) _table = compute();
+    return _table[prop];
+  },
+  has(_target, prop) {
+    if (typeof prop !== 'string') return false;
+    if (_table === null) _table = compute();
+    return prop in _table;
+  },
+  ownKeys() {
+    if (_table === null) _table = compute();
+    return Object.keys(_table);
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    if (typeof prop !== 'string') return undefined;
+    if (_table === null) _table = compute();
+    const value = _table[prop];
+    if (value === undefined) return undefined;
+    return { configurable: true, enumerable: true, writable: false, value };
+  },
+});

@@ -157,6 +157,17 @@ Codes are grouped by the compile-pipeline stage that emits them. Same group = sa
 | `MAX_RECURSION_DEPTH` | error |
 | `JSON_PARSE_ERROR` | error |
 
+## Public-API contract
+
+| Code | Severity |
+|---|---|
+| `INVALID_INPUT` | error |
+| `INTERNAL_ERROR` | error |
+
+`INVALID_INPUT` — surfaced by [`validate()`](/docs/api/validate) when the input is not a markup string, `MCNode`, or `ASTNode` (e.g. `null`, a number, an `MCDocument` passed instead of its `template`).
+
+`INTERNAL_ERROR` — generic wrapper for unexpected exceptions inside `compile()` / `compileFromJSON()`. Also raised when per-call plugin construction fails (a plugin whose `type` collides with a built-in, starts with the reserved `mc-` prefix, or has an invalid shape).
+
 ## Reading an issue
 
 Every entry in `result.errors` and `result.warnings` follows this shape:

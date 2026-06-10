@@ -1,0 +1,90 @@
+---
+title: validate()
+description: Universal validator — accepts a markup string, JSON IR (MCNode), or AST and returns structured errors/warnings without compiling.
+---
+
+```ts
+function validate(input: ValidateInput): ValidationResult
+
+type ValidateInput = string | ASTNode | MCNode
+```
+
+`validate()` is the single public validator. Pass it whatever you have — a `.mc` markup string, a JSON IR tree (`MCNode`), or a parsed `ASTNode` — and it dispatches to the appropriate underlying walker. Returns a `ValidationResult` with `isValid`, `errors`, and `warnings`.
+
+The function **never throws on bad input**. Parse errors on string input, garbage objects, missing `type` fields — they all surface as structured `INVALID_INPUT` errors in the result.
+
+## Signature
+
+```ts
+import { validate } from 'mailc'
+
+// String input (most common — tokenize + parse + walk happens internally)
+const r1 = validate('<mc><mc-body>…</mc-body></mc>')
+
+// JSON IR (MCNode) input
+const r2 = validate({ type: 'mc', children: [/* … */] })
+
+// AST input (when you already called tokenize + parse yourself)
+import { tokenize, parse } from 'mailc'
+const ast = parse(tokenize(source))
+const r3 = validate(ast)
+```
+
+## Result shape
+
+```ts
+interface ValidationResult {
+  isValid: boolean      // true iff errors.length === 0
+  errors:   MCIssue[]   // hard errors — compile() would set partial:true
+  warnings: MCIssue[]   // non-blocking issues (e.g. UNKNOWN_COMPONENT)
+}
+```
+
+## Dispatch rules
+
+| Input shape | What runs |
+|---|---|
+| `string` | `tokenize()` → `parse()` → AST validator. Parse/tokenize errors become structured `errors`. |
+| Object with `loc` field | AST validator (presence of `loc` is the AST discriminant). |
+| Object without `loc`, with a string `type` | JSON IR validator (extra checks: `id` uniqueness, etc.). |
+| Object without `type` | `INVALID_INPUT` error. If the object also has a `template` field, the message points the caller at `validateDocument()`. |
+| `number` / `null` / `undefined` / `boolean` | `INVALID_INPUT` error. |
+
+## When to use which
+
+- **`validate(source)`** — quick correctness check before storing or compiling user input.
+- **`validate(jsonNode)`** — visual builders that maintain JSON IR and want to surface issues as the user edits.
+- **`validate(ast)`** — advanced flows where you already parsed the source for another reason and don't want to re-tokenize.
+
+For document-level validation (an `MCDocument` wrapper with `version`, `metadata`, `dataSchema`, etc.), use [`validateDocument()`](/docs/api/json#validatedocument) instead — it runs `validate()` on the inner template plus checks the document-level fields.
+
+## Plugin types
+
+If you have a per-call plugin set and want validation to know about those plugin types, use `compile(src, { plugins })` — its built-in validation step receives the plugin types automatically. A standalone `validate(source)` call has no plugin context and will report unknown plugin types as `UNKNOWN_COMPONENT` warnings.
+
+## Example — surface errors as the user types
+
+```ts
+import { validate } from 'mailc'
+
+textarea.addEventListener('input', () => {
+  const result = validate(textarea.value)
+  if (result.isValid) {
+    statusBar.textContent = 'Valid'
+  } else {
+    statusBar.textContent = `${result.errors.length} error${result.errors.length === 1 ? '' : 's'}`
+    errorList.replaceChildren(...result.errors.map((e) => {
+      const li = document.createElement('li')
+      li.textContent = `${e.code}: ${e.message}`
+      return li
+    }))
+  }
+})
+```
+
+## Related
+
+- [`compile()`](/docs/api/compile) — full pipeline (validate + compile to HTML).
+- [`validateDocument()`](/docs/api/json#validatedocument) — for full MCDocument inputs.
+- [`introspect.validate()`](/docs/api/introspect) — single-node validation with optional class-mode checks.
+- [Error codes](/docs/api/error-codes) — every code that can appear in `result.errors` / `result.warnings`.

@@ -7,7 +7,7 @@
  * @module json/validator
  */
 
-import type { MCIssue } from '../types.js';
+import type { ComponentRule, MCIssue, Plugin } from '../types.js';
 import type { MCNode, MCDocument, MCDataSchema, SchemaField } from './schema.js';
 import { ErrorCode } from '../errors/codes.js';
 import {
@@ -17,19 +17,43 @@ import {
   VALID_ATTRIBUTES_CHILDREN,
 } from '../validator/rules.js';
 import { suggestComponent } from '../validator/suggestions.js';
-import { getComponentMetadata } from '../registry/component-registry.js';
+import { BUILTIN_METADATA } from '../registry/builtin-registry.js';
+import type { ComponentMetadata } from '../components/metadata.js';
+import { deriveComponentRuleFromMetadata } from '../components/metadata.js';
+
+const getComponentMetadata = (
+  type: string,
+  plugins?: ReadonlyMap<string, ComponentMetadata>,
+): ComponentMetadata | undefined =>
+  BUILTIN_METADATA[type] ?? plugins?.get(type);
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
+/** Options accepted by the JSON validator. */
+export interface ValidateJsonOptions {
+  /**
+   * Per-call plugin set — same shape passed to `compileFromJSON()`. Each
+   * plugin's metadata is converted into a `ComponentRule` so plugin nodes
+   * receive the same nesting / required-attribute / unknown-attribute
+   * enforcement as built-ins. Without this, plugin types are flagged as
+   * unknown.
+   */
+  plugins?: readonly Plugin[];
+}
+
 /**
  * Validates an MCNode tree and returns all issues.
  *
- * @param node - The root MCNode to validate. Should be of type "mc".
+ * @param node    - The root MCNode to validate. Should be of type "mc".
+ * @param options - Optional per-call plugin context — see `ValidateJsonOptions`.
  * @returns An object with `isValid`, `errors`, and `warnings`.
  */
-export function validateJSON(node: MCNode): {
+export function validateJSON(
+  node: MCNode,
+  options?: ValidateJsonOptions,
+): {
   isValid: boolean;
   errors: MCIssue[];
   warnings: MCIssue[];
@@ -37,10 +61,45 @@ export function validateJSON(node: MCNode): {
   const errors: MCIssue[] = [];
   const warnings: MCIssue[] = [];
   const seenIds = new Set<string>();
+  const ctx = buildPluginContext(options?.plugins);
 
-  walkNode(node, null, 0, errors, warnings, seenIds);
+  walkNode(node, null, 0, errors, warnings, seenIds, ctx);
 
   return { isValid: errors.length === 0, errors, warnings };
+}
+
+/** Per-call plugin lookup tables shared by the walker. */
+interface PluginCtx {
+  rules: ReadonlyMap<string, ComponentRule>;
+  metadata: ReadonlyMap<string, ComponentMetadata>;
+  /** Plugin types valid as `<mc-attributes>` children (mirrors built-in eligibility). */
+  attrChildren: ReadonlySet<string>;
+}
+
+const EMPTY_CTX: PluginCtx = {
+  rules: new Map(),
+  metadata: new Map(),
+  attrChildren: new Set(),
+};
+
+function buildPluginContext(plugins: readonly Plugin[] | undefined): PluginCtx {
+  if (!plugins || plugins.length === 0) return EMPTY_CTX;
+  const rules = new Map<string, ComponentRule>();
+  const metadata = new Map<string, ComponentMetadata>();
+  const attrChildren = new Set<string>();
+  for (const plugin of plugins) {
+    if (plugin.type.startsWith('_')) continue;
+    rules.set(plugin.type, deriveComponentRuleFromMetadata(plugin.metadata));
+    metadata.set(plugin.type, plugin.metadata);
+    // Same eligibility rule as rules.ts: head/logic and the structural roots
+    // (mc, mc-body) are excluded; everything else can sit inside <mc-attributes>
+    // to declare type-wide defaults.
+    const cat = plugin.metadata.category;
+    if (cat !== 'head' && cat !== 'logic' && plugin.type !== 'mc' && plugin.type !== 'mc-body') {
+      attrChildren.add(plugin.type);
+    }
+  }
+  return { rules, metadata, attrChildren };
 }
 
 /**
@@ -256,6 +315,7 @@ function walkNode(
   errors: MCIssue[],
   warnings: MCIssue[],
   seenIds: Set<string>,
+  ctx: PluginCtx,
 ): void {
   // 0. Defensive: malformed JSON may produce nodes without a `type` string.
   //    Bail with a clear error instead of crashing downstream (e.g. fuzzy
@@ -270,7 +330,7 @@ function walkNode(
       severity: 'error',
     });
     // Continue traversing children so callers see all malformed nodes in one pass.
-    walkChildren(node, errors, warnings, seenIds);
+    walkChildren(node, errors, warnings, seenIds, ctx);
     return;
   }
 
@@ -292,36 +352,42 @@ function walkNode(
   // unknown types and would either throw or silently drop the subtree.
   // Errors are honest about that — warnings would let validation pass for
   // input the compiler is guaranteed to reject.
-  if (!KNOWN_COMPONENTS.has(node.type)) {
+  if (!KNOWN_COMPONENTS.has(node.type) && !ctx.rules.has(node.type)) {
     const suggestion = suggestComponent(node.type);
     errors.push({
       code: ErrorCode.UNKNOWN_COMPONENT,
       message: `Unknown component "${node.type}".${suggestion ? ' ' + suggestion : ''}`,
       severity: 'error',
     });
-    walkChildren(node, errors, warnings, seenIds);
+    walkChildren(node, errors, warnings, seenIds, ctx);
     return;
   }
 
   // 1b. Children of mc-attributes are attribute specifiers — skip normal validation.
   //     Step 6 (mc-attributes node handler) manages their specific checks.
-  if (parent?.type === 'mc-attributes' && VALID_ATTRIBUTES_CHILDREN.has(node.type)) {
+  if (
+    parent?.type === 'mc-attributes' &&
+    (VALID_ATTRIBUTES_CHILDREN.has(node.type) || ctx.attrChildren.has(node.type))
+  ) {
     return;
   }
 
-  const rule = COMPONENT_RULES[node.type];
+  // Rule lookup: built-in first (fast static read), per-call plugin second.
+  // Both flow through `deriveComponentRuleFromMetadata` so plugin nodes
+  // receive the same nesting / required-attr enforcement as built-ins.
+  const rule = COMPONENT_RULES[node.type] ?? ctx.rules.get(node.type);
   if (!rule) {
     errors.push({
       code: ErrorCode.UNKNOWN_COMPONENT,
       message: `Unknown component <${node.type}>.`,
       severity: 'error',
     });
-    walkChildren(node, errors, warnings, seenIds);
+    walkChildren(node, errors, warnings, seenIds, ctx);
     return;
   }
 
   // 2. content / children mutual exclusivity
-  const meta = getComponentMetadata(node.type);
+  const meta = getComponentMetadata(node.type, ctx.metadata);
   if (meta) {
     const hasContent = typeof node.content === 'string' && node.content.length > 0;
     const hasChildren = Array.isArray(node.children) && node.children.length > 0;
@@ -407,7 +473,9 @@ function walkNode(
   // 7. mc-attributes children must be valid targets
   if (node.type === 'mc-attributes' && node.children) {
     for (const child of node.children) {
-      if (!VALID_ATTRIBUTES_CHILDREN.has(child.type)) {
+      const isValidChild =
+        VALID_ATTRIBUTES_CHILDREN.has(child.type) || ctx.attrChildren.has(child.type);
+      if (!isValidChild) {
         errors.push({
           code: ErrorCode.INVALID_NESTING,
           message: `<mc-attributes> child <${child.type}> is not a valid attribute target`,
@@ -426,7 +494,7 @@ function walkNode(
   }
 
   // Recurse children
-  walkChildren(node, errors, warnings, seenIds);
+  walkChildren(node, errors, warnings, seenIds, ctx);
 }
 
 /**
@@ -436,17 +504,19 @@ function walkNode(
  * @param errors   - Error accumulator.
  * @param warnings - Warning accumulator.
  * @param seenIds  - Set of seen IDs.
+ * @param ctx      - Per-call plugin lookup tables (empty when no plugins).
  */
 function walkChildren(
   node: MCNode,
   errors: MCIssue[],
   warnings: MCIssue[],
   seenIds: Set<string>,
+  ctx: PluginCtx,
 ): void {
   if (!node.children) {
     return;
   }
   node.children.forEach((child, i) => {
-    walkNode(child, node, i, errors, warnings, seenIds);
+    walkNode(child, node, i, errors, warnings, seenIds, ctx);
   });
 }

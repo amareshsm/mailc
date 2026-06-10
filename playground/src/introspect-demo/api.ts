@@ -44,7 +44,12 @@ export interface ComponentSpec {
   type: string
   description: string
   category: string
-  /** True for plugin components registered via defineComponent(). Built-ins are false/undefined. */
+  /**
+   * Reserved for future plugin discovery. Always undefined for now —
+   * `introspect.all()` enumerates built-ins only; plugins are per-call
+   * values with no global identity. UI branches gated on this flag
+   * intentionally never render today.
+   */
   isPlugin?: boolean
   allowedParents: string[]
   allowedChildren: string[]

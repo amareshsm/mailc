@@ -16,7 +16,7 @@
  *
  * @module validate
  */
-import type { ASTNode, ValidationResult } from './types.js';
+import type { ASTNode, Plugin, ValidationResult } from './types.js';
 import type { MCNode } from './json/schema.js';
 import { tokenize } from './tokenizer/index.js';
 import { parse } from './parser/index.js';
@@ -28,22 +28,37 @@ import { ErrorCode } from './errors/codes.js';
 /** Accepted shapes for `validate()`. */
 export type ValidateInput = string | ASTNode | MCNode;
 
+/** Options accepted by the universal `validate()`. */
+export interface ValidateOptions {
+  /**
+   * Per-call plugin set — same shape passed to `compile()`. When
+   * supplied, plugin nodes are recognised as known AND their
+   * metadata-derived rules (parent constraint, required attributes,
+   * known attributes, mustFollow…) are enforced. Without this, plugin
+   * types validate as `UNKNOWN_COMPONENT`.
+   */
+  plugins?: readonly Plugin[];
+}
+
 /**
  * Validates markup, JSON IR, or AST and returns all errors/warnings.
  *
- * Replaces the older AST-only `validate(ast)` (still used internally) with a
- * universal entry point that mirrors `compile()`'s input flexibility.
+ * Mirrors `compile()`'s input flexibility and per-call plugin awareness.
  *
- * @param input - Markup string, JSON IR (`MCNode`), or parsed `ASTNode`.
+ * @param input   - Markup string, JSON IR (`MCNode`), or parsed `ASTNode`.
+ * @param options - Optional per-call plugin context.
  * @returns A `ValidationResult` with `isValid`, `errors`, and `warnings`.
  */
-export function validate(input: ValidateInput): ValidationResult {
+export function validate(
+  input: ValidateInput,
+  options?: ValidateOptions,
+): ValidationResult {
   // ── (1) Markup string → tokenize + parse + AST walk ─────────────────
   if (typeof input === 'string') {
     try {
       const tokens = tokenize(input);
       const ast = parse(tokens);
-      return validateAST(ast);
+      return validateAST(ast, options);
     } catch (e) {
       // Parse/tokenize errors arrive as MCError. Anything else is unexpected
       // (defensive — should not happen with valid string input). Either way,
@@ -111,7 +126,7 @@ export function validate(input: ValidateInput): ValidationResult {
   // ── (4) Discriminate AST vs JSON IR by presence of `loc` ─────────────
   //        AST nodes always carry a SourceLocation; JSON IR nodes never do.
   if ('loc' in obj) {
-    return validateAST(input as ASTNode);
+    return validateAST(input as ASTNode, options);
   }
-  return validateMCNode(input as MCNode);
+  return validateMCNode(input as MCNode, options);
 }

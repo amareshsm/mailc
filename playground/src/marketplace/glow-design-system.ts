@@ -11,6 +11,15 @@ const defineComponent = mailc.defineComponent ?? mailc.default?.defineComponent
 // Plugin-author utilities re-exported from mailc.
 const { escapeHtml, themeColor, warnCss } = mailc
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const GLOW_PLUGINS: any[] = []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function defineLocal(spec: any): any {
+  const plugin = defineComponent(spec)
+  GLOW_PLUGINS.push(plugin)
+  return plugin
+}
+
 const GLOW = {
   brand: '#be185d',
   brandSoft: '#fce7f3',
@@ -26,7 +35,7 @@ const GLOW = {
 // glow-collection-hero — soft palette product launch
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'glow-collection-hero',
   metadata: {
     description: 'Soft pastel collection launch — image left, text right, CTA below.',
@@ -87,7 +96,7 @@ defineComponent({
 // glow-shade-grid — color swatch grid (lipsticks, eyeshadows, etc.)
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'glow-shade-grid',
   metadata: {
     description: 'Color swatch grid — clickable shade circles with names.',
@@ -147,7 +156,7 @@ defineComponent({
 // glow-tutorial-card — image + numbered step list
 // ---------------------------------------------------------------------------
 
-defineComponent({
+defineLocal({
   type: 'glow-tutorial-card',
   metadata: {
     description: 'Tutorial / how-to card with image header and numbered steps.',

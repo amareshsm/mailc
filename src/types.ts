@@ -643,14 +643,23 @@ export interface CompileOptions {
    * compile(source, { config: cfg })
    */
   templateStyle?: TemplateStyle;
-}
-
-/** Options passed to the `validate()` function. */
-export interface ValidateOptions {
-  /** Config overrides. */
-  config?: Partial<MailcConfig>;
-  /** Source file path (for error reporting). */
-  filename?: string;
+  /**
+   * Per-call plugin set. Each entry is a `Plugin` returned by
+   * `defineComponent()`. Plugins are merged with built-ins for this
+   * compile call only — no global state is mutated.
+   *
+   * Use this for multi-instance scenarios (different tenants, isolated
+   * tests, stateless agent retries).
+   *
+   * Last-write-wins within the array on duplicate `type`. Plugins whose
+   * `type` collides with a built-in are rejected at view-build time.
+   *
+   * @example
+   * import { defineComponent, compile } from 'mailc';
+   * const acmeCard = defineComponent({ type: 'acme-card', metadata, compile });
+   * compile(src, { plugins: [acmeCard] });
+   */
+  plugins?: readonly Plugin[];
 }
 
 /** The result of a `validate()` call. */
@@ -866,6 +875,50 @@ export interface ClassifiedCSS {
 /** A function that compiles an AST node into an HTML string. */
 export type ComponentCompiler = (node: ASTNode, context: CompileContext) => string;
 
+// ---------------------------------------------------------------------------
+// Plugin + Registry View (per-call component registry)
+// ---------------------------------------------------------------------------
+
+/**
+ * A plugin component descriptor — the value returned by `defineComponent()`.
+ *
+ * Plain shape (no brand symbol) so structural typing keeps both external
+ * authors and internal call sites simple. A `Plugin` is a value: pass it to
+ * `compile(src, { plugins: [...] })` or `createCompiler({ plugins: [...] })`.
+ */
+export interface Plugin {
+  /** Component tag name (must contain a hyphen, must not start with `mc-`). */
+  readonly type: string;
+  /** Full structural and documentary metadata. */
+  readonly metadata: import('./components/metadata.js').ComponentMetadata;
+  /** Compiler function — receives an AST node and emits HTML. */
+  readonly compile: ComponentCompiler;
+}
+
+/**
+ * Read-only view over the merged set of built-in components + plugins.
+ *
+ * Built once per compile call by `createRegistryView()` (see
+ * `src/registry/registry-view.ts`) and threaded through `CompileContext.registry`.
+ * Immutable — never mutated after construction.
+ */
+export interface RegistryView {
+  /** Returns the metadata for `type`, or `undefined`. */
+  get(type: string): import('./components/metadata.js').ComponentMetadata | undefined;
+  /** Returns the compiler for `type`, or `undefined`. */
+  getCompiler(type: string): ComponentCompiler | undefined;
+  /** True if `type` is registered (built-in or plugin). */
+  has(type: string): boolean;
+  /** All registered type strings — plugins follow built-ins in iteration order. */
+  allTypes(): string[];
+  /** Snapshot of all metadata entries. */
+  allMetadata(): Record<string, import('./components/metadata.js').ComponentMetadata>;
+  /** Snapshot of all compiler entries. */
+  allCompilers(): Record<string, ComponentCompiler>;
+  /** Plugin-only types (excludes built-ins). */
+  pluginTypes(): string[];
+}
+
 /** Context passed through the component compilation tree. */
 export interface CompileContext {
   /** Resolved mailc configuration. */
@@ -999,6 +1052,14 @@ export interface CompileContext {
     }): EmailSourceMap | null;
     readonly activeEntryId: string;
   };
+  /**
+   * Per-call merged view over built-ins + plugins. Built by `createRegistryView()`
+   * at the top of `compile()` / `compileFromJSON()` and threaded through here.
+   * Component compilers and downstream consumers look up other components via
+   * `context.registry` rather than module-level functions, so different
+   * compile calls can use different plugin sets in the same process.
+   */
+  registry: RegistryView;
 }
 
 /**

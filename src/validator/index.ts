@@ -7,7 +7,13 @@
  *
  * @module validator
  */
-import type { ASTNode, MCIssue, ValidationResult } from '../types.js';
+import type {
+  ASTNode,
+  ComponentRule,
+  MCIssue,
+  Plugin,
+  ValidationResult,
+} from '../types.js';
 import { ErrorCode } from '../errors/codes.js';
 import {
   COMPONENT_RULES,
@@ -17,20 +23,81 @@ import {
   GLOBAL_ATTRIBUTES,
 } from './rules.js';
 import { suggestComponent, suggestAttribute } from './suggestions.js';
+import { deriveComponentRuleFromMetadata } from '../components/metadata.js';
+
+/** Options accepted by the AST validator. */
+export interface ValidateAstOptions {
+  /**
+   * Per-call plugin set — same shape passed to `compile()`. The validator
+   * derives a `ComponentRule` from each plugin's metadata and treats
+   * plugin nodes exactly like built-ins for nesting / required-attribute /
+   * unknown-attribute checks. Without this, plugin types are flagged as
+   * unknown.
+   */
+  plugins?: readonly Plugin[];
+}
 
 /**
  * Validates a parsed AST and returns all errors/warnings at once.
  *
- * @param ast - The root ASTNode (type = "root") from `parse()`.
+ * @param ast      - The root ASTNode (type = "root") from `parse()`.
+ * @param options  - Optional per-call plugin context. When `plugins` is
+ *                   supplied, the plugin types are recognised as known
+ *                   AND their metadata-derived rules (parent constraint,
+ *                   required attributes, known attributes, mustFollow…)
+ *                   are enforced — same treatment built-ins get.
  * @returns A `ValidationResult` with `isValid`, `errors`, and `warnings`.
  */
-export function validate(ast: ASTNode): ValidationResult {
+export function validate(
+  ast: ASTNode,
+  options?: ValidateAstOptions,
+): ValidationResult {
   const errors: MCIssue[] = [];
   const warnings: MCIssue[] = [];
+  const ctx = buildPluginContext(options?.plugins);
 
-  walkNode(ast, null, 0, errors, warnings);
+  walkNode(ast, null, 0, errors, warnings, ctx);
 
   return { isValid: errors.length === 0, errors, warnings };
+}
+
+/**
+ * Per-call plugin lookup tables shared by every walker frame. `rules` drives
+ * nesting / required-attr / known-attr / mustFollow validation; `attrChildren`
+ * records which plugin types are valid as `<mc-attributes>` children (mirrors
+ * the eligibility logic in `rules.ts` for built-ins).
+ */
+interface PluginCtx {
+  rules: ReadonlyMap<string, ComponentRule>;
+  attrChildren: ReadonlySet<string>;
+}
+
+const EMPTY_CTX: PluginCtx = {
+  rules: new Map(),
+  attrChildren: new Set(),
+};
+
+/**
+ * Builds the per-call plugin context — rules + mc-attributes eligibility.
+ * Synthetic types (prefixed `_`) are skipped. Returns the shared empty
+ * context when no plugins are supplied (cheap to pass through every frame).
+ */
+function buildPluginContext(plugins: readonly Plugin[] | undefined): PluginCtx {
+  if (!plugins || plugins.length === 0) return EMPTY_CTX;
+  const rules = new Map<string, ComponentRule>();
+  const attrChildren = new Set<string>();
+  for (const plugin of plugins) {
+    if (plugin.type.startsWith('_')) continue;
+    rules.set(plugin.type, deriveComponentRuleFromMetadata(plugin.metadata));
+    // Match the built-in eligibility in `rules.ts`: head / logic / mc / mc-body
+    // are excluded; everything else (content + container + custom categories)
+    // can appear inside <mc-attributes> to declare type-wide defaults.
+    const cat = plugin.metadata.category;
+    if (cat !== 'head' && cat !== 'logic' && plugin.type !== 'mc' && plugin.type !== 'mc-body') {
+      attrChildren.add(plugin.type);
+    }
+  }
+  return { rules, attrChildren };
 }
 
 // ---------------------------------------------------------------------------
@@ -44,15 +111,18 @@ function walkNode(
   siblingIndex: number,
   errors: MCIssue[],
   warnings: MCIssue[],
+  ctx: PluginCtx,
 ): void {
   // Skip the synthetic "root" wrapper
   if (node.type === 'root') {
-    node.children.forEach((child, i) => walkNode(child, node, i, errors, warnings));
+    node.children.forEach((child, i) =>
+      walkNode(child, node, i, errors, warnings, ctx),
+    );
     return;
   }
 
-  // 1. Unknown component check
-  if (!KNOWN_COMPONENTS.has(node.type)) {
+  // 1. Unknown component check — known if built-in OR per-call plugin
+  if (!KNOWN_COMPONENTS.has(node.type) && !ctx.rules.has(node.type)) {
     const suggestion = suggestComponent(node.type);
     warnings.push({
       code: ErrorCode.UNKNOWN_COMPONENT,
@@ -61,17 +131,26 @@ function walkNode(
       loc: locOf(node),
     });
     // Still recurse children even for unknown components
-    node.children.forEach((child, i) => walkNode(child, node, i, errors, warnings));
+    node.children.forEach((child, i) =>
+      walkNode(child, node, i, errors, warnings, ctx),
+    );
     return;
   }
 
   // 1b. Children of mc-attributes are attribute specifiers, not real components.
-  //     Skip normal nesting/required checks — mc-attributes validation (step 7) handles these.
-  if (parent?.type === 'mc-attributes' && VALID_ATTRIBUTES_CHILDREN.has(node.type)) {
+  //     Skip normal nesting/required checks — mc-attributes validation (step 6) handles these.
+  if (
+    parent?.type === 'mc-attributes' &&
+    (VALID_ATTRIBUTES_CHILDREN.has(node.type) || ctx.attrChildren.has(node.type))
+  ) {
     return;
   }
 
-  const rule = COMPONENT_RULES[node.type];
+  // Rule lookup: built-in first (fast static read), per-call plugin second.
+  // Both flow through `deriveComponentRuleFromMetadata` so plugin nodes
+  // receive the same nesting / required-attr / unknown-attr enforcement
+  // as built-ins.
+  const rule = COMPONENT_RULES[node.type] ?? ctx.rules.get(node.type);
   if (!rule) {
     // Should not happen — unknown component should have been caught earlier
     return;
@@ -126,10 +205,16 @@ function walkNode(
   // 6. mc-attributes children must be valid types
   if (node.type === 'mc-attributes') {
     for (const child of node.children) {
-      if (!VALID_ATTRIBUTES_CHILDREN.has(child.type)) {
+      const isValidChild =
+        VALID_ATTRIBUTES_CHILDREN.has(child.type) || ctx.attrChildren.has(child.type);
+      if (!isValidChild) {
+        const allAllowed = [
+          ...VALID_ATTRIBUTES_CHILDREN,
+          ...ctx.attrChildren,
+        ];
         errors.push({
           code: ErrorCode.INVALID_ATTRIBUTES_CHILD,
-          message: `<${child.type}> is not a valid child of <mc-attributes>. Allowed: ${Array.from(VALID_ATTRIBUTES_CHILDREN).join(', ')}`,
+          message: `<${child.type}> is not a valid child of <mc-attributes>. Allowed: ${allAllowed.join(', ')}`,
           severity: 'error',
           loc: locOf(child),
         });
@@ -188,14 +273,16 @@ function walkNode(
     // Recurse only valid children — skip the already-errored ones
     node.children.forEach((child, i) => {
       if (!invalidChildren.has(child)) {
-        walkNode(child, node, i, errors, warnings);
+        walkNode(child, node, i, errors, warnings, ctx);
       }
     });
     return;
   }
 
   // Recurse children
-  node.children.forEach((child, i) => walkNode(child, node, i, errors, warnings));
+  node.children.forEach((child, i) =>
+    walkNode(child, node, i, errors, warnings, ctx),
+  );
 }
 
 // ---------------------------------------------------------------------------

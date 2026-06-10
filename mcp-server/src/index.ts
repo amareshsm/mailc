@@ -111,9 +111,9 @@ async function main(): Promise<void> {
   server.registerTool(
     'list_components',
     {
-      title: 'List all registered mailc components',
+      title: 'List all built-in mailc components',
       description:
-        'Returns every component in the registry — built-in mc-* tags plus any plugin components registered via defineComponent(). Each entry includes type, category, description, and an isPlugin flag.',
+        'Returns every built-in mc-* component the compiler ships with. Each entry includes type, category, and description. Plugins are per-call values in the mailc API (compile(src, { plugins })) and are not enumerated here — fetch their metadata from the plugin author\'s package.',
       inputSchema: listComponentsInput,
     },
     async () => {
