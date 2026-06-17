@@ -121,6 +121,30 @@ export function mergeConfig(overrides?: Partial<MailcConfig>): MailcConfig {
 }
 
 /**
+ * Identity helper for authoring `mailc.config.js` with editor autocompletion.
+ *
+ * Wrapping the config object gives TypeScript-aware editors the
+ * `Partial<MailcConfig>` shape for IntelliSense and type-checking, even in
+ * plain `.js` config files. At runtime it returns the object unchanged.
+ *
+ * ```js
+ * // mailc.config.js
+ * import { defineConfig } from 'mailc'
+ *
+ * export default defineConfig({
+ *   width: 600,
+ *   compatibilityMode: 'strict',
+ * })
+ * ```
+ *
+ * @param config - The partial mailc configuration.
+ * @returns The same object, typed.
+ */
+export function defineConfig(config: Partial<MailcConfig>): Partial<MailcConfig> {
+  return config;
+}
+
+/**
  * Normalises the `CompileOptions.targetClients` shorthand into a runtime value.
  *
  * - `undefined` → `undefined` (no caniemail-driven gating)

@@ -20,11 +20,13 @@ import {
   formatStats,
   formatBatchSummary,
   warn,
+  error,
   info,
 } from './output.js';
 import {
   EXIT_SUCCESS,
   EXIT_COMPILE_ERROR,
+  EXIT_IO_ERROR,
 } from './exit-codes.js';
 import { compileFile } from './compile-dispatch.js';
 import type { BuildFlags } from './build-command.js';
@@ -57,6 +59,17 @@ export function buildGlob(
   flags: BuildFlags,
   mergedConfig: Partial<MailcConfig>,
 ): number {
+  // Same rule as directory builds: multiple output files need --output.
+  if (!flags.output) {
+    process.stderr.write(
+      error(
+        `Glob builds require --output <dir>. ` +
+          `A glob can match multiple files — pass an output directory to write them to.`,
+      ) + '\n',
+    );
+    return EXIT_IO_ERROR;
+  }
+
   const { files, baseDir } = resolveGlob(pattern);
 
   // Filter to only compilable extensions

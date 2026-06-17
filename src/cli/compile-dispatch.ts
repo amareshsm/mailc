@@ -64,7 +64,18 @@ export function compileFile(
     return null;
   }
 
-  const options = buildCompileOptions(filePath, flags, mergedConfig);
+  // A broken --data path is a hard failure, not a soft skip — compiling a
+  // dynamic template without its data and exiting 0 would let CI ship
+  // emails with unresolved {{variables}}.
+  let options: CompileOptions;
+  try {
+    options = buildCompileOptions(filePath, flags, mergedConfig);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    process.stderr.write(error(msg) + '\n');
+    return null;
+  }
+
   const ext = path.extname(filePath).toLowerCase();
 
   if (ext === '.json') {
@@ -104,6 +115,18 @@ function compileJsonFile(
     parsed = JSON.parse(source) as unknown;
   } catch {
     return makeErrorResult(`Invalid JSON in ${path.basename(filePath)}`, 'JSON_PARSE_ERROR');
+  }
+
+  // Valid JSON is not necessarily a valid template: `null`, `42`, `"str"`,
+  // and `[…]` all parse but cannot be MCDocument/MCNode shapes. Guard here —
+  // property access on `null` would otherwise crash the CLI.
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return makeErrorResult(
+      `JSON file must contain an object (MCDocument or MCNode), ` +
+      `got ${parsed === null ? 'null' : Array.isArray(parsed) ? 'an array' : typeof parsed} ` +
+      `in ${path.basename(filePath)}.`,
+      'JSON_FORMAT_ERROR',
+    );
   }
 
   const obj = parsed as Record<string, unknown>;
@@ -176,14 +199,21 @@ export function buildCompileOptions(
     options.templateStyle = flags.templateStyle;
   }
 
-  // Load data file if provided
+  // Load data file if provided. Failure throws — callers (compileFile)
+  // surface it as a hard error so a typo'd --data path can't silently
+  // produce output with unresolved template variables.
   if (flags.data) {
     const dataPath = path.resolve(flags.data);
+    let raw: string;
     try {
-      const raw = fs.readFileSync(dataPath, 'utf-8');
+      raw = fs.readFileSync(dataPath, 'utf-8');
+    } catch {
+      throw new Error(`Cannot read data file: ${dataPath}`);
+    }
+    try {
       options.data = JSON.parse(raw) as Record<string, unknown>;
     } catch {
-      process.stderr.write(error(`Cannot read or parse data file: ${dataPath}`) + '\n');
+      throw new Error(`Invalid JSON in data file: ${dataPath}`);
     }
   }
 

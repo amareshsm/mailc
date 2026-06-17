@@ -50,6 +50,7 @@ const MJML_TAG_MAP: Record<string, string> = {
   'mj-head': 'mc-head',
   'mj-section': 'mc-section',
   'mj-column': 'mc-column',
+  'mj-group': 'mc-group',
   'mj-text': 'mc-text',
   'mj-image': 'mc-image',
   'mj-button': 'mc-button',
@@ -57,10 +58,12 @@ const MJML_TAG_MAP: Record<string, string> = {
   'mj-spacer': 'mc-spacer',
   'mj-raw': 'mc-raw',
   'mj-preview': 'mc-preview',
+  'mj-title': 'mc-title',
+  'mj-table': 'mc-table',
   'mj-attributes': 'mc-attributes',
   'mj-style': 'mc-style',
   'mj-wrapper': 'mc-section',
-  'mj-hero': 'mc-section',
+  'mj-hero': 'mc-hero',
   'mjml': 'mc',
 };
 
@@ -69,7 +72,6 @@ const MJML_UNSUPPORTED = new Set([
   'mj-include',
   'mj-font',
   'mj-breakpoint',
-  'mj-title',
   'mj-social',
   'mj-social-element',
   'mj-navbar',
@@ -80,8 +82,6 @@ const MJML_UNSUPPORTED = new Set([
   'mj-accordion-text',
   'mj-carousel',
   'mj-carousel-image',
-  'mj-table',
-  'mj-group',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -262,11 +262,13 @@ function convertMjmlToMc(source: string): ConvertResult {
     }
   }
 
-  // Step 3: Warn about unsupported tags.
+  // Step 3: Warn about unsupported tags. They are left in place (not
+  // removed) so nothing is silently lost — compiling the result will flag
+  // them as unknown components until manually converted.
   for (const tag of MJML_UNSUPPORTED) {
     const regex = new RegExp(`<${tag}[\\s>]`, 'gi');
     if (regex.test(output)) {
-      warnings.push(`Unsupported MJML tag <${tag}> — no mailc equivalent yet. Removed or needs manual conversion.`);
+      warnings.push(`Unsupported MJML tag <${tag}> — no mailc equivalent yet. Left as-is; needs manual conversion.`);
     }
   }
 

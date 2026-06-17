@@ -81,6 +81,16 @@ function readFile(relativePath: string): string {
 // ---------------------------------------------------------------------------
 
 describe('buildGlob()', () => {
+  // Regression: a glob build without --output used to compile every match,
+  // display "→ stdout" per file, and write the HTML nowhere — silently
+  // discarding all output while exiting 0.
+  it('without --output exits with an error instead of discarding output', () => {
+    createFile('src/email.mc', MINIMAL_MC);
+    const pattern = path.join(tmpDir, 'src/*.mc');
+    const exitCode = buildGlob(pattern, { ...DEFAULT_FLAGS, output: undefined }, {});
+    expect(exitCode).not.toBe(0);
+  });
+
   it('compiles multiple matched files with folder structure preserved', () => {
     createFile('src/mail001/index.mc', MINIMAL_MC);
     createFile('src/mail002/index.mc', MINIMAL_MC);

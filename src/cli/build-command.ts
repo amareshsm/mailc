@@ -194,7 +194,11 @@ function buildSingleFile(
         formatCompileResult(path.basename(filePath), 'stdout', result, source) + '\n',
       );
     }
-    return result.errors.length > 0 ? EXIT_COMPILE_ERROR : EXIT_SUCCESS;
+    if (result.errors.length > 0) return EXIT_COMPILE_ERROR;
+    // --fail-on-warnings applies on the stdout path too — CI gates must not
+    // depend on whether the user happened to pass --output.
+    if (flags.failOnWarnings && result.warnings.length > 0) return EXIT_COMPILE_ERROR;
+    return EXIT_SUCCESS;
   }
 
   // Print result summary (when outputting to a file)
@@ -230,6 +234,18 @@ function buildDirectory(
   flags: BuildFlags,
   mergedConfig: Partial<MailcConfig>,
 ): number {
+  // Multi-file builds need somewhere to write. Without --output the HTML
+  // would be silently discarded (stdout is not meaningful for N files).
+  if (!flags.output) {
+    process.stderr.write(
+      error(
+        `Directory builds require --output <dir>. ` +
+          `Compiling a directory produces multiple HTML files — pass an output directory to write them to.`,
+      ) + '\n',
+    );
+    return EXIT_IO_ERROR;
+  }
+
   const files = collectFiles(dirPath);
 
   if (files.length === 0) {

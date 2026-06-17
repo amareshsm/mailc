@@ -1,12 +1,13 @@
 /**
  * Config file loader for the CLI.
  *
- * Handles the auto-detection chain from Doc 09:
+ * Handles the auto-detection chain:
  * 1. `--config` CLI flag (explicit path)
  * 2. `mailc.config.js` (ESM JS)
- * 3. `mailc.config.json` (JSON)
- * 4. `.mailcrc` (JSON)
- * 5. `package.json` → `"mailc"` key
+ * 3. `mailc.config.mjs` (ESM JS)
+ * 4. `mailc.config.json` (JSON)
+ * 5. `.mailcrc` (JSON)
+ * 6. `package.json` → `"mailc"` key
  *
  * Node-only: uses `node:fs` and `node:path`. Only imported from CLI code.
  *
@@ -25,6 +26,7 @@ import type { MailcConfig } from '../types.js';
 /** Config file names in priority order. */
 const CONFIG_FILES = [
   'mailc.config.js',
+  'mailc.config.mjs',
   'mailc.config.json',
   '.mailcrc',
   'package.json',
@@ -116,7 +118,7 @@ async function loadSingleConfig(filePath: string): Promise<Partial<MailcConfig>>
   const ext = path.extname(filePath);
   const basename = path.basename(filePath);
 
-  if (ext === '.js') {
+  if (ext === '.js' || ext === '.mjs') {
     return loadJsConfig(filePath);
   }
 

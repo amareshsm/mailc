@@ -3,7 +3,7 @@ title: Theme tokens
 description: Override or extend mailc's design tokens — colors, spacing, typography, etc.
 ---
 
-mailc ships with a Tailwind-flavoured token system. You can extend any scale via `theme.extend` in `mailc.config.ts` or via the `theme` option on `compile()`.
+mailc ships with a Tailwind-flavoured token system. You can extend any scale via `theme.extend` in `mailc.config.js` or via the `theme` option on `compile()`.
 
 ## Scales
 
@@ -27,7 +27,7 @@ All twelve scales are extendable:
 ## Example
 
 ```ts
-// mailc.config.ts
+// mailc.config.js
 import { defineConfig } from 'mailc'
 
 export default defineConfig({

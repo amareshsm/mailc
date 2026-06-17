@@ -14,7 +14,7 @@
  * @module cli
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { mergeConfig } from './config.js';
 import {
   loadConfig,
@@ -63,8 +63,14 @@ program
   .option('--fail-on-warnings', 'Exit with error code when warnings are produced (for CI)', false)
   .option('-m, --minify', 'Minify output HTML', false)
   .option('-t, --target <clients>', "Override target clients. Use 'default' for the curated 5-client set, or a comma-separated glob list (e.g. gmail.web,outlook.web). Omit for no client-specific gating.")
-  .option('--compatibility-mode <mode>', 'Compatibility mode: liberal (default) or strict. Strict strips ENHANCE properties with warnings.')
-  .option('--template-style <mode>', "Styling mode: 'attribute' (default — CSS-property attributes) or 'class' (Tailwind utility classes).")
+  .addOption(
+    new Option('--compatibility-mode <mode>', 'Compatibility mode. Strict strips ENHANCE properties with warnings.')
+      .choices(['liberal', 'strict']),
+  )
+  .addOption(
+    new Option('--template-style <mode>', 'Styling mode: CSS-property attributes (default) or Tailwind utility classes.')
+      .choices(['attribute', 'class']),
+  )
   .option('--debug', 'Inject mc:source debug comments and write .map.json source map', false)
   .option('--source-map', 'Inject data-mc-id attributes and write .map.json source map (clean mode)', false)
   .action(async (input: string, opts: Record<string, unknown>) => {
@@ -114,6 +120,7 @@ program
   .argument('<input>', 'Input .mc file to watch')
   .requiredOption('-o, --output <path>', 'Output HTML file (required)')
   .option('-d, --data <path>', 'JSON data file for template variables')
+  .option('-c, --config <path>', 'Config file path')
   .option('--serve', 'Start a live-reload preview server', false)
   .option('--port <number>', 'Preview server port', '3000')
   .option('--open', 'Open browser when server starts', false)
@@ -123,7 +130,7 @@ program
 
     let configResult;
     try {
-      configResult = await loadConfig(cwd, undefined);
+      configResult = await loadConfig(cwd, opts['config'] as string | undefined);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       process.stderr.write(error(msg) + '\n');
@@ -134,7 +141,6 @@ program
       process.stderr.write(warn(w) + '\n');
     }
 
-    const { mergeConfig } = await import('./config.js');
     const mergedConfig = mergeConfig(configResult.config);
 
     const flags: WatchFlags = {
@@ -159,7 +165,9 @@ program
   .description('Validate .mc or .json files without compiling')
   .argument('<input>', 'Input file (.mc or .json) or directory')
   .option('-c, --config <path>', 'Config file path')
-  .option('-f, --format <format>', 'Output format: text or json', 'text')
+  .addOption(
+    new Option('-f, --format <format>', 'Output format').choices(['text', 'json']).default('text'),
+  )
   .option('-v, --verbose', 'Show verbose output', false)
   .action(async (input: string, opts: Record<string, unknown>) => {
     const cwd = process.cwd();
@@ -210,8 +218,13 @@ program
   .command('convert')
   .description('Convert between .mc and JSON formats')
   .argument('<input>', 'Input file to convert')
-  .requiredOption('--to <format>', 'Target format: json or mc')
-  .option('--from <format>', 'Source format override: mc or json (auto-detected from extension)')
+  .addOption(
+    new Option('--to <format>', 'Target format').choices(['json', 'mc']).makeOptionMandatory(),
+  )
+  .addOption(
+    new Option('--from <format>', 'Source format override (auto-detected from extension)')
+      .choices(['mc', 'json', 'mjml']),
+  )
   .option('-o, --output <path>', 'Output file path (defaults to stdout)')
   .action((input: string, opts: Record<string, unknown>) => {
     const exitCode = runConvert(input, {
@@ -230,7 +243,9 @@ program
   .command('contract')
   .description('Extract and display the data contract for a .mc or .json template')
   .argument('<input>', 'Input file (.mc or .json)')
-  .option('-f, --format <format>', 'Output format: markdown (default) or json', 'markdown')
+  .addOption(
+    new Option('-f, --format <format>', 'Output format').choices(['markdown', 'json']).default('markdown'),
+  )
   .option('-o, --output <path>', 'Write output to a file instead of stdout')
   .option('-c, --config <path>', 'Config file path (optional)')
   .action(async (input: string, opts: Record<string, unknown>) => {

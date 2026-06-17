@@ -22,7 +22,7 @@ import { introspect } from '../introspect/index.js';
 import type { DataContract, DataContractField, DataContractLoop } from '../introspect/index.js';
 import type { MailcConfig } from '../types.js';
 import type { MCNode } from '../json/schema.js';
-import { error, warn } from './output.js';
+import { error, success } from './output.js';
 import { EXIT_SUCCESS, EXIT_COMPILE_ERROR, EXIT_IO_ERROR } from './exit-codes.js';
 
 // ---------------------------------------------------------------------------
@@ -93,7 +93,7 @@ export function runContract(
     const outPath = path.resolve(flags.output);
     try {
       fs.writeFileSync(outPath, formatted, 'utf-8');
-      process.stdout.write(warn(`Contract written to ${outPath}`) + '\n');
+      process.stdout.write(success(`Contract written to ${outPath}`) + '\n');
     } catch {
       process.stderr.write(error(`Cannot write output to: ${outPath}`) + '\n');
       return EXIT_IO_ERROR;

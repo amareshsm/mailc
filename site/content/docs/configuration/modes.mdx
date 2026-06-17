@@ -23,7 +23,7 @@ The compiler reads the attributes, classifies each one, and inlines them as styl
 - **Cons**: Verbose for many styles; no responsive/dark-mode sugar
 
 ```ts
-// mailc.config.ts
+// mailc.config.js
 export default defineConfig({
   styling: { templateStyle: 'attribute' },  // default
 })
@@ -68,7 +68,7 @@ compile(source, { templateStyle: 'class' })
 
 ## Mixed teams
 
-Many teams use `attribute` mode for hand-authored marketing emails (designers comfortable with HTML attributes) and `class` mode for componentised transactional emails (engineers comfortable with Tailwind). Two `mailc.config.ts` files, two build scripts.
+Many teams use `attribute` mode for hand-authored marketing emails (designers comfortable with HTML attributes) and `class` mode for componentised transactional emails (engineers comfortable with Tailwind). Two `mailc.config.js` files, two build scripts.
 
 ## Responsive utilities (class mode)
 

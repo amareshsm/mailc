@@ -1,14 +1,14 @@
 ---
-title: mailc.config.ts
+title: mailc.config.js
 description: Project-wide configuration for the mailc compiler.
 ---
 
-mailc reads `mailc.config.ts` (or `.js`, `.mjs`) from the project root. Every option is optional — defaults cover the common case.
+mailc reads `mailc.config.js` (or `.mjs`, `.json`, `.mailcrc`, or a `"mailc"` key in `package.json`) from the project root. Every option is optional — defaults cover the common case.
 
 ## Example
 
 ```ts
-// mailc.config.ts
+// mailc.config.js
 import { defineConfig } from 'mailc'
 
 export default defineConfig({
@@ -97,7 +97,7 @@ Source maps are orthogonal — `sourceMap: true` attaches a source-map structure
 When the same option is specified in multiple places, the highest-priority value wins:
 
 1. **Per-call options** — `compile(source, { compatibilityMode: 'strict' })`
-2. **Config file** — `mailc.config.ts`
+2. **Config file** — `mailc.config.js`
 3. **Built-in defaults**
 
 CLI flags (`--compatibility-mode`, `--target`) feed into per-call options.

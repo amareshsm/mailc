@@ -216,6 +216,53 @@ describe('compileFile() — JSON errors', () => {
     expect(compiled?.result.errors).toHaveLength(1);
     expect(compiled?.result.errors[0]?.code).toBe('JSON_FORMAT_ERROR');
   });
+
+  // Regression: `null` is valid JSON but not an object — property access on
+  // it crashed the CLI with an uncaught TypeError instead of a structured
+  // error. Same class: arrays, numbers, strings, booleans.
+  it('returns structured JSON_FORMAT_ERROR (no crash) for non-object JSON roots', () => {
+    for (const [name, content] of [
+      ['null.json', 'null'],
+      ['arr.json', '[1,2]'],
+      ['num.json', '42'],
+      ['str.json', '"hello"'],
+    ] as const) {
+      const jsonPath = path.join(tmpDir, name);
+      fs.writeFileSync(jsonPath, content);
+
+      const compiled = compileFile(jsonPath, DEFAULT_FLAGS, {});
+      expect(compiled, name).not.toBeNull();
+      expect(compiled?.result.html, name).toBeNull();
+      expect(compiled?.result.errors[0]?.code, name).toBe('JSON_FORMAT_ERROR');
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// --data failures are hard errors
+// ---------------------------------------------------------------------------
+
+describe('compileFile() — --data failures', () => {
+  // Regression: a typo'd --data path used to print an error but continue
+  // compiling WITHOUT the data and exit 0 — CI would ship emails with
+  // unresolved {{variables}}. It must be a hard failure (null → IO error).
+  it('returns null when the data file does not exist', () => {
+    const mcPath = path.join(tmpDir, 'tpl.mc');
+    fs.writeFileSync(mcPath, '<mc><mc-body><mc-section><mc-column><mc-text>{{name}}</mc-text></mc-column></mc-section></mc-body></mc>');
+
+    const flags: BuildFlags = { ...DEFAULT_FLAGS, data: path.join(tmpDir, 'missing.json') };
+    expect(compileFile(mcPath, flags, {})).toBeNull();
+  });
+
+  it('returns null when the data file contains invalid JSON', () => {
+    const mcPath = path.join(tmpDir, 'tpl.mc');
+    fs.writeFileSync(mcPath, '<mc><mc-body><mc-section><mc-column><mc-text>hi</mc-text></mc-column></mc-section></mc-body></mc>');
+    const dataPath = path.join(tmpDir, 'bad-data.json');
+    fs.writeFileSync(dataPath, '{ nope ');
+
+    const flags: BuildFlags = { ...DEFAULT_FLAGS, data: dataPath };
+    expect(compileFile(mcPath, flags, {})).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------

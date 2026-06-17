@@ -71,7 +71,7 @@ export type { ValidateInput, ValidateOptions } from './validate.js';
 export { checkCss } from './css/index.js';
 
 // Config (Phase 4)
-export { DEFAULT_CLIENTS, DEFAULT_CONFIG, mergeConfig, resolveTargetClients } from './config.js';
+export { DEFAULT_CLIENTS, DEFAULT_CONFIG, mergeConfig, resolveTargetClients, defineConfig } from './config.js';
 
 // CSS — Theme & Class Resolver (Phase 4)
 export { DEFAULT_THEME, resolveTheme, resolveClass, resolveColor, remToPx } from './css/index.js';

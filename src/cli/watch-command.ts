@@ -119,7 +119,7 @@ export async function runWatch(
   }
 
   // ── Initial compile ─────────────────────────────────────────────────────
-  compileAndWrite(resolved, outputPath, flags, mergedConfig, previewHandle);
+  _compileAndWrite(resolved, outputPath, flags, mergedConfig, previewHandle);
 
   // ── Watcher ─────────────────────────────────────────────────────────────
   const watcher = chokidar.watch(resolved, {
@@ -129,7 +129,7 @@ export async function runWatch(
   });
 
   watcher.on('change', () => {
-    compileAndWrite(resolved, outputPath, flags, mergedConfig, previewHandle);
+    _compileAndWrite(resolved, outputPath, flags, mergedConfig, previewHandle);
   });
 
   watcher.on('error', (err: unknown) => {
@@ -166,13 +166,15 @@ export async function runWatch(
  * Compiles a single `.mc` file, writes the HTML to disk, and optionally
  * notifies the preview server.
  *
+ * Exported for tests (underscore prefix = not public CLI API).
+ *
  * @param srcPath      - Absolute path to the `.mc` source file.
  * @param outPath      - Absolute path to write the compiled HTML.
  * @param flags        - Watch flags (verbose, serve, etc.).
  * @param config       - Merged MailcConfig.
  * @param preview      - Optional preview server handle to notify.
  */
-function compileAndWrite(
+export function _compileAndWrite(
   srcPath: string,
   outPath: string,
   flags: WatchFlags,
@@ -205,9 +207,11 @@ function compileAndWrite(
   const result = compile(source, { config, data });
   const compileMs = Date.now() - start;
 
-  // ── Compile errors ───────────────────────────────────────────────────────
-  const errors = result.errors.filter((e) => e.severity === 'error');
-  const warnings = result.errors.filter((e) => e.severity === 'warning');
+  // ── Compile errors / warnings ────────────────────────────────────────────
+  // Errors live in result.errors; warnings live in result.warnings — they are
+  // separate arrays on CompileResult, not one array split by severity.
+  const errors = result.errors;
+  const warnings = result.warnings;
 
   // Genuinely unrecoverable (tokenizer/parser crash) — cannot preview anything.
   if (result.html === null) {

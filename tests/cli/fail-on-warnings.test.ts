@@ -118,11 +118,41 @@ describe('--fail-on-warnings: single file', () => {
     const code = await runBuild(input, { ...BASE_FLAGS, failOnWarnings: false, output }, {});
     expect(code).toBe(EXIT_COMPILE_ERROR);
   });
+
+  // Regression: the CI gate must not depend on whether --output was passed.
+  // The stdout path used to early-return before the failOnWarnings check,
+  // so `mailc build x.mc --fail-on-warnings` (no -o) exited 0 on warnings
+  // while the same template with -o exited 1.
+  it('with the flag and NO --output (stdout mode), a warning template still exits 1', async () => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const input = writeFile('warn.mc', WARN_MC);
+    const code = await runBuild(input, { ...BASE_FLAGS, failOnWarnings: true, output: undefined }, {});
+    expect(code).toBe(EXIT_COMPILE_ERROR);
+  });
+
+  it('without the flag and NO --output, the same warning template exits 0', async () => {
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const input = writeFile('warn.mc', WARN_MC);
+    const code = await runBuild(input, { ...BASE_FLAGS, failOnWarnings: false, output: undefined }, {});
+    expect(code).toBe(EXIT_SUCCESS);
+  });
 });
 
 // ---------------------------------------------------------------------------
 // Directory build
 // ---------------------------------------------------------------------------
+
+describe('directory build requires --output', () => {
+  // Regression: a directory build without --output used to compile every
+  // file, print "→ stdout" per file, and write the HTML NOWHERE — silently
+  // discarding all output while exiting 0.
+  it('directory input without --output exits with IO error instead of discarding output', async () => {
+    const dir = path.join(tmpDir, 'src');
+    writeFile('src/warn.mc', WARN_MC);
+    const code = await runBuild(dir, { ...BASE_FLAGS, failOnWarnings: false, output: undefined }, {});
+    expect(code).not.toBe(EXIT_SUCCESS);
+  });
+});
 
 describe('--fail-on-warnings: directory build', () => {
   it('without the flag, a directory containing a warning template exits 0', async () => {

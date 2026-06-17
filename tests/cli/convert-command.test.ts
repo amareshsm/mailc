@@ -194,7 +194,7 @@ describe('runConvert() — mjml → mc', () => {
     expect(matches).toHaveLength(1);
   });
 
-  it('maps mj-wrapper and mj-hero to mc-section', () => {
+  it('maps mj-wrapper to mc-section and mj-hero to mc-hero', () => {
     const mjmlPath = path.join(tmpDir, 'test.mjml');
     fs.writeFileSync(mjmlPath, `
 <mjml>
@@ -203,7 +203,7 @@ describe('runConvert() — mjml → mc', () => {
       <mj-column><mj-text>Wrapped</mj-text></mj-column>
     </mj-wrapper>
     <mj-hero>
-      <mj-column><mj-text>Hero</mj-text></mj-column>
+      <mj-text>Hero</mj-text>
     </mj-hero>
   </mj-body>
 </mjml>`);
@@ -214,8 +214,46 @@ describe('runConvert() — mjml → mc', () => {
 
     const output = stdoutChunks.join('');
     expect(output).toContain('<mc-section>');
+    // mailc HAS a real mc-hero — mj-hero must map to it, not flatten to mc-section.
+    expect(output).toContain('<mc-hero>');
     expect(output).not.toContain('mj-wrapper');
     expect(output).not.toContain('mj-hero');
+  });
+
+  // Regression: mj-title, mj-table, and mj-group were wrongly listed as
+  // "no mailc equivalent" and left untranslated — mailc ships mc-title,
+  // mc-table, and mc-group.
+  it('maps mj-title, mj-table, and mj-group to their real mailc equivalents', () => {
+    const mjmlPath = path.join(tmpDir, 'test.mjml');
+    fs.writeFileSync(mjmlPath, `
+<mjml>
+  <mj-head><mj-title>Subject</mj-title></mj-head>
+  <mj-body>
+    <mj-section>
+      <mj-group>
+        <mj-column><mj-text>Grouped</mj-text></mj-column>
+      </mj-group>
+    </mj-section>
+    <mj-table><tr><td>cell</td></tr></mj-table>
+  </mj-body>
+</mjml>`);
+
+    const flags: ConvertFlags = { to: 'mc' };
+    const code = runConvert(mjmlPath, flags);
+    expect(code).toBe(EXIT_SUCCESS);
+
+    const output = stdoutChunks.join('');
+    expect(output).toContain('<mc-title>Subject</mc-title>');
+    expect(output).toContain('<mc-group>');
+    expect(output).toContain('<mc-table>');
+    expect(output).not.toContain('mj-title');
+    expect(output).not.toContain('mj-group');
+    expect(output).not.toContain('mj-table');
+    // And no false "unsupported" warnings for tags that DO have equivalents.
+    const warnings = stderrChunks.join('');
+    expect(warnings).not.toContain('mj-title');
+    expect(warnings).not.toContain('mj-group');
+    expect(warnings).not.toContain('mj-table');
   });
 });
 
